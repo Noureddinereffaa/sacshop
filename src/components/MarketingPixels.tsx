@@ -6,9 +6,9 @@ import { supabase } from "@/lib/supabase";
 // Declare global types for pixel SDKs
 declare global {
   interface Window {
-    fbq: (...args: unknown[]) => void;
-    _fbq: unknown;
-    ttq: { load: (id: string) => void; track: (event: string) => void };
+    fbq?: (...args: unknown[]) => void;
+    _fbq?: unknown;
+    ttq?: { load: (id: string) => void; track: (event: string) => void };
   }
 }
 
@@ -47,8 +47,8 @@ export default function MarketingPixels() {
             const s = b.getElementsByTagName(e)[0];
             s.parentNode?.insertBefore(t, s);
           })(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
-          window.fbq("init", fbPixelId);
-          window.fbq("track", "PageView");
+          window.fbq?.("init", fbPixelId);
+          window.fbq?.("track", "PageView");
         }
 
         // TikTok Pixel

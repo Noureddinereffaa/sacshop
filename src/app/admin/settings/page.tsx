@@ -32,6 +32,10 @@ export default function AdminSettings() {
 
   async function fetchData() {
     setIsLoading(true);
+    if (!supabase) {
+      setIsLoading(false);
+      return;
+    }
     
     // Fetch Settings
     const { data: settingsData } = await supabase.from("settings").select("*");
@@ -49,6 +53,7 @@ export default function AdminSettings() {
   }
 
   const saveSettings = async () => {
+    if (!supabase) return;
     setIsSaving(true);
     try {
       for (const key of Object.keys(settings)) {

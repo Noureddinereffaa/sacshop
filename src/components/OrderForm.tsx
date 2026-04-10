@@ -23,6 +23,7 @@ interface OrderFormProps {
 export default function OrderForm({ productId, productName, productPrice, selectedSize, selectedColor, appliedOfferId, cartItems = [], quantity = 1, discountAmount = 0, onAddToCart }: OrderFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [pendingOrderId, setPendingOrderId] = useState<string>("");
   const [whatsappNumber, setWhatsappNumber] = useState<string>("213000000000");
   const router = useRouter(); // default fallback
   
@@ -154,6 +155,8 @@ export default function OrderForm({ productId, productName, productPrice, select
         admin_notes: (formData.notes || "") + `\n__wa_message__:\n${waMessage}\n__wa_number__:${whatsappNumber.replace(/[^0-9]/g, '')}`
       }).eq("id", orderId);
 
+      // Save message in DB and show success with manual button
+      setPendingOrderId(orderId);
       setIsSuccess(true);
 
       // Redirect to SECURE confirmation page — no WhatsApp text in URL
@@ -199,39 +202,42 @@ export default function OrderForm({ productId, productName, productPrice, select
   if (isSuccess) {
     return (
       <motion.div 
-        initial={{ opacity: 0, scale: 0.9 }}
+        initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white p-12 rounded-[3rem] border-2 border-[#25D366]/50 shadow-2xl text-center space-y-6"
+        className="bg-white p-8 rounded-3xl border-2 border-[#25D366]/40 shadow-xl text-center space-y-5"
       >
-        <div className="w-20 h-20 bg-[#25D366]/20 rounded-full flex items-center justify-center text-[#25D366] mx-auto mb-8">
-           <MessageCircle size={48} />
+        <div className="w-20 h-20 bg-[#25D366]/15 rounded-full flex items-center justify-center text-[#25D366] mx-auto">
+           <MessageCircle size={44} />
         </div>
-        <h2 className="text-3xl font-black text-gray-900">جاري توجيهك إلى الواتساب...</h2>
-        <p className="text-gray-500 text-lg leading-relaxed max-w-md mx-auto">
-           تم إرسال طلبك بنجاح. سيتم نقل محادثتك وتفاصيل التصميم مباشرة لفريقنا لمناقشة التفاصيل وتأكيد التكلفة.
-        </p>
-        <div className="pt-4 flex flex-col items-center justify-center text-sm font-bold text-gray-400">
-           <Loader2 className="animate-spin mb-2" />
-           إذا لم يحولك التطبيق، الرجاء النقر على رابط الواتساب بأنفسكم أو تفقد النوافذ المنبثقة!
+        <div>
+          <h2 className="text-2xl font-black text-gray-900">تم تسجيل طلبك! ✅</h2>
+          <p className="text-gray-500 mt-2 leading-relaxed text-sm">
+            اضغط على الزر أدناه لفتح واتساب وإتمام التأكيد مع فريقنا.
+          </p>
         </div>
+        <a
+          href={`/order/confirm/${pendingOrderId}`}
+          className="flex items-center justify-center gap-3 w-full bg-[#25D366] text-white rounded-2xl py-5 font-black text-lg shadow-lg active:scale-95 transition-transform"
+          style={{ WebkitTapHighlightColor: 'transparent' }}
+        >
+          <MessageCircle size={24} />
+          فتح واتساب والتأكيد الآن
+        </a>
+        <p className="text-xs text-gray-400">إذا لم يفتح واتساب تلقائياً، تأكد من تثبيته على هاتفك</p>
       </motion.div>
     );
   }
 
   return (
-    <div className="bg-white rounded-[3rem] p-8 md:p-12 border border-gray-100 shadow-2xl relative overflow-hidden">
-      {/* Background Decor */}
-      <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-[#25D366]/5 rounded-full blur-3xl pointer-events-none" />
-
+    <div className="bg-white rounded-3xl p-5 sm:p-8 border border-gray-100 shadow-xl">
       <div className="relative z-10">
-        <div className="flex items-center gap-3 mb-8">
-           <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
-              <MessageCircle size={24} />
+        <div className="flex items-center gap-3 mb-6">
+           <div className="w-11 h-11 bg-[#25D366]/10 rounded-2xl flex items-center justify-center text-[#25D366] shrink-0">
+              <MessageCircle size={22} />
            </div>
            <div>
-              <h2 className="text-2xl font-black text-gray-950">تأكيد المبدئي للطلب</h2>
-              <p className="text-gray-400 font-bold text-xs uppercase tracking-tighter">سيتم الاتفاق على التصاميم و التسعير النهائي عبر الواتساب</p>
+              <h2 className="text-lg sm:text-xl font-black text-gray-950">الطلب عبر واتساب</h2>
+              <p className="text-gray-400 font-semibold text-xs">أدخل بياناتك ليتم تأكيد طلبك</p>
            </div>
         </div>
 
@@ -284,18 +290,17 @@ export default function OrderForm({ productId, productName, productPrice, select
           </div>
 
           {/* Pricing Summary */}
-          <div className="bg-primary/5 p-6 rounded-[2rem] space-y-3 mt-8 border border-primary/10">
+          <div className="bg-[#25D366]/5 p-4 rounded-2xl border border-[#25D366]/15 mt-4">
              {discountAmount > 0 && (
                <div className="flex justify-between items-center text-green-600 font-bold text-sm mb-2">
-                 <span>خصم تم تطبيقه بنجاح:</span>
+                 <span>خصم تم تطبيقه:</span>
                  <span>- {discountAmount} د.ج</span>
                </div>
              )}
-             <div className="flex justify-between items-center text-primary pt-2 border-t border-primary/5">
-                <span className="text-xl font-black">الإجمالي التقديري للطلب:</span>
-                <span className="text-3xl font-black">{productPrice} د.ج</span>
+             <div className="flex justify-between items-center text-gray-900">
+                <span className="font-bold text-sm">المجموع الإجمالي:</span>
+                <span className="text-2xl font-black text-[#25D366]">{productPrice.toLocaleString()} د.ج</span>
              </div>
-             <p className="text-xs text-gray-500 font-bold mb-0 text-right">قد تتغير التكلفة قليلاً بناءً على تفاصيل الطباعة والتوصيل المطلوبة والتي سيتم نقاشها معك فوراً.</p>
           </div>
 
           <div className="space-y-3 mt-4">
@@ -303,22 +308,25 @@ export default function OrderForm({ productId, productName, productPrice, select
                <button
                  type="button"
                  onClick={onAddToCart}
-                 className="w-full bg-white border-2 border-primary text-primary py-4 rounded-xl font-bold text-lg hover:bg-primary/5 transition-colors flex items-center justify-center gap-2 shadow-sm"
+                 className="w-full bg-white border-2 border-primary text-primary py-3.5 rounded-xl font-bold text-base hover:bg-primary/5 active:scale-95 transition-all flex items-center justify-center gap-2"
+                 style={{ WebkitTapHighlightColor: 'transparent' }}
                >
                  <ShoppingCart size={20} />
-                 أضف إلى السلة (للحصول على الخصم)
+                 أضف إلى السلة
                </button>
             )}
             <button 
+              type="submit"
               disabled={isLoading}
-              className="w-full bg-[#25D366] text-white rounded-[2rem] py-6 font-black text-xl hover:bg-[#20b957] transition-all flex items-center justify-center gap-3 shadow-2xl hover:shadow-[#25D366]/40 disabled:opacity-50 disabled:cursor-not-allowed group"
+              className="w-full bg-[#25D366] text-white rounded-2xl py-5 font-black text-xl flex items-center justify-center gap-3 shadow-lg active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed select-none"
+              style={{ WebkitTapHighlightColor: 'transparent', minHeight: '64px' }}
             >
              {isLoading ? (
-               <Loader2 className="animate-spin" size={24} />
+               <Loader2 className="animate-spin" size={26} />
              ) : (
                <>
-                 <span>تأكيد الآن</span>
-                 <MessageCircle className="group-hover:scale-110 transition-transform" />
+                 <MessageCircle size={24} />
+                 <span>تأكيد الطلب عبر واتساب</span>
                </>
              )}
             </button>

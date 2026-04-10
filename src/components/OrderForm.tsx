@@ -186,8 +186,10 @@ export default function OrderForm({ productId, productName, productPrice, select
         cartItems: isCartOrder ? cartItems : undefined,
       });
 
-      // Also save PDF URL in order record
-      await supabase.from("orders").update({ admin_notes: `pdf_url:${pdfUrl}` }).eq("id", orderId);
+      // Also save PDF URL in order record (appending to existing notes if any)
+      const { data: currentOrder } = await supabase.from("orders").select("admin_notes").eq("id", orderId).single();
+      const updatedNotes = (currentOrder?.admin_notes ? currentOrder.admin_notes + "\n" : "") + `pdf_url:${pdfUrl}`;
+      await supabase.from("orders").update({ admin_notes: updatedNotes }).eq("id", orderId);
     } catch (pdfErr) {
       console.warn("PDF generation failed, falling back to text message:", pdfErr);
     }

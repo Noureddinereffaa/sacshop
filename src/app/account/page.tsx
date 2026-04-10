@@ -53,6 +53,32 @@ const STATUS_MAP: Record<string, { label: string; color: string; icon: React.Rea
 
 const TIMELINE_STEPS = ["new", "confirmed", "processing", "shipped", "delivered"];
 
+// ─── Helper to parse notes ───────────────────────────────────────────────────
+function parseOrderNotes(notes?: string) {
+  if (!notes) return { displayNotes: null, pdfUrl: null };
+  
+  let displayNotes = notes;
+  let pdfUrl = null;
+
+  // Extract PDF URL if it exists (saved as pdf_url:URL)
+  const pdfMatch = notes.match(/pdf_url:(https:\/\/\S+)/);
+  if (pdfMatch) {
+    pdfUrl = pdfMatch[1];
+    displayNotes = displayNotes.replace(/pdf_url:https:\/\/\S+/, "");
+  }
+
+  // Hide internal WhatsApp technical markers
+  if (displayNotes.includes("__wa_message__")) {
+    const parts = displayNotes.split("__wa_message__");
+    displayNotes = parts[0].trim(); // Only show what was before the technical marker
+  }
+
+  return { 
+    displayNotes: displayNotes.trim() || null, 
+    pdfUrl 
+  };
+}
+
 // ─── Login sub-form (for returning visitors coming directly to /account) ───────
 function LoginForm({ onSuccess }: { onSuccess: (phone: string, name: string) => void }) {
   const [phone, setPhone] = useState("");
@@ -436,24 +462,47 @@ function AccountContent() {
                 {/* Header */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center p-6 md:p-8 border-b border-gray-50 bg-gradient-to-b from-gray-50/50 to-white gap-6">
                   <div className="flex items-center gap-5">
-                    <div className="bg-white w-14 h-14 rounded-2xl flex items-center justify-center font-black text-sm text-primary shadow-sm border border-gray-100">
+                    <div className="bg-white w-14 h-14 rounded-2xl flex items-center justify-center font-black text-sm text-primary shadow-sm border border-gray-100 shrink-0">
                       #{order.id.split("-")[0]}
                     </div>
                     <div>
-                      <p className="font-bold text-gray-800 flex items-center gap-2 mb-1.5">
+                      <p className="font-bold text-gray-800 flex items-center gap-2 mb-1.5 text-sm md:text-base">
                         <Calendar size={14} className="text-gray-400" />
                         {new Date(order.created_at).toLocaleDateString("ar-DZ", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                       </p>
-                      {order.admin_notes && <p className="text-xs font-bold text-primary bg-primary/5 px-3 py-1 rounded-full inline-block">{order.admin_notes}</p>}
+                      <div className="flex flex-wrap gap-2">
+                        {(() => {
+                           const { displayNotes, pdfUrl } = parseOrderNotes(order.admin_notes);
+                           return (
+                             <>
+                               {displayNotes && (
+                                 <p className="text-[11px] font-black text-gray-500 bg-gray-100/80 px-3 py-1 rounded-full inline-block">
+                                   الملاحظة: {displayNotes}
+                                 </p>
+                               )}
+                               {pdfUrl && (
+                                 <a 
+                                   href={pdfUrl} 
+                                   target="_blank" 
+                                   rel="noopener noreferrer"
+                                   className="text-[11px] font-black text-primary bg-primary/10 hover:bg-primary/20 px-3 py-1 rounded-full flex items-center gap-1.5 transition-all shadow-sm active:scale-95"
+                                 >
+                                   <ShieldCheck size={12} /> تحميل الفاتورة الرسمية (PDF)
+                                 </a>
+                               )}
+                             </>
+                           )
+                        })()}
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end bg-gray-50 md:bg-transparent p-4 md:p-0 rounded-2xl md:rounded-none">
+                  <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end bg-white md:bg-transparent p-4 md:p-0 rounded-2xl border border-gray-100 md:border-none shadow-sm md:shadow-none">
                     <div className="text-right">
-                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">الإجمالي</p>
-                      <span className="font-black text-xl text-gray-900">{order.total_price} د.ج</span>
+                      <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-0.5">الإجمالي المستحق</p>
+                      <span className="font-black text-2xl text-primary">{order.total_price} <span className="text-sm">د.ج</span></span>
                     </div>
                     <div className="h-10 w-px bg-gray-200 hidden md:block" />
-                    <span className={`px-4 py-2 rounded-xl text-sm font-black flex items-center gap-2 shadow-sm ${st.color}`}>
+                    <span className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 shadow-sm ${st.color} border border-black/5`}>
                       {st.icon} {st.label}
                     </span>
                   </div>
@@ -505,19 +554,28 @@ function AccountContent() {
                 )}
 
                 {/* Body / Items Details */}
-                <div className="p-6 md:p-8 bg-gray-50/30">
-                  <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">تفاصيل وعناصر الطلب</p>
+                <div className="p-6 md:p-8 bg-gray-50/30 border-t border-gray-50">
+                  <div className="flex items-center justify-between mb-5">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">تفاصيل وعناصر الطلب</p>
+                    <div className="h-px flex-1 bg-gray-100 mx-4" />
+                  </div>
+                  
                   {isCart ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {order.cart_items!.map((item, idx) => (
-                        <div key={idx} className="flex justify-between items-center bg-white p-4 rounded-2xl border border-gray-100 shadow-sm group-hover:border-primary/20 transition-colors">
+                        <div key={idx} className="flex justify-between items-center bg-white p-4 rounded-2xl border border-gray-100 shadow-sm group-hover:border-primary/20 transition-all hover:shadow-md">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400">
-                              <Package size={16} />
+                            <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 border border-gray-100">
+                              <ShoppingBag size={16} />
                             </div>
                             <div>
-                              <p className="font-bold text-gray-900 text-sm line-clamp-1">{item.name}</p>
-                              {item.size && <p className="text-xs text-gray-500 mt-1 font-medium bg-gray-50 inline-block px-2 py-0.5 rounded-md">{item.size} {item.color ? `| ${item.color}` : ""}</p>}
+                              <p className="font-black text-gray-900 text-sm line-clamp-1">{item.name}</p>
+                              {item.size && (
+                                <div className="flex items-center gap-1.5 mt-1">
+                                  <span className="text-[10px] font-black text-gray-400 bg-gray-50 px-2 py-0.5 rounded border border-gray-100">{item.size}</span>
+                                  {item.color && <span className="text-[10px] font-black text-gray-400 bg-gray-50 px-2 py-0.5 rounded border border-gray-100">{item.color}</span>}
+                                </div>
+                              )}
                             </div>
                           </div>
                           <span className="font-black text-primary bg-primary/5 px-3 py-1.5 rounded-xl text-sm border border-primary/10">
@@ -527,19 +585,27 @@ function AccountContent() {
                       ))}
                     </div>
                   ) : (
-                    <div className="flex justify-between items-center bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:border-primary/20 transition-colors">
+                    <div className="flex justify-between items-center bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:border-primary/20 transition-all hover:shadow-md">
                       <div className="flex items-center gap-4">
-                         <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-                            <ShoppingBag size={20} />
+                         <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary border border-primary/20 shadow-inner">
+                            <Package size={20} />
                          </div>
                         <div>
-                          <p className="font-bold text-gray-900 line-clamp-1">حزمة مطبوعات مخصصة (الطلب السريع)</p>
-                          {order.size && <p className="text-xs text-gray-500 mt-1 font-medium bg-gray-50 inline-block px-2 py-0.5 rounded-md">{order.size} {order.color ? `| ${order.color}` : ""}</p>}
+                          <p className="font-black text-gray-900 text-base">حزمة مطبوعات مخصصة (الطلب السريع)</p>
+                          {(order.size || order.color) && (
+                            <div className="flex items-center gap-2 mt-1.5">
+                              {order.size && <span className="text-[10px] font-black text-gray-500 bg-gray-50 px-2.5 py-1 rounded-md border border-gray-100">{order.size}</span>}
+                              {order.color && <span className="text-[10px] font-black text-gray-500 bg-gray-50 px-2.5 py-1 rounded-md border border-gray-100">{order.color}</span>}
+                            </div>
+                          )}
                         </div>
                       </div>
-                      <span className="font-black text-primary bg-primary/5 px-4 py-2 rounded-xl border border-primary/10 text-sm">
-                        ×{order.quantity}
-                      </span>
+                      <div className="flex flex-col items-center">
+                        <span className="text-[10px] text-gray-400 font-black uppercase mb-1">الكمية</span>
+                        <span className="font-black text-primary bg-primary/5 px-4 py-2 rounded-xl border border-primary/10 text-base shadow-sm">
+                          ×{order.quantity}
+                        </span>
+                      </div>
                     </div>
                   )}
                 </div>

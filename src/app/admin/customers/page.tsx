@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { Search, Loader2, Users, Crown, ShoppingBag, MapPin, Eye, ExternalLink } from "lucide-react";
-import Link from "next/link";
+import { Search, Loader2, Users, Crown, ShoppingBag, MapPin } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface Customer {
   id: string;
@@ -43,31 +43,35 @@ export default function AdminCustomersPage() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-black text-gray-900 flex items-center gap-3">
-            <Users className="text-indigo-500" size={32} />
-            إدارة الزبائن
+      {/* Hero Header */}
+      <div className="bg-gradient-to-br from-indigo-900 to-indigo-800 rounded-[2.5rem] p-8 md:p-10 shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="absolute -top-24 -left-24 w-64 h-64 bg-white/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative z-10">
+          <h1 className="text-3xl md:text-4xl font-black text-white mb-2 flex items-center gap-3">
+            <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center p-2 mb-2 backdrop-blur-sm">
+              <Users size={28} className="text-white" />
+            </div>
           </h1>
-          <p className="text-gray-500 mt-1">سجل بجميع زبائن المتجر وتفاصيلهم</p>
+          <h1 className="text-3xl md:text-4xl font-black text-white mb-2">إدارة الزبائن</h1>
+          <p className="text-indigo-200 font-medium">سجل شامل لجميع عملاء المتجر، مع تحليلات إنفاقهم.</p>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
         {[
-          { label: "إجمالي الزبائن", value: customers.length, color: "text-blue-600 bg-blue-50" },
-          { label: "زبائن VIP", value: customers.filter(c => c.is_vip).length, color: "text-yellow-600 bg-yellow-50" },
-          { label: "متوسط الطلبات للزبون", value: customers.length > 0 ? (customers.reduce((a, c) => a + c.total_orders, 0) / customers.length).toFixed(1) : "0", color: "text-green-600 bg-green-50" },
-          { label: "أعلى إنفاق", value: customers.length > 0 ? `${Math.max(...customers.map(c => c.total_spent)).toLocaleString()} د.ج` : "0 د.ج", color: "text-purple-600 bg-purple-50" },
-        ].map(s => (
-          <div key={s.label} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-            <p className="text-gray-500 text-xs font-bold mb-2">{s.label}</p>
-            <p className={`text-2xl font-black px-3 py-1.5 rounded-xl inline-block ${s.color}`}>
-              {s.value}
-            </p>
-          </div>
+          { label: "إجمالي الزبائن", value: customers.length, color: "bg-blue-50 text-blue-600 border-blue-100", icon: Users },
+          { label: "زبائن الـ VIP", value: customers.filter(c => c.is_vip).length, color: "bg-yellow-50 text-yellow-600 border-yellow-200", icon: Crown },
+          { label: "الطلبات لكل زبون", value: customers.length > 0 ? (customers.reduce((a, c) => a + c.total_orders, 0) / customers.length).toFixed(1) : "0", color: "bg-green-50 text-green-600 border-green-200", icon: ShoppingBag },
+          { label: "أعلى إنفاق للزبون", value: customers.length > 0 ? `${Math.max(...customers.map(c => c.total_spent)).toLocaleString()} د.ج` : "0 د.ج", color: "bg-purple-50 text-purple-600 border-purple-200", icon: MapPin },
+        ].map((s, idx) => (
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.05 * idx }} key={s.label}>
+            <div className={`rounded-3xl p-6 border shadow-sm ${s.color}`}>
+              <s.icon size={24} className="mb-4 opacity-80" />
+              <p className="text-black/50 text-[10px] font-black uppercase tracking-widest mb-1">{s.label}</p>
+              <p className="text-2xl font-black">{s.value}</p>
+            </div>
+          </motion.div>
         ))}
       </div>
 
@@ -139,7 +143,9 @@ export default function AdminCustomersPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <p className="font-black text-primary">{customer.total_spent.toLocaleString()} د.ج</p>
+                      <div className="bg-primary/5 px-4 py-2 rounded-xl border border-primary/10 inline-block">
+                        <p className="font-black text-primary text-base">{customer.total_spent.toLocaleString()} د.ج</p>
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-gray-500 font-medium">
                       {new Date(customer.last_order_at || customer.created_at).toLocaleDateString("ar-DZ", {

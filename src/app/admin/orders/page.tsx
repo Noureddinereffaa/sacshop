@@ -3,18 +3,21 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { 
-  Search, 
-  Filter, 
-  MoreHorizontal, 
-  Eye, 
-  CheckCircle, 
-  XCircle, 
-  Trash2, 
-  AlertTriangle, 
-  PhoneCall,
-  Clock
+  Search, Filter, Eye, CheckCircle2, 
+  XCircle, Trash2, AlertTriangle, PhoneCall,
+  Clock, Package, Truck, MessageCircle, X, ChevronDown, CheckCircle
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const STATUS_MAP: Record<string, { label: string; color: string; icon: any; nextStatus?: string }> = {
+  new:        { label: "جديد",         color: "bg-blue-100 text-blue-700", icon: Clock, nextStatus: "confirmed" },
+  confirmed:  { label: "مؤكد",         color: "bg-indigo-100 text-indigo-700", icon: CheckCircle2, nextStatus: "processing" },
+  processing: { label: "قيد التجهيز",  color: "bg-orange-100 text-orange-700", icon: Package, nextStatus: "shipped" },
+  shipped:    { label: "تم الشحن",     color: "bg-purple-100 text-purple-700", icon: Truck, nextStatus: "delivered" },
+  delivered:  { label: "مكتمل",        color: "bg-green-100 text-green-700", icon: CheckCircle2 },
+  cancelled:  { label: "ملغى",         color: "bg-red-100 text-red-700", icon: XCircle },
+};
 
 interface Order {
   id: string;
@@ -28,15 +31,27 @@ interface Order {
   is_fake: boolean;
   is_duplicate: boolean;
   created_at: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  cart_items?: any[];
+  admin_notes?: string;
 }
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [toast, setToast] = useState<{message: string, type: 'success'|'error'} | null>(null);
+  const [confirmData, setConfirmData] = useState({ quantity: '', finalPrice: '', notes: '' });
+  const [isConfirming, setIsConfirming] = useState(false);
 
   useEffect(() => {
     fetchOrders();
   }, []);
+
+  const showToast = (message: string, type: 'success'|'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   async function fetchOrders() {
     setIsLoading(true);
@@ -44,7 +59,7 @@ export default function AdminOrders() {
       setIsLoading(false);
       return;
     }
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("orders")
       .select("*")
       .order("created_at", { ascending: false });
@@ -61,86 +76,112 @@ export default function AdminOrders() {
       .eq("id", order.id);
     
     if (!error) {
-      if (order.customer_email) {
-        try {
-          await fetch('/api/notify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              orderId: order.id,
-              orderNumber: order.order_number,
-              customerName: order.customer_name,
-              customerEmail: order.customer_email,
-              status: status,
-              totalPrice: order.total_price,
-            })
-          });
-        } catch (e) {
-           console.error("Failed to notify", e);
-        }
-      }
+      showToast(`تم تغيير حالة الطلب #${order.order_number} إلى ${STATUS_MAP[status].label}`);
+      if (selectedOrder?.id === order.id) setSelectedOrder({ ...selectedOrder, status });
+      fetchOrders();
+    } else {
+      showToast('حدث خطأ أثناء تغيير الحالة', 'error');
+    }
+  };
+
+  const markAs = async (order: Order, field: "is_fake" | "is_duplicate") => {
+    if (!supabase) return;
+    const newValue = !order[field];
+    const { error } = await supabase
+      .from("orders")
+      .update({ [field]: newValue })
+      .eq("id", order.id);
+    
+    if (!error) {
+      showToast(`تم ${newValue ? 'وضع' : 'إزالة'} علامة ${field === 'is_fake' ? 'وهمي' : 'مكرر'} للطلب #${order.order_number}`);
+      if (selectedOrder?.id === order.id) setSelectedOrder({ ...selectedOrder, [field]: newValue });
       fetchOrders();
     }
   };
 
-  const markAs = async (id: string, field: "is_fake" | "is_duplicate", value: boolean) => {
+  const deleteOrder = async (id: string) => {
+    if (!confirm("هل أنت متأكد أنك تريد حذف هذا الطلب نهائياً؟")) return;
     if (!supabase) return;
-    const { error } = await supabase
-      .from("orders")
-      .update({ [field]: value })
-      .eq("id", id);
-    
-    if (!error) fetchOrders();
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "new": return "bg-blue-100 text-blue-600";
-      case "processing": return "bg-orange-100 text-orange-600";
-      case "shipped": return "bg-purple-100 text-purple-600";
-      case "delivered": return "bg-green-100 text-green-600";
-      case "cancelled": return "bg-red-100 text-red-600";
-      default: return "bg-gray-100 text-gray-600";
+    const { error } = await supabase.from("orders").delete().eq("id", id);
+    if (!error) {
+      showToast('تم حذف الطلب بنجاح', 'success');
+      setSelectedOrder(null);
+      fetchOrders();
     }
   };
 
+  const openWhatsApp = (phone: string, orderNumber: number) => {
+    const formattedPhone = phone.replace(/\s+/g, '');
+    const wsUrl = `https://wa.me/213${formattedPhone.startsWith('0') ? formattedPhone.slice(1) : formattedPhone}?text=مرحباً بك، نتواصل معك بخصوص طلبك رقم ${orderNumber} من SacShop.`;
+    window.open(wsUrl, '_blank');
+  };
+
+  const confirmOrder = async () => {
+    if (!supabase || !selectedOrder) return;
+    if (!confirmData.quantity) {
+      showToast('يرجى إدخال الكمية على الأقل', 'error');
+      return;
+    }
+    setIsConfirming(true);
+    const finalPrice = confirmData.finalPrice ? parseFloat(confirmData.finalPrice) : selectedOrder.total_price;
+    const updates: Record<string, unknown> = {
+      status: 'confirmed',
+      quantity: parseInt(confirmData.quantity),
+      total_price: finalPrice,
+    };
+    if (confirmData.notes) updates.admin_notes = confirmData.notes;
+
+    const { error } = await supabase.from('orders').update(updates).eq('id', selectedOrder.id);
+
+    if (!error) {
+      // Update customer stats: increment total_orders by 1 and add final price to total_spent
+      const { data: existingCustomer } = await supabase
+        .from('customers')
+        .select('id, total_orders, total_spent')
+        .eq('phone', selectedOrder.customer_phone)
+        .maybeSingle();
+
+      if (existingCustomer) {
+        await supabase.from('customers').update({
+          total_orders: (existingCustomer.total_orders || 0) + 1,
+          total_spent: (existingCustomer.total_spent || 0) + finalPrice,
+          last_order_at: new Date().toISOString(),
+        }).eq('id', existingCustomer.id);
+      } else {
+        // Customer not in DB yet — create them
+        await supabase.from('customers').insert({
+          name: selectedOrder.customer_name,
+          phone: selectedOrder.customer_phone,
+          total_orders: 1,
+          total_spent: finalPrice,
+          last_order_at: new Date().toISOString(),
+        });
+      }
+
+      showToast(`✅ تم تأكيد الطلب #${selectedOrder.order_number} بنجاح!`);
+      setSelectedOrder({ ...selectedOrder, ...updates, status: 'confirmed' } as Order);
+      setConfirmData({ quantity: '', finalPrice: '', notes: '' });
+      fetchOrders();
+    } else {
+      showToast('حدث خطأ أثناء تأكيد الطلب', 'error');
+    }
+    setIsConfirming(false);
+  };
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 relative">
       {/* Page Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-           <h1 className="text-3xl font-black text-gray-900">إدارة الطلبات</h1>
-           <p className="text-gray-500">متابعة وتأكيد طلبات العملاء من جميع الولايات</p>
+           <h1 className="text-3xl font-black text-gray-900">إدارة الطلبات السريعة</h1>
+           <p className="text-gray-500">متابعة وتأكيد طلبات العملاء والتحكم في حالات الشحن.</p>
         </div>
         <div className="flex gap-3">
            <button className="bg-white border border-gray-200 px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-gray-50 transition-all text-gray-700">
               <Filter size={18} />
               <span>تصفية</span>
            </button>
-           <button className="bg-primary text-white px-6 py-3 rounded-xl font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
-              إضافة طلب يدوي
-           </button>
         </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-         {[
-           { name: "طلبات جديدة", count: orders.filter(o => o.status === 'new').length, icon: Clock, color: "text-blue-500", bg: "bg-blue-50" },
-           { name: "تم التسليم", count: orders.filter(o => o.status === 'delivered').length, icon: CheckCircle, color: "text-green-500", bg: "bg-green-50" },
-           { name: "ملغاة", count: orders.filter(o => o.status === 'cancelled').length, icon: XCircle, color: "text-red-500", bg: "bg-red-50" },
-           { name: "إجمالي الأرباح", count: orders.reduce((acc, o) => acc + (o.status === 'delivered' ? o.total_price : 0), 0) + " د.ج", icon: AlertTriangle, color: "text-purple-500", bg: "bg-purple-50" },
-         ].map((stat) => (
-           <div key={stat.name} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center justify-between">
-              <div>
-                 <p className="text-gray-500 text-sm font-bold mb-1">{stat.name}</p>
-                 <h4 className="text-2xl font-black text-gray-900">{stat.count}</h4>
-              </div>
-              <div className={`w-12 h-12 ${stat.bg} ${stat.color} rounded-2xl flex items-center justify-center`}>
-                 <stat.icon size={24} />
-              </div>
-           </div>
-         ))}
       </div>
 
       {/* Orders Table */}
@@ -150,76 +191,320 @@ export default function AdminOrders() {
               <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               <input 
                 type="text" 
-                placeholder="البحث برقم الهاتف أو الاسم..."
-                className="w-full bg-gray-50 border-none rounded-xl py-3 pr-12 pl-4 focus:ring-2 focus:ring-primary/20 transition-all"
+                placeholder="البحث برقم الهاتف أو اسم الزبون..."
+                className="w-full bg-gray-50 border-none rounded-xl py-3 pr-12 pl-4 focus:ring-2 focus:ring-primary/20 transition-all font-medium"
               />
            </div>
-           <p className="text-gray-400 text-sm font-bold flex items-center gap-2">
+           <p className="text-primary bg-primary/5 px-4 py-2 rounded-xl text-sm font-black flex items-center gap-2">
               عرض {orders.length} طلب
            </p>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-right">
-            <thead>
-              <tr className="bg-gray-50 text-gray-500 text-xs font-black uppercase tracking-widest border-b border-gray-100">
-                <th className="px-6 py-5">رقم الطلب</th>
-                <th className="px-6 py-5">العميل</th>
-                <th className="px-6 py-5">التاريخ</th>
-                <th className="px-6 py-5">الإجمالي</th>
-                <th className="px-6 py-5">الحالة</th>
-                <th className="px-6 py-5 text-left">الإجراءات</th>
+        <div className="overflow-x-hidden min-h-[400px]">
+          <table className="w-full text-right block lg:table">
+            <thead className="hidden lg:table-header-group">
+              <tr className="bg-gray-50/50 text-gray-400 text-xs font-black uppercase tracking-widest border-b border-gray-100 block lg:table-row">
+                <th className="px-6 py-5 block lg:table-cell">الطلب</th>
+                <th className="px-6 py-5 block lg:table-cell">العميل</th>
+                <th className="px-6 py-5 block lg:table-cell">تاريخ الطلب</th>
+                <th className="px-6 py-5 block lg:table-cell">الإجمالي</th>
+                <th className="px-6 py-5 block lg:table-cell">الحالة الحالية</th>
+                <th className="px-6 py-5 text-left block lg:table-cell">إجراءات سريعة</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 text-sm">
+            <tbody className="block lg:table-row-group divide-y lg:divide-y-0 lg:divide-gray-100 text-sm">
               {isLoading ? (
                 <tr>
-                   <td colSpan={6} className="px-6 py-20 text-center text-gray-400 font-bold">جاري تحميل الطلبات...</td>
+                   <td colSpan={6} className="px-6 py-20 text-center text-gray-400 font-bold">جاري تحميل أحدث الطلبات...</td>
                 </tr>
               ) : orders.length === 0 ? (
                 <tr>
-                   <td colSpan={6} className="px-6 py-20 text-center text-gray-400 font-bold">لا يوجد طلبات في الوقت الحالي</td>
+                   <td colSpan={6} className="px-6 py-20 text-center text-gray-400 font-bold">لا توجد طلبات في هذا الوقت.</td>
                 </tr>
-              ) : orders.map((order) => (
-                <tr key={order.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-5 font-black text-gray-950">#{order.order_number}</td>
-                  <td className="px-6 py-5">
-                    <div className="flex flex-col">
-                      <span className="font-bold text-gray-900">{order.customer_name}</span>
-                      <span className="text-xs text-gray-500 flex items-center gap-1">
-                        <PhoneCall size={12} className="text-primary" />
-                        {order.customer_phone}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-5 text-gray-500 font-medium">
-                    {new Date(order.created_at).toLocaleDateString('ar-DZ')}
-                  </td>
-                  <td className="px-6 py-5 font-black text-primary">{order.total_price} د.ج</td>
-                  <td className="px-6 py-5">
-                    <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${getStatusColor(order.status)}`}>
-                      {order.status === 'new' ? 'جديد' : order.status === 'delivered' ? 'تم التسليم' : order.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-5">
-                    <div className="flex items-center gap-2 justify-end">
-                       {order.is_fake && (
-                         <div className="px-3 py-1 bg-red-50 text-red-500 text-[10px] font-bold rounded-lg border border-red-100 flex items-center gap-1">
-                            <AlertTriangle size={12} />
-                            وهمي
-                         </div>
-                       )}
-                       <button onClick={() => updateStatus(order, 'delivered')} className="p-2 text-green-500 hover:bg-green-50 rounded-lg transition-colors" title="تم التسليم"><CheckCircle size={20} /></button>
-                       <button onClick={() => updateStatus(order, 'cancelled')} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="إلغاء الطلب"><XCircle size={20} /></button>
-                       <button className="p-2 text-gray-400 hover:bg-gray-100 rounded-lg transition-colors"><MoreHorizontal size={20} /></button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              ) : orders.map((order) => {
+                const st = STATUS_MAP[order.status] || STATUS_MAP.new;
+                const StatusIcon = st.icon;
+
+                return (
+                  <tr key={order.id} className="block lg:table-row hover:bg-primary/5 transition-colors cursor-pointer group bg-white lg:bg-transparent rounded-2xl mb-4 p-4 lg:p-0 shadow-sm border border-gray-100 lg:border-none lg:shadow-none lg:mb-0" onClick={() => setSelectedOrder(order)}>
+                    <td className="px-4 py-2 lg:px-6 lg:py-5 font-black text-gray-900 block lg:table-cell flex items-center justify-between lg:justify-start border-b border-gray-50 lg:border-none">
+                      <span className="lg:hidden text-xs text-gray-400 font-bold">الطلب</span>
+                      <div className="bg-gray-100 w-10 h-10 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors text-sm lg:text-base">
+                        #{order.order_number}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 lg:px-6 lg:py-5 block lg:table-cell flex items-center justify-between lg:justify-start border-b border-gray-50 lg:border-none">
+                      <span className="lg:hidden text-xs text-gray-400 font-bold">العميل</span>
+                      <div className="flex flex-col text-left lg:text-right">
+                        <span className="font-bold text-gray-900 text-sm lg:text-base">{order.customer_name}</span>
+                        <span className="text-[11px] lg:text-xs text-gray-500 font-medium flex items-center gap-1.5 mt-1 lg:mt-0 justify-end lg:justify-start" dir="ltr">
+                          {order.customer_phone} <PhoneCall size={10} className="text-primary hidden lg:block" />
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 lg:px-6 lg:py-5 text-gray-500 font-medium block lg:table-cell flex items-center justify-between lg:justify-start border-b border-gray-50 lg:border-none text-xs lg:text-sm">
+                      <span className="lg:hidden text-xs text-gray-400 font-bold">التاريخ</span>
+                      {new Date(order.created_at).toLocaleDateString('ar-DZ', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    </td>
+                    <td className="px-4 py-3 lg:px-6 lg:py-5 font-black text-gray-900 text-base lg:text-lg block lg:table-cell flex items-center justify-between lg:justify-start border-b border-gray-50 lg:border-none">
+                      <span className="lg:hidden text-xs text-gray-400 font-bold">الإجمالي</span>
+                      {order.total_price.toLocaleString()} د.ج
+                    </td>
+                    <td className="px-4 py-3 lg:px-6 lg:py-5 block lg:table-cell flex items-center justify-between lg:justify-start border-b border-gray-50 lg:border-none">
+                      <span className="lg:hidden text-xs text-gray-400 font-bold">الحالة</span>
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-[11px] font-black shadow-sm ${st.color}`}>
+                          <StatusIcon size={14} /> {st.label}
+                        </span>
+                        {order.is_fake && <span className="inline-block px-2 py-1 bg-red-100 text-red-600 rounded text-[10px] font-bold shadow-sm">وهمي</span>}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 lg:px-6 lg:py-5 block lg:table-cell flex items-center justify-between lg:justify-end lg:text-left mt-2 lg:mt-0">
+                      <span className="lg:hidden text-xs text-gray-400 font-bold">الإجراءات</span>
+                      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                         {/* Quick Advance Status (if applicable) */}
+                         {st.nextStatus && (
+                            <button 
+                              onClick={() => updateStatus(order, st.nextStatus!)} 
+                              className="px-4 py-2.5 lg:p-2.5 text-primary bg-primary/10 hover:bg-primary/20 rounded-xl transition-colors font-bold text-xs flex items-center gap-1"
+                              title={`ترقية الحالة إلى ${STATUS_MAP[st.nextStatus].label}`}
+                            >
+                              ترقية <ChevronDown size={14} className="rotate-90 hidden lg:block" />
+                            </button>
+                         )}
+                         {/* One-Click WhatsApp Action */}
+                         <button onClick={() => openWhatsApp(order.customer_phone, order.order_number)} className="px-4 py-2.5 lg:p-2.5 text-white bg-[#25D366] hover:bg-[#20b858] rounded-xl transition-all shadow-md hover:shadow-lg flex items-center gap-2" title="مراسلة العميل عبر واتساب">
+                            <MessageCircle size={18} />
+                            <span className="lg:hidden text-xs font-bold">مراسلة</span>
+                         </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* Slide-in Drawer for Order Details */}
+      <AnimatePresence>
+        {selectedOrder && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
+              className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-40"
+              onClick={() => setSelectedOrder(null)}
+            />
+            <motion.div 
+              initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }} transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed top-0 left-0 h-full w-[450px] max-w-[90vw] bg-white shadow-2xl z-50 overflow-y-auto"
+              dir="rtl"
+            >
+              <div className="p-6 md:p-8 flex flex-col h-full">
+                {/* Drawer Header */}
+                <div className="flex justify-between items-center mb-8 border-b border-gray-100 pb-4">
+                  <div>
+                    <h2 className="text-2xl font-black text-gray-900 flex items-center gap-3">
+                      طلب #{selectedOrder.order_number}
+                      {/* Interactive Status Tag in Title */}
+                      <span className={`px-2.5 py-1 rounded-lg text-xs font-black flex items-center gap-1 border ${STATUS_MAP[selectedOrder.status].color.replace('text', 'border')}`}>
+                        {STATUS_MAP[selectedOrder.status].label}
+                      </span>
+                    </h2>
+                    <p className="text-gray-400 text-sm mt-1">{new Date(selectedOrder.created_at).toLocaleString('ar-DZ')}</p>
+                  </div>
+                  <button onClick={() => setSelectedOrder(null)} className="w-10 h-10 bg-gray-50 flex items-center justify-center rounded-xl text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition-colors">
+                    <X size={20} />
+                  </button>
+                </div>
+
+                {/* Customer Section */}
+                <div className="bg-gray-50 p-5 rounded-2xl mb-6">
+                   <p className="text-[10px] uppercase font-black tracking-widest text-gray-400 mb-3">بيانات العميل</p>
+                   <div className="flex items-center justify-between mb-2">
+                     <p className="font-bold text-gray-900 text-lg">{selectedOrder.customer_name}</p>
+                     <button onClick={() => openWhatsApp(selectedOrder.customer_phone, selectedOrder.order_number)} className="text-[#25D366] bg-green-50 p-2 rounded-lg hover:bg-green-100">
+                        <MessageCircle size={18} />
+                     </button>
+                   </div>
+                   <p className="text-gray-600 text-sm font-medium flex items-center gap-2 mb-2" dir="ltr">
+                     <PhoneCall size={14} className="text-gray-400" /> {selectedOrder.customer_phone}
+                   </p>
+                   <p className="text-gray-600 text-sm flex items-start gap-2">
+                     📍 <span className="leading-relaxed">{selectedOrder.customer_address || "العنوان غير متوفر"}</span>
+                   </p>
+                </div>
+
+                {/* Items Section */}
+                <div className="mb-8">
+                  <p className="text-[10px] uppercase font-black tracking-widest text-gray-400 mb-3">تفاصيل السلة والمشتريات</p>
+                  <div className="space-y-4">
+                    {selectedOrder.cart_items && selectedOrder.cart_items.length > 0 ? (
+                      selectedOrder.cart_items.map((item, idx) => (
+                        <div key={idx} className="flex justify-between items-start bg-white border border-gray-100 p-4 rounded-xl shadow-sm">
+                          <div className="flex gap-3">
+                             <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary shrink-0">
+                               <Package size={18} />
+                             </div>
+                             <div>
+                               <p className="font-bold text-gray-800 text-sm">{item.name}</p>
+                               {(item.size || item.color) && (
+                                 <p className="text-xs text-gray-500 mt-1 font-medium bg-gray-50 inline-block px-2 py-0.5 rounded-md">
+                                   {item.size} {item.color ? `| ${item.color}` : ""}
+                                 </p>
+                               )}
+                             </div>
+                          </div>
+                          <span className="font-black text-gray-900 bg-gray-50 px-3 py-1 rounded-lg border border-gray-200">
+                            ×{item.quantity}
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="flex justify-between items-center bg-gray-50 p-4 rounded-xl border border-gray-100">
+                        <p className="font-bold text-gray-800">حزمة مطبوعات مخصصة مبسطة</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-4 p-4 bg-primary/5 rounded-xl border border-primary/10 flex justify-between items-center">
+                     <span className="font-bold text-gray-600">الإجمالي الصافي:</span>
+                     <span className="font-black text-2xl text-primary">{selectedOrder.total_price.toLocaleString()} د.ج</span>
+                  </div>
+                </div>
+
+                {/* Controls Section */}
+                <div className="mt-auto pt-6 border-t border-gray-100 space-y-6">
+                   <div>
+                     <p className="text-[10px] uppercase font-black tracking-widest text-gray-400 mb-3">تحديث حالة الطلب</p>
+                     <div className="grid grid-cols-2 gap-2">
+                       {Object.keys(STATUS_MAP).map((statusKey) => (
+                         <button
+                           key={statusKey}
+                           onClick={() => updateStatus(selectedOrder, statusKey)}
+                           className={`p-3 rounded-xl text-sm font-bold border transition-all ${
+                             selectedOrder.status === statusKey 
+                             ? `${STATUS_MAP[statusKey].color} ring-2 ring-primary/30` 
+                             : "bg-white text-gray-600 hover:bg-gray-50"
+                           }`}
+                         >
+                           {STATUS_MAP[statusKey].label}
+                         </button>
+                       ))}
+                     </div>
+                   </div>
+
+
+                    {/* Admin Confirmation Panel */}
+                    {(selectedOrder.status === 'new' || selectedOrder.status === 'confirmed') && (
+                      <div className="bg-gradient-to-br from-primary/5 to-indigo-50 border-2 border-primary/20 rounded-2xl p-5 space-y-4">
+                        <div className="flex items-center gap-2 mb-1">
+                          <CheckCircle className="text-primary" size={18} />
+                          <p className="text-sm font-black text-primary tracking-wide">لوحة تأكيد الطلب — فريق التأكيد</p>
+                        </div>
+                        <p className="text-[11px] text-gray-500 font-bold">أدخل التفاصيل النهائية المتفق عليها مع العميل قبل التأكيد الرسمي.</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <label className="text-[11px] font-black text-gray-600 uppercase tracking-wide">الكمية النهائية *</label>
+                            <input type="number" min="1" placeholder="مثال: 500" dir="ltr"
+                              value={confirmData.quantity}
+                              onChange={e => setConfirmData(p => ({ ...p, quantity: e.target.value }))}
+                              className="w-full bg-white border-2 border-primary/20 rounded-xl py-3 px-4 font-black text-gray-900 focus:border-primary outline-none transition-all text-center text-lg"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[11px] font-black text-gray-600 uppercase tracking-wide">السعر النهائي (د.ج)</label>
+                            <input type="number" min="0" placeholder="مثال: 15000" dir="ltr"
+                              value={confirmData.finalPrice}
+                              onChange={e => setConfirmData(p => ({ ...p, finalPrice: e.target.value }))}
+                              className="w-full bg-white border-2 border-primary/20 rounded-xl py-3 px-4 font-black text-gray-900 focus:border-primary outline-none transition-all text-center text-lg"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-black text-gray-600 uppercase tracking-wide">ملاحظات فريق التأكيد</label>
+                          <textarea placeholder="مواصفات الطباعة، موعد التسليم، ملاحظات خاصة..." rows={2}
+                            value={confirmData.notes}
+                            onChange={e => setConfirmData(p => ({ ...p, notes: e.target.value }))}
+                            className="w-full bg-white border-2 border-primary/20 rounded-xl py-3 px-4 font-bold text-gray-700 focus:border-primary outline-none transition-all resize-none text-sm"
+                          />
+                        </div>
+                        <button onClick={confirmOrder} disabled={isConfirming}
+                          className="w-full bg-primary text-white py-4 rounded-xl font-black text-base flex items-center justify-center gap-2 hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-60"
+                        >
+                          {isConfirming ? (
+                            <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                            </svg>
+                          ) : <CheckCircle size={20} />}
+                          {isConfirming ? 'جاري التأكيد...' : 'تأكيد الطلب وحفظ التفاصيل'}
+                        </button>
+                      </div>
+                    )}
+
+                   <div>
+                     <p className="text-[10px] uppercase font-black tracking-widest text-gray-400 mb-3">عناصر الأمان والإنذار (Anti-Fraud)</p>
+                     <div className="flex gap-3">
+                       <button 
+                         onClick={() => markAs(selectedOrder, "is_fake")}
+                         className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-colors border ${
+                           selectedOrder.is_fake ? "bg-red-50 text-red-600 border-red-200" : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                         }`}
+                       >
+                         <AlertTriangle size={16} /> طلب وهمي
+                       </button>
+                       <button 
+                         onClick={() => markAs(selectedOrder, "is_duplicate")}
+                         className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-colors border ${
+                           selectedOrder.is_duplicate ? "bg-orange-50 text-orange-600 border-orange-200" : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                         }`}
+                       >
+                         <XCircle size={16} /> طلب مكرر
+                       </button>
+                     </div>
+                   </div>
+
+                   <button 
+                     onClick={() => deleteOrder(selectedOrder.id)}
+                     className="w-full flex items-center justify-center gap-2 py-4 bg-white border border-red-200 text-red-500 rounded-xl font-bold hover:bg-red-50 hover:text-red-600 transition-all"
+                   >
+                     <Trash2 size={18} /> حذف الطلب نهائياً
+                   </button>
+                </div>
+
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Floating Modern Toast Notification */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className={`fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 font-bold text-sm border-2 ${
+              toast.type === 'success' 
+              ? 'bg-white border-green-200 text-gray-800' 
+              : 'bg-red-50 border-red-200 text-red-800'
+            }`}
+          >
+            {toast.type === 'success' ? (
+              <div className="w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
+                <CheckCircle size={16} />
+              </div>
+            ) : (
+              <div className="w-8 h-8 bg-red-100 text-red-600 rounded-full flex items-center justify-center">
+                <AlertTriangle size={16} />
+              </div>
+            )}
+            {toast.message}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

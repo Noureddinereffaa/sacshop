@@ -319,7 +319,7 @@ export default function CustomerPortalPage() {
                           {isCart ? (
                             <div className="space-y-3">
                               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                              {order.cart_items.map((item: any, idx: number) => (
+                              {(order.cart_items || []).map((item: any, idx: number) => (
                                 <div key={idx} className="flex justify-between items-center bg-gray-50 p-3 rounded-xl border border-gray-100">
                                   <div>
                                     <p className="font-bold text-gray-800 text-sm">{item.name}</p>

@@ -6,7 +6,8 @@ import { motion } from "framer-motion";
 import {
   Crown, Package, Calendar, Gift, Percent, Tag,
   AlarmClock, ShoppingBag, ArrowLeft, Star, CheckCircle2,
-  Loader2, MessageCircle, Phone, Lock, Eye, EyeOff
+  Loader2, MessageCircle, Phone, Lock, Eye, EyeOff, Check,
+  Truck, Clock, ShieldCheck, UserCircle, ArrowRight
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -41,14 +42,16 @@ interface VipOffer {
 }
 
 // ─── Status helpers ────────────────────────────────────────────────────────────
-const STATUS_MAP: Record<string, { label: string; color: string }> = {
-  new:        { label: "جديد",         color: "bg-blue-100 text-blue-700" },
-  confirmed:  { label: "مؤكد",         color: "bg-indigo-100 text-indigo-700" },
-  processing: { label: "قيد التجهيز",  color: "bg-orange-100 text-orange-700" },
-  shipped:    { label: "تم الشحن",     color: "bg-purple-100 text-purple-700" },
-  delivered:  { label: "مكتمل",        color: "bg-green-100 text-green-700" },
-  cancelled:  { label: "ملغى",         color: "bg-red-100 text-red-700" },
+const STATUS_MAP: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
+  new:        { label: "جديد",         color: "bg-blue-100 text-blue-700", icon: <Clock size={16} /> },
+  confirmed:  { label: "مؤكد",         color: "bg-indigo-100 text-indigo-700", icon: <CheckCircle2 size={16} /> },
+  processing: { label: "قيد التجهيز",  color: "bg-orange-100 text-orange-700", icon: <Package size={16} /> },
+  shipped:    { label: "تم الشحن",     color: "bg-purple-100 text-purple-700", icon: <Truck size={16} /> },
+  delivered:  { label: "مكتمل",        color: "bg-green-100 text-green-700", icon: <CheckCircle2 size={16} /> },
+  cancelled:  { label: "ملغى",         color: "bg-red-100 text-red-700", icon: <Clock size={16} /> },
 };
+
+const TIMELINE_STEPS = ["new", "confirmed", "processing", "shipped", "delivered"];
 
 // ─── Login sub-form (for returning visitors coming directly to /account) ───────
 function LoginForm({ onSuccess }: { onSuccess: (phone: string, name: string) => void }) {
@@ -121,10 +124,20 @@ function LoginForm({ onSuccess }: { onSuccess: (phone: string, name: string) => 
           {isLoading ? <><Loader2 className="animate-spin" size={20} />جاري الدخول...</> : "الدخول إلى حسابي"}
         </button>
       </form>
-      <p className="text-center text-xs text-gray-400 font-bold mt-6">
-        لا تملك حساباً؟{" "}
-        <Link href="/products" className="text-primary hover:underline">اطلب الآن لإنشاء حساب تلقائي</Link>
+      <p className="text-center text-xs text-gray-400 font-bold mt-8">
+        منظومة حسابات <strong>SacShop</strong> الآمنة. بيانتك مشفرة ولا نشاركها مع أي جهة.
       </p>
+
+      <div className="mt-8 text-center relative z-10">
+         <Link href="/register" className="inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-primary transition-colors">
+            <span>ليس لديك حساب؟ إنشاء حساب جديد</span>
+            <ArrowRight size={14} className="rotate-180" />
+         </Link>
+      </div>
+
+      <div className="absolute top-4 left-4 opacity-10">
+        <ShieldCheck size={120} />
+      </div>
     </div>
   );
 }
@@ -142,6 +155,7 @@ function AccountContent() {
   const [vipOffers, setVipOffers]   = useState<VipOffer[]>([]);
   const [isLoading, setIsLoading]   = useState(true);
   const [isReady, setIsReady]       = useState(false);
+  const [waClicked, setWaClicked]   = useState(false);
 
   // Hydrate phone from sessionStorage after mount
   useEffect(() => {
@@ -213,7 +227,7 @@ function AccountContent() {
     <div className="flex-grow container mx-auto px-4 py-10 md:py-16 max-w-4xl text-right space-y-8" dir="rtl">
 
       {/* ── WhatsApp Confirm CTA (shown immediately after new order) ────────── */}
-      {waLink && (
+      {waLink && !waClicked && (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -249,6 +263,12 @@ function AccountContent() {
               href={waLink}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => {
+                setWaClicked(true);
+                // Clear the URL parameters without triggering a page reload, 
+                // so the banner doesn't reappear on refresh
+                window.history.replaceState(null, '', '/account');
+              }}
               className="w-full md:w-auto shrink-0 bg-white text-[#25D366] px-10 py-5 rounded-2xl font-black text-lg hover:bg-green-50 transition-all shadow-xl flex items-center justify-center gap-3 group"
             >
               <MessageCircle size={24} className="group-hover:scale-110 transition-transform" />
@@ -259,34 +279,55 @@ function AccountContent() {
         </motion.div>
       )}
 
-      {/* ── Identity Card ──────────────────────────────────────────────────── */}
-      <div className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-sm border border-gray-100 flex flex-col md:flex-row items-center gap-6 justify-between relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-40 h-40 bg-primary/5 rounded-bl-full pointer-events-none" />
-        <div className="flex items-center gap-6 z-10 w-full md:w-auto">
-          <div className="w-20 h-20 bg-primary/10 rounded-[1.5rem] flex items-center justify-center text-primary text-3xl font-black shrink-0 border-2 border-white shadow-md">
-            {customerData.name.charAt(0)}
+      {waLink && waClicked && (
+        <motion.div
+           initial={{ opacity: 0, y: -10 }}
+           animate={{ opacity: 1, y: 0 }}
+           className="bg-green-50 border-2 border-green-200 rounded-3xl p-6 shadow-sm flex items-center gap-5"
+        >
+          <div className="w-14 h-14 bg-green-100 rounded-2xl flex items-center justify-center shrink-0 shadow-inner">
+            <CheckCircle2 size={32} className="text-green-600" />
           </div>
           <div>
-            <div className="flex items-center gap-3 mb-1 flex-wrap">
-              <h2 className="text-2xl md:text-3xl font-black text-gray-900">{customerData.name}</h2>
+             <p className="text-green-800 font-black text-lg">شكراً لك! طلبك الآن في طور التأكيد.</p>
+             <p className="text-green-700 text-sm font-medium mt-0.5">لقد قمت بإرسال تفاصيل الطلب بنجاح. سيتم مراجعته قريباً وتحديث حالته هنا.</p>
+          </div>
+        </motion.div>
+      )}
+
+      {/* ── Identity Card ──────────────────────────────────────────────────── */}
+      <div className="bg-gradient-to-br from-primary to-primary/80 rounded-[2.5rem] p-8 md:p-10 shadow-2xl shadow-primary/20 flex flex-col md:flex-row items-center gap-8 justify-between relative overflow-hidden group">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-700" />
+        <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-black/10 rounded-full blur-2xl pointer-events-none" />
+        
+        <div className="flex flex-col md:flex-row items-center md:items-start gap-6 z-10 w-full md:w-auto">
+          <div className="w-24 h-24 bg-white/20 backdrop-blur-md rounded-[2rem] flex items-center justify-center text-white text-4xl font-black shrink-0 border-2 border-white/30 shadow-inner">
+            {customerData.name.charAt(0)}
+          </div>
+          <div className="text-center md:text-right mt-2">
+            <div className="flex flex-col md:flex-row items-center md:items-start gap-3 mb-2 flex-wrap justify-center md:justify-start">
+              <h2 className="text-3xl md:text-4xl font-black text-white">{customerData.name}</h2>
               {customerData.is_vip && (
-                <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs font-black flex items-center gap-1 border border-yellow-200">
-                  <Crown size={13} /> زبون مميز
+                <span className="bg-gradient-to-r from-yellow-300 to-yellow-500 text-yellow-900 px-4 py-1.5 rounded-full text-xs font-black flex items-center gap-1.5 shadow-lg shadow-yellow-400/20 mt-1 md:mt-0">
+                  <Crown size={14} /> زبون VIP
                 </span>
               )}
             </div>
-            <p className="text-gray-500 font-medium" dir="ltr">{customerData.phone}</p>
+            <p className="text-white/80 font-medium flex items-center gap-2 justify-center md:justify-start" dir="ltr">
+              <Phone size={14} className="opacity-70" /> {customerData.phone}
+            </p>
           </div>
         </div>
-        <div className="flex gap-6 md:gap-10 w-full md:w-auto bg-gray-50 p-5 md:p-6 rounded-3xl z-10">
-          <div>
-            <p className="text-gray-400 text-[10px] font-bold uppercase tracking-tighter mb-1">إجمالي الإنفاق</p>
-            <p className="text-xl md:text-2xl font-black text-primary">{customerData.total_spent || 0} د.ج</p>
+
+        <div className="flex gap-4 md:gap-8 w-full md:w-auto bg-white/10 backdrop-blur-md p-6 rounded-[2rem] z-10 border border-white/20">
+          <div className="text-center md:text-right">
+            <p className="text-white/60 text-[10px] font-black uppercase tracking-widest mb-1.5">إجمالي مشترياتك</p>
+            <p className="text-2xl md:text-3xl font-black text-white">{customerData.total_spent || 0} <span className="text-sm opacity-80">د.ج</span></p>
           </div>
-          <div className="w-px bg-gray-200" />
-          <div>
-            <p className="text-gray-400 text-[10px] font-bold uppercase tracking-tighter mb-1">عدد الطلبات</p>
-            <p className="text-xl md:text-2xl font-black text-gray-900">{customerData.total_orders || 0}</p>
+          <div className="w-px bg-white/20" />
+          <div className="text-center md:text-right">
+            <p className="text-white/60 text-[10px] font-black uppercase tracking-widest mb-1.5">سجل الشراء</p>
+            <p className="text-2xl md:text-3xl font-black text-white">{customerData.total_orders || 0} <span className="text-sm opacity-80">طلبات</span></p>
           </div>
         </div>
       </div>
@@ -361,69 +402,148 @@ function AccountContent() {
 
       {/* ── Orders History ─────────────────────────────────────────────────── */}
       <div>
-        <h3 className="text-xl font-black text-gray-900 mb-6 flex items-center gap-3">
-          <div className="w-9 h-9 bg-primary/10 rounded-xl flex items-center justify-center">
-            <Package className="text-primary" size={19} />
+        <h3 className="text-2xl font-black text-gray-900 mb-8 flex items-center gap-4">
+          <div className="w-12 h-12 bg-white shadow-sm border border-gray-100 rounded-2xl flex items-center justify-center">
+            <Package className="text-primary" size={24} />
           </div>
-          سجل طلباتي
+          <span className="bg-gradient-to-l from-gray-900 to-gray-600 bg-clip-text text-transparent">سجل طلباتي ومتابعة الشحن</span>
         </h3>
-        <div className="grid gap-5">
+        
+        <div className="grid gap-6">
           {orders.length === 0 ? (
-            <div className="bg-white rounded-3xl p-12 text-center border border-gray-100">
-              <Package size={48} className="mx-auto mb-4 text-gray-200" />
-              <p className="text-gray-400 font-bold">لا توجد طلبات مسجلة بعد.</p>
+            <div className="bg-white rounded-[2.5rem] p-16 text-center border-2 border-dashed border-gray-200">
+              <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                <ShoppingBag size={48} className="text-gray-300" />
+              </div>
+              <h4 className="text-xl font-black text-gray-800 mb-2">لا توجد طلبات مسجلة بعد</h4>
+              <p className="text-gray-500 font-medium mb-8 max-w-sm mx-auto">يبدو أنك لم تقم بأي طلب حتى الآن. اكتشف مطبوعاتنا وعروضنا الحصرية وابدأ الآن.</p>
+              <Link href="/products" className="inline-flex bg-primary text-white px-8 py-4 rounded-2xl font-black hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 items-center gap-2">
+                تصفح المنتجات <ArrowLeft size={18} />
+              </Link>
             </div>
           ) : orders.map(order => {
             const st = STATUS_MAP[order.status] || STATUS_MAP.new;
             const isCart = order.cart_items && order.cart_items.length > 0;
+            const currentStepIndex = order.status === "cancelled" ? -1 : TIMELINE_STEPS.indexOf(order.status);
+            
             return (
-              <div key={order.id} className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center p-6 border-b border-gray-50 bg-gray-50/50 gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="bg-white w-12 h-12 rounded-xl flex items-center justify-center font-black text-xs text-primary shadow-sm border border-gray-100">
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                key={order.id} 
+                className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden hover:shadow-xl transition-all duration-300 group"
+              >
+                {/* Header */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center p-6 md:p-8 border-b border-gray-50 bg-gradient-to-b from-gray-50/50 to-white gap-6">
+                  <div className="flex items-center gap-5">
+                    <div className="bg-white w-14 h-14 rounded-2xl flex items-center justify-center font-black text-sm text-primary shadow-sm border border-gray-100">
                       #{order.id.split("-")[0]}
                     </div>
                     <div>
-                      <p className="font-bold text-gray-900 flex items-center gap-2">
+                      <p className="font-bold text-gray-800 flex items-center gap-2 mb-1.5">
                         <Calendar size={14} className="text-gray-400" />
-                        {new Date(order.created_at).toLocaleDateString("ar-DZ", { year: "numeric", month: "long", day: "numeric" })}
+                        {new Date(order.created_at).toLocaleDateString("ar-DZ", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                       </p>
-                      {order.admin_notes && <p className="text-xs text-gray-500 mt-1">{order.admin_notes}</p>}
+                      {order.admin_notes && <p className="text-xs font-bold text-primary bg-primary/5 px-3 py-1 rounded-full inline-block">{order.admin_notes}</p>}
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 w-full md:w-auto justify-end">
-                    <span className="font-black text-xl text-gray-900">{order.total_price} د.ج</span>
-                    <span className={`px-4 py-2 rounded-xl text-sm font-bold ${st.color}`}>{st.label}</span>
+                  <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end bg-gray-50 md:bg-transparent p-4 md:p-0 rounded-2xl md:rounded-none">
+                    <div className="text-right">
+                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">الإجمالي</p>
+                      <span className="font-black text-xl text-gray-900">{order.total_price} د.ج</span>
+                    </div>
+                    <div className="h-10 w-px bg-gray-200 hidden md:block" />
+                    <span className={`px-4 py-2 rounded-xl text-sm font-black flex items-center gap-2 shadow-sm ${st.color}`}>
+                      {st.icon} {st.label}
+                    </span>
                   </div>
                 </div>
-                <div className="p-6">
+
+                {/* Timeline Progress */}
+                {order.status !== "cancelled" && (
+                  <div className="px-6 md:px-10 py-6 md:py-8 border-b border-gray-50 bg-white">
+                    <div className="relative">
+                      {/* Line Background */}
+                      <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-100 -translate-y-1/2 rounded-full hidden sm:block" />
+                      {/* Active Line Progress */}
+                      <div 
+                        className="absolute top-1/2 right-0 h-1 bg-primary -translate-y-1/2 rounded-full hidden sm:block transition-all duration-700 ease-in-out" 
+                        style={{ width: `${Math.max(0, (currentStepIndex / (TIMELINE_STEPS.length - 1)) * 100)}%` }} 
+                      />
+
+                      <div className="relative flex justify-between items-center sm:flex-row flex-col sm:gap-0 gap-6">
+                        {TIMELINE_STEPS.map((stepKey, idx) => {
+                          const isActive = currentStepIndex >= idx;
+                          const isCurrent = currentStepIndex === idx;
+                          const stepInfo = STATUS_MAP[stepKey];
+                          
+                          return (
+                            <div key={stepKey} className="flex flex-col items-center gap-3 relative z-10 sm:w-auto w-full">
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 font-bold ${
+                                  isActive 
+                                    ? "bg-primary text-white shadow-lg shadow-primary/20 scale-110 ring-4 ring-white" 
+                                    : "bg-white border-2 border-gray-200 text-gray-300"
+                                }`}>
+                                  {isActive ? <Check size={16} /> : <div className="w-2 h-2 rounded-full bg-gray-200" />}
+                                </div>
+                                <div className="text-center">
+                                  <p className={`text-xs font-black transition-colors ${isActive ? "text-gray-900" : "text-gray-400"}`}>
+                                    {stepInfo.label}
+                                  </p>
+                                  {isCurrent && (
+                                    <span className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-black block mt-1 animate-pulse">
+                                      المرحلة الحالية
+                                    </span>
+                                  )}
+                                </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Body / Items Details */}
+                <div className="p-6 md:p-8 bg-gray-50/30">
+                  <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">تفاصيل وعناصر الطلب</p>
                   {isCart ? (
-                    <div className="space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {order.cart_items!.map((item, idx) => (
-                        <div key={idx} className="flex justify-between items-center bg-gray-50 p-3 rounded-xl border border-gray-100">
-                          <div>
-                            <p className="font-bold text-gray-800 text-sm">{item.name}</p>
-                            {item.size && <p className="text-xs text-gray-500">{item.size} {item.color ? `| ${item.color}` : ""}</p>}
+                        <div key={idx} className="flex justify-between items-center bg-white p-4 rounded-2xl border border-gray-100 shadow-sm group-hover:border-primary/20 transition-colors">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400">
+                              <Package size={16} />
+                            </div>
+                            <div>
+                              <p className="font-bold text-gray-900 text-sm line-clamp-1">{item.name}</p>
+                              {item.size && <p className="text-xs text-gray-500 mt-1 font-medium bg-gray-50 inline-block px-2 py-0.5 rounded-md">{item.size} {item.color ? `| ${item.color}` : ""}</p>}
+                            </div>
                           </div>
-                          <span className="font-black text-gray-600 bg-white px-3 py-1 rounded-lg border border-gray-200 text-sm">
-                            الكمية: {item.quantity}
+                          <span className="font-black text-primary bg-primary/5 px-3 py-1.5 rounded-xl text-sm border border-primary/10">
+                            ×{item.quantity}
                           </span>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="flex justify-between items-center bg-gray-50 p-4 rounded-xl border border-gray-100">
-                      <div>
-                        <p className="font-bold text-gray-800">حزمة مطبوعات مخصصة</p>
-                        {order.size && <p className="text-xs text-gray-500">{order.size} {order.color ? `| ${order.color}` : ""}</p>}
+                    <div className="flex justify-between items-center bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:border-primary/20 transition-colors">
+                      <div className="flex items-center gap-4">
+                         <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
+                            <ShoppingBag size={20} />
+                         </div>
+                        <div>
+                          <p className="font-bold text-gray-900 line-clamp-1">حزمة مطبوعات مخصصة (الطلب السريع)</p>
+                          {order.size && <p className="text-xs text-gray-500 mt-1 font-medium bg-gray-50 inline-block px-2 py-0.5 rounded-md">{order.size} {order.color ? `| ${order.color}` : ""}</p>}
+                        </div>
                       </div>
-                      <span className="font-black text-gray-600 bg-white px-4 py-2 rounded-lg border border-gray-200 text-sm">
-                        الكمية: {order.quantity}
+                      <span className="font-black text-primary bg-primary/5 px-4 py-2 rounded-xl border border-primary/10 text-sm">
+                        ×{order.quantity}
                       </span>
                     </div>
                   )}
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>

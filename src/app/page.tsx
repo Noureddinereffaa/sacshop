@@ -8,6 +8,8 @@ import { supabase } from "@/lib/supabase";
 import ProductCard from "@/components/ProductCard";
 
 
+export const revalidate = 0; // Ensure dynamic rendering for settings changes
+
 export default async function Home() {
   const { data: rawProducts } = supabase 
     ? await supabase.from("products").select("*").eq("is_published", true).eq("is_featured", true).limit(6)
@@ -18,9 +20,37 @@ export default async function Home() {
     { id: "2", name: "أكياس فاخرة مغلفة", price: 120.00, image_url: "https://placehold.co/800x800/1a1a1a/ffffff.png?text=Luxury+Bag", category: "أكياس فاخرة" },
     { id: "3", name: "علب شحن وتوصيل", price: 65.00, image_url: "https://placehold.co/800x800/c4a484/1a1a1a.png?text=Shipping+Box", category: "علب وتعبئة" },
   ];
+
+  // Fetch discount settings
+  let discountEnabled = true; // Default to true as per cartStore
+  let discountPercentage = 10;
+  if (supabase) {
+     const { data: offerSetting } = await supabase.from("settings").select("value").eq("key", "offers").maybeSingle();
+     if (offerSetting && offerSetting.value) {
+       discountEnabled = offerSetting.value.cartDiscountEnabled !== false;
+       discountPercentage = offerSetting.value.cartDiscountPercentage || 10;
+     }
+  }
   return (
     <main className="min-h-screen">
       <Header />
+      
+      {/* Promotional Banner */}
+      {discountEnabled && (
+        <div className="bg-gradient-to-l from-primary to-primary/80 text-white shadow-xl shadow-primary/20 relative z-10 overflow-hidden">
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+          <div className="container mx-auto px-4 py-3 md:py-4 flex flex-col md:flex-row items-center justify-center gap-3 relative z-20">
+             <div className="flex items-center gap-3 bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/20 shadow-inner">
+               <Zap size={18} className="text-yellow-300 animate-pulse" fill="currentColor" />
+               <span className="font-black text-sm tracking-wide">حدث حصري للشركات (B2B)</span>
+             </div>
+             <p className="font-bold text-sm md:text-base text-center">
+                احصل على تخفيض فوري بقيمة <span className="text-yellow-300 font-black text-lg mx-1">{discountPercentage}%</span> عند إضافة <span className="underline underline-offset-4 font-black">منتجين أو أكثر</span> إلى سلة التسوق!
+             </p>
+          </div>
+        </div>
+      )}
+
       <Hero />
       <Partners />
 

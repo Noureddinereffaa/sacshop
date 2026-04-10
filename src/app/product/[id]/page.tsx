@@ -12,7 +12,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   Star, ShieldCheck, Truck, RefreshCcw, ChevronRight,
-  Minus, Plus, CheckCircle2, Package
+  CheckCircle2, Package, Zap
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -55,10 +55,10 @@ export default function ProductDetailPage() {
 
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [discountConfig, setDiscountConfig] = useState({ enabled: true, percentage: 10 });
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
-  const [quantity, setQuantity] = useState(1);
   const [showToast, setShowToast] = useState(false);
   const { addItem } = useCartStore();
   const router = useRouter();
@@ -76,6 +76,15 @@ export default function ProductDetailPage() {
         .eq("id", id)
         .eq("is_published", true)
         .single();
+
+      // Fetch promo settings
+      const { data: offerSetting } = await supabase.from("settings").select("value").eq("key", "offers").maybeSingle();
+      if (offerSetting && offerSetting.value) {
+        setDiscountConfig({
+          enabled: offerSetting.value.cartDiscountEnabled !== false,
+          percentage: offerSetting.value.cartDiscountPercentage || 10
+        });
+      }
 
       setProduct(error || !data ? DEMO_PRODUCT : data);
       setIsLoading(false);
@@ -113,25 +122,39 @@ export default function ProductDetailPage() {
     : 0;
 
   const handleAddToCart = () => {
-    // If exact sizes/colors exist and none selected, we can still allow it, but we append them clearly.
     addItem({
-      id: `${product.id}-${selectedSize}-${selectedColor}`, // unique identifier
+      id: `${product.id}-${selectedSize}-${selectedColor}`,
       productId: product.id,
       name: product.name,
       price: effectivePrice,
-      quantity,
+      quantity: 1,
       image_url: product.image_url,
       size: selectedSize || undefined,
       color: selectedColor || undefined
     });
-    
-    // Redirect instantly to products catalog to encourage B2B upsell
     router.push("/products");
   };
 
   return (
     <main className="min-h-screen bg-gray-50/50">
       <Header />
+      
+      {/* Promotional Banner */}
+      {discountConfig.enabled && (
+        <div className="bg-gradient-to-l from-primary to-primary/80 text-white shadow-xl shadow-primary/20 relative z-10 overflow-hidden">
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+          <div className="container mx-auto px-4 py-3 md:py-4 flex flex-col md:flex-row items-center justify-center gap-3 relative z-20">
+             <div className="flex items-center gap-3 bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/20 shadow-inner">
+               <Zap size={18} className="text-yellow-300 animate-pulse" fill="currentColor" />
+               <span className="font-black text-sm tracking-wide">حدث حصري للشركات (B2B)</span>
+             </div>
+             <p className="font-bold text-sm md:text-base text-center">
+                احصل على تخفيض فوري بقيمة <span className="text-yellow-300 font-black text-lg mx-1">{discountConfig.percentage}%</span> عند إضافة <span className="underline underline-offset-4 font-black">منتجين أو أكثر</span> إلى سلة التسوق!
+             </p>
+          </div>
+        </div>
+      )}
+
       {/* Breadcrumb */}
       <div className="bg-white border-b border-gray-100">
         <div className="container mx-auto px-4 py-3 flex items-center gap-2 text-sm text-gray-500 text-right">
@@ -188,12 +211,12 @@ export default function ProductDetailPage() {
 
             {/* Thumbnails */}
             {allImages.length > 1 && (
-              <div className="flex gap-3">
+              <div className="flex gap-3 overflow-x-auto pb-4 custom-scrollbar snap-x">
                 {allImages.map((img, i) => (
                   <button
                     key={i}
                     onClick={() => setSelectedImage(i)}
-                    className={`w-20 h-20 rounded-2xl overflow-hidden border-2 transition-all relative ${
+                    className={`shrink-0 snap-start w-20 h-20 rounded-2xl overflow-hidden border-2 transition-all relative ${
                       selectedImage === i ? "border-primary shadow-lg shadow-primary/20" : "border-gray-200 hover:border-gray-400"
                     }`}
                   >
@@ -294,34 +317,6 @@ export default function ProductDetailPage() {
                 </div>
               )}
 
-              {/* Quantity */}
-              <div className="space-y-3">
-                <label className="text-sm font-black text-gray-700">الكمية</label>
-                <div className="flex items-center gap-4">
-                  <button
-                    onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                    className="w-10 h-10 shrink-0 rounded-xl bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
-                  >
-                    <Minus size={16} />
-                  </button>
-                  <input 
-                    type="number"
-                    min="1"
-                    dir="ltr"
-                    value={quantity}
-                    onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="w-24 text-center font-black text-xl bg-gray-50 border border-gray-200 rounded-xl py-2 focus:ring-2 focus:ring-primary/20 outline-none appearance-none"
-                  />
-                  <button
-                    onClick={() => setQuantity(q => Math.min(product.stock, q + 1))}
-                    className="w-10 h-10 shrink-0 rounded-xl bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
-                  >
-                    <Plus size={16} />
-                  </button>
-                  <span className="text-xs text-gray-400 font-bold mr-2">{product.stock} متاح بالمخزن</span>
-                </div>
-              </div>
-
               {/* Trust Badges */}
               <div className="grid grid-cols-2 gap-3 pt-2">
                 {[
@@ -351,10 +346,9 @@ export default function ProductDetailPage() {
               <OrderForm
                 productId={product.id}
                 productName={product.name}
-                productPrice={effectivePrice * quantity}
+                productPrice={effectivePrice}
                 selectedSize={selectedSize}
                 selectedColor={selectedColor}
-                quantity={quantity}
                 onAddToCart={handleAddToCart}
               />
             </div>

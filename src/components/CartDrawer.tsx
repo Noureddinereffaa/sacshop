@@ -127,9 +127,9 @@ export default function CartDrawer() {
                             <h3 className="font-bold text-gray-900 text-sm line-clamp-2">{item.name}</h3>
                             <button 
                               onClick={() => removeItem(item.id)}
-                              className="text-gray-400 hover:text-red-500 p-1 transition-colors"
+                              className="text-gray-400 hover:text-red-500 w-10 h-10 flex items-center justify-center rounded-full hover:bg-red-50 transition-all -m-2"
                             >
-                              <Trash2 size={16} />
+                              <Trash2 size={18} />
                             </button>
                           </div>
                           
@@ -149,27 +149,28 @@ export default function CartDrawer() {
                           <p className="font-black text-primary">{item.price} د.ج</p>
                           
                           {/* Quantity Controls */}
-                          <div className="flex items-center gap-2 bg-gray-50 rounded-xl p-1 border border-gray-100">
+                          <div className="flex items-center gap-1 bg-gray-50/80 rounded-xl p-1 border border-gray-200/60">
                             <button 
                               onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                              className="w-8 h-8 flex items-center justify-center bg-white rounded-lg shadow-sm text-gray-600 cursor-pointer disabled:opacity-50"
+                              className="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center bg-white rounded-lg shadow-sm text-gray-600 hover:text-primary hover:border-primary/20 border border-transparent transition-all cursor-pointer disabled:opacity-50"
                               disabled={item.quantity <= 1}
                             >
-                              <Minus size={14} />
+                              <Minus size={16} />
                             </button>
                             <input
                               type="number"
                               min="1"
                               dir="ltr"
+                              inputMode="numeric"
                               value={item.quantity}
                               onChange={(e) => updateQuantity(item.id, Math.max(1, parseInt(e.target.value) || 1))}
-                              className="w-12 text-center font-black text-sm bg-transparent border-none focus:ring-0 outline-none appearance-none"
+                              className="w-10 sm:w-12 text-center font-black text-sm md:text-base bg-transparent border-none focus:ring-0 outline-none appearance-none"
                             />
                             <button 
                               onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                              className="w-8 h-8 flex items-center justify-center bg-white rounded-lg shadow-sm text-gray-600 cursor-pointer"
+                              className="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center bg-white rounded-lg shadow-sm text-gray-600 hover:text-primary hover:border-primary/20 border border-transparent transition-all cursor-pointer"
                             >
-                              <Plus size={14} />
+                              <Plus size={16} />
                             </button>
                           </div>
                         </div>
@@ -182,7 +183,7 @@ export default function CartDrawer() {
 
             {/* Footer / Checkout */}
             {items.length > 0 && (
-              <div className="p-6 bg-white border-t border-gray-100 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)]">
+              <div className="p-6 pb-8 md:pb-6 bg-white border-t border-gray-100 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)] sticky bottom-0 z-10 w-full">
                 <div className="space-y-2 mb-4">
                   {isEligible && (
                     <div className="flex items-center justify-between text-green-600 text-sm font-bold">
@@ -192,15 +193,15 @@ export default function CartDrawer() {
                   )}
                   <div className="flex items-center justify-between pt-2 border-t border-gray-100">
                     <span className="text-gray-500 font-bold">الإجمالي للمنتجات:</span>
-                    <span className="text-2xl font-black text-gray-900">{finalTotal} د.ج</span>
+                    <span className="text-2xl font-black text-gray-900 leading-none">{finalTotal} د.ج</span>
                   </div>
                 </div>
                 {/* Notice that shipping is not included yet */}
-                <p className="text-xs text-gray-400 font-medium text-center mb-4">هذا السعر مبدئي ويتم تحديد التكلفة النهائية والتوصيل عبر الواتساب</p>
+                <p className="text-[11px] text-gray-400 font-medium text-center mb-4 leading-tight">هذا السعر مبدئي. يتم تحديد التكلفة النهائية والتوصيل بواسطة فريقنا.</p>
                 
-                <Link href="/checkout" onClick={() => setIsOpen(false)}>
-                   <button className="w-full bg-primary text-white py-4 rounded-xl font-bold text-lg shadow-xl shadow-primary/20 hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2">
-                     إكمال الطلب <ArrowRight size={20} />
+                <Link href="/checkout" onClick={() => setIsOpen(false)} className="block">
+                   <button className="w-full bg-primary text-white h-14 rounded-2xl font-black text-lg shadow-xl shadow-primary/25 hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3">
+                     إكمال الطلب <ArrowRight size={22} className="opacity-90" />
                    </button>
                 </Link>
               </div>

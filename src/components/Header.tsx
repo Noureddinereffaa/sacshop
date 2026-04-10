@@ -24,7 +24,7 @@ export default function Header() {
       <div className="container mx-auto px-4 h-20 flex items-center justify-between gap-4">
         {/* Mobile Menu Toggle */}
         <button 
-          className="lg:hidden p-2 hover:bg-gray-100 rounded-full transition-colors"
+          className="lg:hidden w-11 h-11 hover:bg-gray-100 rounded-full transition-colors flex items-center justify-center"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
         >
           {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -57,15 +57,24 @@ export default function Header() {
               <input 
                 type="text" 
                 placeholder="بحث عن منتج..." 
-                className="bg-gray-100 border-none rounded-full py-2 px-10 text-sm focus:ring-2 focus:ring-primary/20 w-48 lg:w-64 transition-all"
+                className="bg-gray-100 border-none rounded-full py-3 px-11 text-sm focus:ring-2 focus:ring-primary/20 w-48 lg:w-64 transition-all h-11"
               />
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
             </div>
+
+            {/* Register/Login Button for Mobile & Desktop */}
+            <Link 
+              href="/register"
+              className="w-11 h-11 text-gray-700 hover:bg-gray-100 rounded-full transition-colors flex items-center justify-center -ml-1 sm:ml-0"
+              title="إنشاء حساب"
+            >
+              <UserCircle size={24} />
+            </Link>
 
             {/* Cart Button */}
             <button 
               onClick={() => setIsOpen(true)}
-              className="relative p-2 text-gray-700 hover:bg-gray-100 rounded-full transition-colors flex items-center justify-center mr-2"
+              className="relative w-11 h-11 text-gray-700 hover:bg-gray-100 rounded-full transition-colors flex items-center justify-center mr-2"
             >
               <ShoppingBag size={24} />
               {mounted && totalItems > 0 && (

@@ -13,14 +13,13 @@ interface OrderFormProps {
   productPrice: number;
   selectedSize?: string;
   selectedColor?: string;
-  quantity?: number;
   appliedOfferId?: string;
   cartItems?: CartItem[];
   discountAmount?: number;
   onAddToCart?: () => void;
 }
 
-export default function OrderForm({ productId, productName, productPrice, selectedSize, selectedColor, quantity = 1, appliedOfferId, cartItems = [], discountAmount = 0, onAddToCart }: OrderFormProps) {
+export default function OrderForm({ productId, productName, productPrice, selectedSize, selectedColor, appliedOfferId, cartItems = [], discountAmount = 0, onAddToCart }: OrderFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [whatsappNumber, setWhatsappNumber] = useState<string>("213000000000");
@@ -32,6 +31,15 @@ export default function OrderForm({ productId, productName, productPrice, select
     email: "",
     notes: ""
   });
+
+  // Auto-fill form if user is already logged in
+  useEffect(() => {
+    const storedPhone = sessionStorage.getItem("sacshop_phone");
+    const storedName = sessionStorage.getItem("sacshop_name");
+    if (storedPhone && storedName) {
+      setFormData(prev => ({ ...prev, phone: storedPhone, name: storedName }));
+    }
+  }, []);
 
   // Fetch WhatsApp number dynamically from Settings
   useEffect(() => {
@@ -72,7 +80,7 @@ export default function OrderForm({ productId, productName, productPrice, select
       const isCartOrder = cartItems && cartItems.length > 0;
       const orderId = crypto.randomUUID();
       
-      // Save order to dashboard
+      // Save order to dashboard — quantity is NOT set at this stage; admin fills it upon confirmation
       const { error } = await supabase.from("orders").insert({
         id: orderId,
         customer_name: formData.name,
@@ -81,7 +89,7 @@ export default function OrderForm({ productId, productName, productPrice, select
         admin_notes: formData.notes,
         customer_address: "غير مطلوب (طلب طباعة)",
         product_id: isCartOrder ? null : productId,
-        quantity: isCartOrder ? 1 : quantity,
+        quantity: null,          // يتم تحديدها من قبل فريق التأكيد
         size: isCartOrder ? null : selectedSize,
         color: isCartOrder ? null : selectedColor,
         product_price: isCartOrder ? 0 : productPrice,
@@ -100,7 +108,7 @@ export default function OrderForm({ productId, productName, productPrice, select
           content_name: isCartOrder ? "Cart Order" : productName,
           value: productPrice,
           currency: "DZD",
-          num_items: isCartOrder ? cartItems.length : quantity,
+          num_items: isCartOrder ? cartItems.length : 1,
         });
       } catch {/* non-critical */}
 
@@ -112,12 +120,11 @@ export default function OrderForm({ productId, productName, productPrice, select
       if (isCartOrder) {
         message += `\n🛍️ *المنتجات المطلوبة:* \n`;
         cartItems.forEach((item, index) => {
-          message += `${index + 1}. ${item.name} (${item.quantity} عدد)\n`;
+          message += `${index + 1}. ${item.name}\n`;
           if (item.size) message += `   - تفاصيل: ${item.size} ${item.color ? `| اللون ${item.color}` : ''}\n`;
         });
       } else {
         message += `\n🛍️ *المنتج:* ${productName}\n`;
-        message += `📦 *الكمية:* ${quantity}\n`;
         if (selectedSize) message += `📏 *المقاس:* ${selectedSize}\n`;
         if (selectedColor) message += `🎨 *اللون:* ${selectedColor}\n`;
       }
@@ -137,14 +144,44 @@ export default function OrderForm({ productId, productName, productPrice, select
       
       setIsSuccess(true);
 
-      // Redirect to account setup (creates account then shows WA confirm button)
-      setTimeout(() => {
-        router.push(
-          `/set-password?phone=${encodeURIComponent(formData.phone)}` +
-          `&name=${encodeURIComponent(formData.name)}` +
-          `&ref=${orderId.split('-')[0]}` +
-          `&wa=${encodeURIComponent(waLink)}`
-        );
+      // Redirect to account dashboard or setup based on login state
+      setTimeout(async () => {
+        const storedPhone = sessionStorage.getItem("sacshop_phone");
+        if (storedPhone) {
+          // Already logged in, skip password setup and go to account
+          router.push(`/account?ref=${orderId.split('-')[0]}&wa=${encodeURIComponent(waLink)}`);
+        } else {
+          try {
+            // Check if user already exists
+            const res = await fetch("/api/check-user", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ phone: formData.phone })
+            });
+            const { exists } = await res.json();
+
+            if (exists) {
+              // User exists but is not logged in! Send to account (which shows login)
+              router.push(`/account?ref=${orderId.split('-')[0]}&wa=${encodeURIComponent(waLink)}`);
+            } else {
+              // New session and new user, go to password setup
+              router.push(
+                `/set-password?phone=${encodeURIComponent(formData.phone)}` +
+                `&name=${encodeURIComponent(formData.name)}` +
+                `&ref=${orderId.split('-')[0]}` +
+                `&wa=${encodeURIComponent(waLink)}`
+              );
+            }
+          } catch(e) {
+            // Fallback in case of network error
+            router.push(
+              `/set-password?phone=${encodeURIComponent(formData.phone)}` +
+              `&name=${encodeURIComponent(formData.name)}` +
+              `&ref=${orderId.split('-')[0]}` +
+              `&wa=${encodeURIComponent(waLink)}`
+            );
+          }
+        }
       }, 800);
 
     } catch (err) {
@@ -205,7 +242,7 @@ export default function OrderForm({ productId, productName, productPrice, select
                      required
                      type="text" 
                      placeholder="مثلاً: شركة الطباعة، مراد..."
-                     className="w-full bg-gray-50 border-none rounded-2xl py-4 pr-12 pl-4 focus:ring-2 focus:ring-primary/20 transition-all font-medium"
+                     className="w-full bg-gray-50 border-none rounded-2xl py-4 pr-12 pl-4 focus:ring-2 focus:ring-primary/20 transition-all font-medium text-base"
                      value={formData.name}
                      onChange={(e) => setFormData({...formData, name: e.target.value})}
                    />
@@ -219,9 +256,10 @@ export default function OrderForm({ productId, productName, productPrice, select
                    <input 
                      required
                      type="tel" 
+                     inputMode="tel"
                      placeholder="05 / 06 / 07 XX XX XX XX"
                      dir="ltr"
-                     className="w-full bg-gray-50 border-none rounded-2xl py-4 pr-12 pl-4 focus:ring-2 focus:ring-primary/20 transition-all font-bold text-right"
+                     className="w-full bg-gray-50 border-none rounded-2xl py-4 pr-12 pl-4 focus:ring-2 focus:ring-primary/20 transition-all font-bold text-left text-base"
                      value={formData.phone}
                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
                    />
@@ -235,7 +273,7 @@ export default function OrderForm({ productId, productName, productPrice, select
                 <Edit3 className="absolute right-4 top-4 text-gray-400" size={18} />
                 <textarea 
                   placeholder="أدخل أي متطلبات خاصة لشعارك أو ألوان الشركة..."
-                  className="w-full bg-gray-50 border-none rounded-2xl py-4 pr-12 pl-4 focus:ring-2 focus:ring-primary/20 transition-all font-medium h-32 resize-none"
+                  className="w-full bg-gray-50 border-none rounded-2xl py-4 pr-12 pl-4 focus:ring-2 focus:ring-primary/20 transition-all font-medium text-base h-32 resize-none"
                   value={formData.notes}
                   onChange={(e) => setFormData({...formData, notes: e.target.value})}
                 />

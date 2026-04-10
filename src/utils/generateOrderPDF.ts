@@ -153,58 +153,57 @@ export async function generateAndUploadOrderPDF(data: OrderPDFData): Promise<str
 
   document.body.appendChild(container);
 
-  try {
-    const canvas = await html2canvas(container, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: "#ffffff",
-      logging: false,
+  const canvas = await html2canvas(container, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: "#ffffff",
+    logging: false,
+  });
+
+  const pdf = new jsPDF("p", "pt", "a4");
+  const pdfWidth = pdf.internal.pageSize.getWidth();
+  const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+  const imgData = canvas.toDataURL("image/jpeg", 0.95);
+  pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
+
+  const pdfBlob = pdf.output("blob");
+
+  // Upload to Supabase Storage
+  if (!supabase) throw new Error("Supabase is missing configuration.");
+
+  const fileName = `order-${shortId}-${Date.now()}.pdf`;
+  
+  // Attempt upload
+  const { error: uploadError } = await supabase.storage
+    .from("orders")
+    .upload(fileName, pdfBlob, {
+      contentType: "application/pdf",
+      cacheControl: "3600",
+      upsert: false,
     });
 
-    const pdf = new jsPDF("p", "pt", "a4");
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-    const imgData = canvas.toDataURL("image/jpeg", 0.95);
-    pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
-
-    const pdfBlob = pdf.output("blob");
-
-    // Upload to Supabase Storage
-    if (!supabase) throw new Error("Supabase is missing configuration.");
-
-    const fileName = `order-${shortId}-${Date.now()}.pdf`;
-    
-    // Attempt upload
-    const { error: uploadError } = await supabase.storage
-      .from("orders")
-      .upload(fileName, pdfBlob, {
-        contentType: "application/pdf",
-        cacheControl: "3600",
-        upsert: false,
-      });
-
-    if (uploadError) {
-      if (uploadError.message.includes("Bucket not found")) {
-        throw new Error("⚠️ 'orders' bucket not found. Please create a public bucket named 'orders' in Supabase Storage.");
-      }
-      throw uploadError;
+  if (uploadError) {
+    if (uploadError.message.includes("Bucket not found")) {
+      throw new Error("⚠️ 'orders' bucket not found. Please create a public bucket named 'orders' in Supabase Storage.");
     }
-
-    const { data: publicUrlData } = supabase.storage
-      .from("orders")
-      .getPublicUrl(fileName);
-
-    return publicUrlData.publicUrl;
-  } catch (err: any) {
-    console.error("PDF Generate/Upload Error:", err);
-    // Show alert during this phase to help the user identify the issue
-    if (typeof window !== "undefined") {
-      alert("فشل إنشاء الوصل: " + (err.message || "خطأ غير معروف"));
-    }
-    throw err;
-  } finally {
-    if (container && document.body.contains(container)) {
-      document.body.removeChild(container);
-    }
+    throw uploadError;
   }
+
+  const { data: publicUrlData } = supabase.storage
+    .from("orders")
+    .getPublicUrl(fileName);
+
+  return publicUrlData.publicUrl;
+} catch (err: any) {
+  console.error("PDF Generate/Upload Error:", err);
+  // Show alert during this phase to help the user identify the issue
+  if (typeof window !== "undefined") {
+    alert("فشل إنشاء الوصل: " + (err.message || "خطأ غير معروف"));
+  }
+  throw err;
+} finally {
+  if (container && document.body.contains(container)) {
+    document.body.removeChild(container);
+  }
+}
 }

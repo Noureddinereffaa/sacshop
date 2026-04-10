@@ -26,6 +26,7 @@ type Step = "info" | "password" | "success";
 export default function OrderForm({ productId, productName, productPrice, selectedSize, selectedColor, appliedOfferId, cartItems = [], quantity = 1, discountAmount = 0, onAddToCart }: OrderFormProps) {
   const [step, setStep] = useState<Step>("info");
   const [isLoading, setIsLoading] = useState(false);
+  const [isPdfGenerating, setIsPdfGenerating] = useState(false);
   const [pendingWaLink, setPendingWaLink] = useState<string>("");
   const [pendingOrderId, setPendingOrderId] = useState<string>("");
   const [whatsappNumber, setWhatsappNumber] = useState<string>("213000000000");
@@ -169,7 +170,7 @@ export default function OrderForm({ productId, productName, productPrice, select
     if (error) throw new Error(error.message);
 
     // ── Generate PDF and upload to Supabase Storage ───────────────────────────
-    // Show loading indicator — PDF generation takes 1-2 seconds
+    setIsPdfGenerating(true);
     let pdfUrl: string | null = null;
     try {
       pdfUrl = await generateAndUploadOrderPDF({
@@ -186,31 +187,39 @@ export default function OrderForm({ productId, productName, productPrice, select
         cartItems: isCartOrder ? cartItems : undefined,
       });
 
-      // Also save PDF URL in order record (appending to existing notes if any)
-      const { data: currentOrder } = await supabase.from("orders").select("admin_notes").eq("id", orderId).single();
-      const updatedNotes = (currentOrder?.admin_notes ? currentOrder.admin_notes + "\n" : "") + `pdf_url:${pdfUrl}`;
+      // Also save PDF URL in order record (avoiding extra select to bypass RLS issues)
+      const currentNotes = formData.notes.trim();
+      const updatedNotes = (currentNotes ? currentNotes + "\n" : "") + `pdf_url:${pdfUrl}`;
       await supabase.from("orders").update({ admin_notes: updatedNotes }).eq("id", orderId);
     } catch (pdfErr) {
-      console.warn("PDF generation failed, falling back to text message:", pdfErr);
+      console.error("PDF Generation Error:", pdfErr);
+    } finally {
+      setIsPdfGenerating(false);
     }
 
-    // ── Build minimal WhatsApp message (PDF link only) ────────────────────────
+    // ── Build WhatsApp message ────────────────────────────────────────────────
     let waMessage: string;
     if (pdfUrl) {
       waMessage = [
-        `📦 *طلب جديد من ${formData.name.trim()}*`,
-        `📞 رقم الهاتف: ${formData.phone.trim()}`,
+        `🛒 *طلب جديد من SacShop*`,
+        `👤 الاسم: ${formData.name.trim()}`,
+        `📞 الهاتف: ${formData.phone.trim()}`,
         ``,
-        `📄 *وصل الطلب (غير قابل للتعديل):*`,
+        `📄 *وصل الطلب الرسمي (PDF):*`,
         pdfUrl,
         ``,
         `🔖 رقم الطلب: #${shortId}`,
       ].join("\n");
     } else {
-      // Fallback: short reference message
+      // Fallback: full text message if PDF failed
       waMessage = [
-        `📦 طلب جديد`,
-        `👤 ${formData.name.trim()} \u2014 📞 ${formData.phone.trim()}`,
+        `🛒 *طلب جديد من SacShop*`,
+        `👤 الاسم: ${formData.name.trim()}`,
+        `📞 الهاتف: ${formData.phone.trim()}`,
+        `📦 المنتج: ${productName}`,
+        `💰 المجموع: ${productPrice.toLocaleString()} د.ج`,
+        ``,
+        `⚠️ (الوصل متاح في حسابك الشخصي)`,
         `🔖 رقم الطلب: #${shortId}`,
       ].join("\n");
     }
@@ -247,18 +256,27 @@ export default function OrderForm({ productId, productName, productPrice, select
             اضغط على الزر أدناه لفتح واتساب وإتمام التأكيد مع فريقنا.
           </p>
         </div>
-        {pendingWaLink && (
-          <a
-            href={pendingWaLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-3 w-full bg-[#25D366] text-white rounded-2xl py-5 font-black text-lg shadow-lg active:scale-95 transition-transform"
-            style={{ WebkitTapHighlightColor: "transparent" }}
+        <div className="flex flex-col gap-3">
+          {pendingWaLink && (
+            <a
+              href={pendingWaLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-3 w-full bg-[#25D366] text-white rounded-2xl py-5 font-black text-lg shadow-lg active:scale-95 transition-transform"
+              style={{ WebkitTapHighlightColor: "transparent" }}
+            >
+              <MessageCircle size={24} />
+              فتح واتساب والتأكيد الآن
+            </a>
+          )}
+          {/* Optional Direct Download if account exists or after creation */}
+          <button 
+            onClick={() => window.location.href = "/account"}
+            className="text-xs font-bold text-gray-400 hover:text-primary underline"
           >
-            <MessageCircle size={24} />
-            فتح واتساب والتأكيد الآن
-          </a>
-        )}
+            عرض سجل طلباتي وتحميل الوصل من حسابي
+          </button>
+        </div>
         <p className="text-xs text-gray-400">
           رقم الطلب: #{pendingOrderId.split("-")[0].toUpperCase()}
         </p>
@@ -468,14 +486,19 @@ export default function OrderForm({ productId, productName, productPrice, select
               className="w-full bg-[#25D366] text-white rounded-2xl py-5 font-black text-xl flex items-center justify-center gap-3 shadow-lg active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed select-none"
               style={{ WebkitTapHighlightColor: "transparent", minHeight: "64px" }}
             >
-              {isLoading ? (
+            {(isLoading || isPdfGenerating) ? (
+              <div className="flex flex-col items-center gap-2">
                 <Loader2 className="animate-spin" size={26} />
-              ) : (
-                <>
-                  <MessageCircle size={24} />
-                  <span>تأكيد الطلب عبر واتساب</span>
-                </>
-              )}
+                <span className="text-[10px] font-black opacity-70">
+                  {isPdfGenerating ? "جاري تجهيز وصل الطلب (PDF)..." : "جاري المعالجة..."}
+                </span>
+              </div>
+            ) : (
+              <>
+                <MessageCircle size={24} />
+                <span>تأكيد الطلب عبر واتساب</span>
+              </>
+            )}
             </button>
           </div>
         </form>

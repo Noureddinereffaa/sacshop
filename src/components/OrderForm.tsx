@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
 import { Phone, User, Loader2, Edit3, MessageCircle, ShoppingCart, Lock, Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import { CartItem } from "@/types";
+import { generateAndUploadOrderPDF } from "@/utils/generateOrderPDF";
 
 interface OrderFormProps {
   productId: string;
@@ -145,42 +146,9 @@ export default function OrderForm({ productId, productName, productPrice, select
     const isCartOrder = cartItems && cartItems.length > 0;
     const orderId = crypto.randomUUID();
     const waNumber = whatsappNumber.replace(/[^0-9]/g, "");
+    const shortId = orderId.split("-")[0].toUpperCase();
 
-    // Build the WhatsApp message (will be stored in DB)
-    let waMessage = `🛒 *طلب جديد من متجر SacShop*\n\n`;
-    waMessage += `👤 *الاسم:* ${formData.name.trim()}\n`;
-    waMessage += `📞 *الهاتف:* ${formData.phone.trim()}\n`;
-
-    if (isCartOrder) {
-      waMessage += `\n🛍️ *المنتجات:*\n`;
-      cartItems.forEach((item, idx) => {
-        waMessage += `${idx + 1}. ${item.name} × ${item.quantity}\n`;
-        const itemTotal = (item.price * item.quantity).toLocaleString();
-        if (item.size) waMessage += `   📐 ${item.size}`;
-        if (item.color) waMessage += ` | 🎨 ${item.color}`;
-        waMessage += `\n   💵 ${itemTotal} د.ج\n`;
-      });
-    } else {
-      waMessage += `\n🛍️ *المنتج:* ${productName}\n`;
-      waMessage += `📦 *الكمية:* ${quantity}\n`;
-      if (selectedSize) waMessage += `📐 *المقاس:* ${selectedSize}\n`;
-      if (selectedColor) waMessage += `🎨 *اللون:* ${selectedColor}\n`;
-    }
-
-    if (discountAmount > 0) {
-      waMessage += `\n💰 *السعر الأصلي:* ${(productPrice + discountAmount).toLocaleString()} د.ج\n`;
-      waMessage += `🎁 *خصم (10%):* -${discountAmount.toLocaleString()} د.ج\n`;
-      waMessage += `✅ *المجموع النهائي:* ${productPrice.toLocaleString()} د.ج\n`;
-    } else {
-      waMessage += `\n✅ *المجموع:* ${productPrice.toLocaleString()} د.ج\n`;
-    }
-
-    if (formData.notes.trim()) {
-      waMessage += `\n📝 *ملاحظات:* ${formData.notes.trim()}\n`;
-    }
-    waMessage += `\n🔖 رقم الطلب: #${orderId.split("-")[0].toUpperCase()}`;
-
-    // Save order to database
+    // ── Save order to database first ─────────────────────────────────────────
     const { error } = await supabase.from("orders").insert({
       id: orderId,
       customer_name: formData.name.trim(),
@@ -196,13 +164,56 @@ export default function OrderForm({ productId, productName, productPrice, select
       status: "new",
       delivery_type: "home",
       cart_items: isCartOrder ? cartItems : [],
-      admin_notes: (formData.notes.trim() || "") +
-        `\n__wa_message__:\n${waMessage}\n__wa_number__:${waNumber}`,
+      admin_notes: formData.notes.trim() || null,
     });
-
     if (error) throw new Error(error.message);
 
-    // Marketing tracking
+    // ── Generate PDF and upload to Supabase Storage ───────────────────────────
+    // Show loading indicator — PDF generation takes 1-2 seconds
+    let pdfUrl: string | null = null;
+    try {
+      pdfUrl = await generateAndUploadOrderPDF({
+        orderId,
+        customerName: formData.name.trim(),
+        customerPhone: formData.phone.trim(),
+        productName,
+        quantity,
+        productPrice,
+        discountAmount,
+        selectedSize,
+        selectedColor,
+        notes: formData.notes.trim() || undefined,
+        cartItems: isCartOrder ? cartItems : undefined,
+      });
+
+      // Also save PDF URL in order record
+      await supabase.from("orders").update({ admin_notes: `pdf_url:${pdfUrl}` }).eq("id", orderId);
+    } catch (pdfErr) {
+      console.warn("PDF generation failed, falling back to text message:", pdfErr);
+    }
+
+    // ── Build minimal WhatsApp message (PDF link only) ────────────────────────
+    let waMessage: string;
+    if (pdfUrl) {
+      waMessage = [
+        `📦 *طلب جديد من ${formData.name.trim()}*`,
+        `📞 رقم الهاتف: ${formData.phone.trim()}`,
+        ``,
+        `📄 *وصل الطلب (غير قابل للتعديل):*`,
+        pdfUrl,
+        ``,
+        `🔖 رقم الطلب: #${shortId}`,
+      ].join("\n");
+    } else {
+      // Fallback: short reference message
+      waMessage = [
+        `📦 طلب جديد`,
+        `👤 ${formData.name.trim()} \u2014 📞 ${formData.phone.trim()}`,
+        `🔖 رقم الطلب: #${shortId}`,
+      ].join("\n");
+    }
+
+    // ── Marketing tracking ────────────────────────────────────────────────────
     try {
       window.trackMarketingEvent?.("SubmitOrder", {
         content_name: isCartOrder ? "Cart Order" : productName,

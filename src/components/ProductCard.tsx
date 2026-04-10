@@ -3,7 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ShoppingCart, Eye } from "lucide-react";
+import { ShoppingCart, Eye, PackagePlus } from "lucide-react";
+import { useCartStore } from "@/store/cartStore";
+import { useRouter } from "next/navigation";
 
 interface ProductCardProps {
   id: string;
@@ -14,6 +16,22 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ id, name, price, image, category }: ProductCardProps) {
+  const { addItem } = useCartStore();
+  const router = useRouter();
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    addItem({
+      id: `${id}-default-default`,
+      productId: id,
+      name,
+      price,
+      quantity: 1,
+      image_url: image
+    });
+    router.push('/products');
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -49,18 +67,28 @@ export default function ProductCard({ id, name, price, image, category }: Produc
           {name}
         </h3>
         
-        <div className="flex justify-between items-center bg-gray-50 p-4 rounded-2xl group-hover:bg-primary/5 transition-colors">
+        <div className="flex justify-between items-center bg-gray-50 p-3 rounded-2xl group-hover:bg-primary/5 transition-colors">
            <div className="flex flex-col">
               <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">السعر</span>
-              <span className="text-2xl font-black text-gray-950">{price} <span className="text-sm font-bold text-primary">د.ج</span></span>
+              <span className="text-xl font-black text-gray-950">{price} <span className="text-sm font-bold text-primary">د.ج</span></span>
            </div>
-           <Link 
-             href={`/product/${id}`}
-             className="bg-gray-950 text-white rounded-xl px-5 py-3 font-bold hover:bg-primary transition-all flex items-center gap-2 shadow-lg hover:shadow-primary/30"
-           >
-              <span>اطلب</span>
-              <ShoppingCart size={18} />
-           </Link>
+           
+           <div className="flex gap-2">
+             <Link 
+               href={`/product/${id}`}
+               className="bg-white border-2 border-gray-100 text-gray-600 rounded-xl px-4 flex items-center justify-center hover:border-gray-300 hover:text-gray-900 transition-all shadow-sm"
+               title="التفاصيل"
+             >
+                <Eye size={18} />
+             </Link>
+             <button 
+               onClick={handleAddToCart}
+               className="bg-primary text-white rounded-xl w-10 h-10 flex items-center justify-center font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
+               title="أضف للسلة للخصم"
+             >
+                <PackagePlus size={18} />
+             </button>
+           </div>
         </div>
       </div>
     </motion.div>

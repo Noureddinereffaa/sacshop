@@ -1,13 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { Search, Menu, X } from "lucide-react";
-import { useState } from "react";
+import { Search, Menu, X, UserCircle } from "lucide-react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import FastRegistrationModal from "./FastRegistrationModal";
+import CartDrawer from "./CartDrawer";
+import { useCartStore } from "@/store/cartStore";
+import { ShoppingBag } from "lucide-react";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { items, setIsOpen } = useCartStore();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const totalItems = items.reduce((acc, item) => acc + item.quantity, 0);
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100">
@@ -33,9 +43,12 @@ export default function Header() {
         {/* Desktop Navigation */}
         <nav className="hidden lg:flex items-center gap-8 text-sm font-medium text-gray-600">
           <Link href="/" className="hover:text-primary transition-colors">الرئيسية</Link>
-          <Link href="/products" className="hover:text-primary transition-colors">المنتجات</Link>
-          <Link href="/track" className="hover:text-primary transition-colors">تتبع الطلب</Link>
+          <Link href="/products" className="hover:text-primary transition-colors">المطبوعات</Link>
           <Link href="/about" className="hover:text-primary transition-colors">من نحن</Link>
+          <Link href="/account" className="flex items-center gap-1.5 text-primary font-bold hover:opacity-80 transition-opacity">
+            <UserCircle size={17} />
+            حسابي
+          </Link>
         </nav>
 
           {/* Right Actions */}
@@ -49,10 +62,22 @@ export default function Header() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
             </div>
 
-            {/* Fast VIP Registration */}
-            <FastRegistrationModal />
+            {/* Cart Button */}
+            <button 
+              onClick={() => setIsOpen(true)}
+              className="relative p-2 text-gray-700 hover:bg-gray-100 rounded-full transition-colors flex items-center justify-center mr-2"
+            >
+              <ShoppingBag size={24} />
+              {mounted && totalItems > 0 && (
+                <span className="absolute top-0 right-0 w-5 h-5 bg-primary text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white">
+                  {totalItems}
+                </span>
+              )}
+            </button>
           </div>
         </div>
+
+      <CartDrawer />
 
       {/* Mobile Menu */}
       <AnimatePresence>
@@ -64,12 +89,9 @@ export default function Header() {
             className="lg:hidden absolute top-full left-0 w-full bg-white border-b border-gray-100 shadow-xl py-6 px-4 flex flex-col gap-4 text-right"
           >
             <Link href="/" onClick={() => setIsMenuOpen(false)} className="py-2 text-lg font-medium border-b border-gray-50">الرئيسية</Link>
-            <Link href="/products" onClick={() => setIsMenuOpen(false)} className="py-2 text-lg font-medium border-b border-gray-50">المنتجات</Link>
-            <Link href="/track" onClick={() => setIsMenuOpen(false)} className="py-2 text-lg font-medium border-b border-gray-50">تتبع الطلب</Link>
+            <Link href="/products" onClick={() => setIsMenuOpen(false)} className="py-2 text-lg font-medium border-b border-gray-50">المطبوعات</Link>
+            <Link href="/track" onClick={() => setIsMenuOpen(false)} className="py-2 text-lg font-medium border-b border-gray-50">بوابة العميل</Link>
             <Link href="/about" onClick={() => setIsMenuOpen(false)} className="py-2 text-lg font-medium border-b border-gray-50">من نحن</Link>
-            <div className="mt-4 flex flex-col gap-3">
-               <FastRegistrationModal />
-            </div>
           </motion.div>
         )}
       </AnimatePresence>

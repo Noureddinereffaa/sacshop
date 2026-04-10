@@ -6,7 +6,9 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import ProductCard from "@/components/ProductCard";
-import { Search, Filter, Loader2 } from "lucide-react";
+import { Search, Filter, Loader2, Gift, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { useCartStore } from "@/store/cartStore";
+import Link from "next/link";
 
 
 interface Product {
@@ -20,15 +22,15 @@ interface Product {
 
 // Fallback static products when Supabase not connected
 const STATIC_PRODUCTS: Product[] = [
-  { id: "1", name: "حقيبة تسوق كلاسيكية", price: 3500, image_url: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&q=80&w=800", category: "حقائب جلدية", description: "" },
-  { id: "2", name: "حقيبة قماشية صديقة للبيئة", price: 1800, image_url: "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&q=80&w=800", category: "حقائب قماشية", description: "" },
-  { id: "3", name: "حقيبة ظهر عصرية", price: 4500, image_url: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&q=80&w=800", category: "حقائب ظهر", description: "" },
-  { id: "4", name: "كيس ورقي فاخر", price: 850, image_url: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&q=80&w=800", category: "أكياس ورقية", description: "" },
-  { id: "5", name: "حقيبة يد أنيقة", price: 5200, image_url: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&q=80&w=800", category: "حقائب يد", description: "" },
-  { id: "6", name: "كيس تسوق بيج", price: 1200, image_url: "https://images.unsplash.com/photo-1601924921557-45e6dea0a157?auto=format&fit=crop&q=80&w=800", category: "حقائب قماشية", description: "" },
+  { id: "1", name: "أكياس ورقية كرافت (Kraft Bags)", price: 35.00, image_url: "https://placehold.co/800x800/d2b48c/ffffff.png?text=Kraft+Bag", category: "أكياس ورقية", description: "" },
+  { id: "2", name: "أكياس فاخرة مغلفة", price: 120.00, image_url: "https://placehold.co/800x800/1a1a1a/ffffff.png?text=Luxury+Bag", category: "أكياس فاخرة", description: "" },
+  { id: "3", name: "أكياس بلاستيكية مطبوعة", price: 15.00, image_url: "https://placehold.co/800x800/e8e8e8/1a1a1a.png?text=Plastic+Bag", category: "أكياس بلاستيكية", description: "" },
+  { id: "4", name: "ورق تغليف داخلي", price: 8.00, image_url: "https://placehold.co/800x800/f8f9fa/1a1a1a.png?text=Tissue+Paper", category: "ملحقات التغليف", description: "" },
+  { id: "5", name: "ملصقات وشعارات دائرية", price: 4.00, image_url: "https://placehold.co/800x800/10a37f/ffffff.png?text=Stickers", category: "ملحقات التغليف", description: "" },
+  { id: "6", name: "علب شحن وتوصيل", price: 65.00, image_url: "https://placehold.co/800x800/c4a484/1a1a1a.png?text=Shipping+Box", category: "علب وتعبئة", description: "" },
 ];
 
-const CATEGORIES = ["الكل", "حقائب جلدية", "حقائب قماشية", "حقائب ظهر", "أكياس ورقية", "حقائب يد"];
+const CATEGORIES = ["الكل", "أكياس ورقية", "أكياس فاخرة", "أكياس بلاستيكية", "علب وتعبئة", "ملحقات التغليف"];
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -36,6 +38,15 @@ export default function ProductsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("الكل");
+  
+  const { items, getDiscountInfo } = useCartStore();
+  const { isEligible, percentage } = getDiscountInfo();
+  // Hydration fix
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     async function fetchProducts() {
@@ -82,11 +93,50 @@ export default function ProductsPage() {
           <h1 className="text-4xl lg:text-5xl font-black text-gray-950 mb-4">
             جميع <span className="text-primary">منتجاتنا</span>
           </h1>
-          <p className="text-gray-500 text-lg">اختر من بين أفضل الحقائب والأكياس في الجزائر</p>
+          <p className="text-gray-500 text-lg">اختر من بين أفضل حلول التغليف والطباعة</p>
         </div>
       </section>
 
       <div className="container mx-auto px-4 py-12">
+      
+        {/* UPSell Banner B2B logic */}
+        {mounted && items.length > 0 && (
+          <div className={`mb-10 p-6 rounded-3xl border-2 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl transition-all ${
+            isEligible 
+              ? "bg-green-50 border-green-200 text-green-800" 
+              : "bg-primary/5 border-primary/20 text-primary"
+          }`}>
+             <div className="flex items-center gap-4">
+               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${
+                 isEligible ? "bg-green-200 text-green-700 shadow-inner" : "bg-primary shadow-xl shadow-primary/20 text-white"
+               }`}>
+                 {isEligible ? <CheckCircle2 size={32} /> : <Gift size={32} />}
+               </div>
+               <div>
+                 <h3 className="text-xl font-black mb-1">
+                   {isEligible 
+                     ? "مبروك! الخصم مُفعّل في سلتك 👏" 
+                     : `خصم ${percentage}% بانتظارك!`}
+                 </h3>
+                 <p className={`font-bold text-sm ${isEligible ? "text-green-700/80" : "text-gray-500"}`}>
+                   {isEligible 
+                     ? "يمكنك الاستمرار في التسوق أو إتمام طلبك الآن بالأسعار المخفضة." 
+                     : "لقد أضفت منتجاً، أضف منتجاً آخر لسلّتك الآن للحصول على خصم مباشر على التكلفة الإجمالية!"}
+                 </p>
+               </div>
+             </div>
+             <Link href="/checkout" className="w-full sm:w-auto">
+               <button className={`w-full px-8 py-4 rounded-xl font-black flex items-center justify-center gap-2 transition-all ${
+                 isEligible 
+                   ? "bg-green-600 text-white hover:bg-green-700 shadow-lg shadow-green-600/20" 
+                   : "bg-primary text-white hover:bg-primary/90 shadow-lg shadow-primary/20"
+               }`}>
+                 الذهاب للدفع <ArrowLeft size={18} />
+               </button>
+             </Link>
+          </div>
+        )}
+
         {/* Search + Filter Bar */}
         <div className="flex flex-col md:flex-row gap-4 mb-10">
           <div className="relative flex-1">

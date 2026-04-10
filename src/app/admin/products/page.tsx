@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   Plus, Search, Edit2, Trash2, Eye, EyeOff, Star,
-  Package, Loader2, X, Save, ImagePlus, CheckCircle2
+  Package, Loader2, X, Save, CheckCircle2
 } from "lucide-react";
 import Image from "next/image";
 

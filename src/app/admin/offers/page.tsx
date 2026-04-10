@@ -117,14 +117,25 @@ export default function AdminOffersPage() {
       </div>
 
       {/* Info Box */}
-      <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-5 flex gap-4">
-        <Crown className="text-yellow-500 shrink-0 mt-0.5" size={22} />
-        <div>
-          <h3 className="font-black text-yellow-800 mb-1">كيف يعمل النظام؟</h3>
-          <p className="text-yellow-700 text-sm leading-relaxed">
-            عند إدخال العميل لرقم هاتفه في صفحة المنتج، يتحقق النظام تلقائياً إذا كان زبوناً دائماً ويستوفي شروط العرض.
-            إذا كان مؤهلاً، يظهر له بنر خاص بالعرض الحصري مع تطبيق الخصم تلقائياً على السعر الإجمالي.
-          </p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-5 flex gap-4">
+          <Crown className="text-yellow-500 shrink-0 mt-0.5" size={22} />
+          <div>
+            <h3 className="font-black text-yellow-800 mb-1">عروض الزبائن الدائمين</h3>
+            <p className="text-yellow-700 text-sm leading-relaxed">
+              تُعرض هذه العروض تلقائياً في منطقة
+              «حسابي» لكل زبون استوفى شروط الأهلية (عدد الطلبات أو إجمالي الإنفاق). يدخل الزبون رقم هاتفه ويرى العروض المتاحة له مباشرة.
+            </p>
+          </div>
+        </div>
+        <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5 flex gap-4">
+          <Tag className="text-primary shrink-0 mt-0.5" size={22} />
+          <div>
+            <h3 className="font-black text-gray-800 mb-1">الفرق بين هذه العروض وخصم السلة</h3>
+            <p className="text-gray-600 text-sm leading-relaxed">
+              <strong>خصم السلة</strong> تلقائي لكل من يضيف منتجين أو أكثر في السلة (من إعدادات النظام). أما <strong>عروض VIP</strong> فت عرض حصرياً للزبائن العائدين بناءً على سجل طلباتهم.
+            </p>
+          </div>
         </div>
       </div>
 

@@ -1,18 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import OrderForm from "@/components/OrderForm";
-import VipOfferChecker from "@/components/VipOfferChecker";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import { useCartStore } from "@/store/cartStore";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Image from "next/image";
 import Link from "next/link";
 import {
   Star, ShieldCheck, Truck, RefreshCcw, ChevronRight,
-  Minus, Plus, Tag, CheckCircle2, Package
+  Minus, Plus, CheckCircle2, Package
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -34,20 +34,19 @@ interface Product {
 // Fallback for demo when Supabase not connected
 const DEMO_PRODUCT: Product = {
   id: "1",
-  name: "حقيبة تسوق كلاسيكية فاخرة",
-  description: "حقيبة مصنوعة من أجود أنواع الجلد الطبيعي، تتميز بتصميم أنيق وعملي يناسب جميع المناسبات. تأتي بخياطة محكمة ومقاومة للاستخدام اليومي.",
-  short_description: "جلد طبيعي عالي الجودة - ضمان سنة",
-  price: 3500,
-  compare_price: 5000,
-  image_url: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&q=80&w=1000",
+  name: "أكياس ورقية كرافت (Kraft Bags)",
+  description: "أكياس الكرافت البنية الكلاسيكية هي الخيار الأمثل للعلامات التجارية التي تبحث عن المظهر الطبيعي والبيئي. تتميز بقوة تحمل عالية وتناسب محلات الملابس، الوجبات السريعة، والمقاهي. السعر المعروض هو للقطعة الواحدة (الحد الأدنى للطلب يحدد في المراسلة).",
+  short_description: "صديقة للبيئة مع طباعة الشعار بلون أو لونين.",
+  price: 35.00,
+  compare_price: 45.00,
+  image_url: "https://placehold.co/800x800/d2b48c/ffffff.png?text=Kraft+Bag",
   gallery: [
-    "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&q=80&w=800",
+    "https://placehold.co/800x800/d2b48c/000000.png?text=Kraft+Bag+Back",
   ],
-  category: "حقائب جلدية",
+  category: "أكياس ورقية",
   sizes: ["صغير", "متوسط", "كبير"],
-  colors: [{ name: "بني", hex: "#8B4513" }, { name: "أسود", hex: "#1a1a1a" }, { name: "بيج", hex: "#D2B48C" }],
-  stock: 15,
+  colors: [],
+  stock: 10000,
 };
 
 export default function ProductDetailPage() {
@@ -60,8 +59,9 @@ export default function ProductDetailPage() {
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
   const [quantity, setQuantity] = useState(1);
-  const [appliedOffer, setAppliedOffer] = useState<{ id: string; title: string; discount_type: string; discount_value: number } | null>(null);
-  const [discountedPrice, setDiscountedPrice] = useState<number | null>(null);
+  const [showToast, setShowToast] = useState(false);
+  const { addItem } = useCartStore();
+  const router = useRouter();
 
   useEffect(() => {
     async function fetchProduct() {
@@ -107,10 +107,27 @@ export default function ProductDetailPage() {
   }
 
   const allImages = [product.image_url, ...(product.gallery || [])].filter(Boolean);
-  const effectivePrice = discountedPrice ?? product.price;
+  const effectivePrice = product.price;
   const discountPercent = product.compare_price
     ? Math.round((1 - product.price / product.compare_price) * 100)
     : 0;
+
+  const handleAddToCart = () => {
+    // If exact sizes/colors exist and none selected, we can still allow it, but we append them clearly.
+    addItem({
+      id: `${product.id}-${selectedSize}-${selectedColor}`, // unique identifier
+      productId: product.id,
+      name: product.name,
+      price: effectivePrice,
+      quantity,
+      image_url: product.image_url,
+      size: selectedSize || undefined,
+      color: selectedColor || undefined
+    });
+    
+    // Redirect instantly to products catalog to encourage B2B upsell
+    router.push("/products");
+  };
 
   return (
     <main className="min-h-screen bg-gray-50/50">
@@ -125,6 +142,18 @@ export default function ProductDetailPage() {
           <span className="text-gray-900 font-bold">{product.name}</span>
         </div>
       </div>
+
+      {/* Floating Toast Notification */}
+      <motion.div 
+        initial={{ opacity: 0, y: -50 }}
+        animate={{ opacity: showToast ? 1 : 0, y: showToast ? 0 : -50 }}
+        className="fixed top-24 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
+      >
+        <div className="bg-gray-900/90 text-white px-6 py-3 rounded-full font-bold shadow-2xl flex items-center gap-3 backdrop-blur-md border border-gray-700">
+           <CheckCircle2 className="text-[#25D366]" size={20} />
+           تمت إضافة المنتج إلى السلة بنجاح
+        </div>
+      </motion.div>
 
       <div className="container mx-auto px-4 py-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
@@ -150,15 +179,9 @@ export default function ProductDetailPage() {
                   <Package size={80} />
                 </div>
               )}
-              {discountPercent > 0 && !appliedOffer && (
+              {discountPercent > 0 && (
                 <div className="absolute top-5 right-5 bg-red-500 text-white text-sm font-black px-4 py-2 rounded-2xl shadow-lg">
                   -{discountPercent}%
-                </div>
-              )}
-              {appliedOffer && (
-                <div className="absolute top-5 right-5 bg-primary text-white text-sm font-black px-4 py-2 rounded-2xl shadow-lg flex items-center gap-1.5">
-                  <Tag size={14} />
-                  عرض حصري
                 </div>
               )}
             </motion.div>
@@ -206,17 +229,12 @@ export default function ProductDetailPage() {
 
               {/* Price */}
               <div className="flex items-end gap-4">
-                <span className={`text-4xl font-black ${appliedOffer ? "text-primary" : "text-gray-950"}`}>
+                <span className="text-4xl font-black text-gray-950">
                   {effectivePrice.toLocaleString()} <span className="text-xl text-primary">د.ج</span>
                 </span>
-                {product.compare_price && !appliedOffer && (
+                {product.compare_price && (
                   <span className="text-xl text-gray-400 line-through mb-1">
                     {product.compare_price.toLocaleString()} د.ج
-                  </span>
-                )}
-                {appliedOffer && (
-                  <span className="text-lg text-gray-400 line-through mb-1">
-                    {product.price.toLocaleString()} د.ج
                   </span>
                 )}
               </div>
@@ -282,18 +300,25 @@ export default function ProductDetailPage() {
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                    className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+                    className="w-10 h-10 shrink-0 rounded-xl bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
                   >
                     <Minus size={16} />
                   </button>
-                  <span className="text-2xl font-black text-gray-900 w-8 text-center">{quantity}</span>
+                  <input 
+                    type="number"
+                    min="1"
+                    dir="ltr"
+                    value={quantity}
+                    onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="w-24 text-center font-black text-xl bg-gray-50 border border-gray-200 rounded-xl py-2 focus:ring-2 focus:ring-primary/20 outline-none appearance-none"
+                  />
                   <button
                     onClick={() => setQuantity(q => Math.min(product.stock, q + 1))}
-                    className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+                    className="w-10 h-10 shrink-0 rounded-xl bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
                   >
                     <Plus size={16} />
                   </button>
-                  <span className="text-xs text-gray-400 font-bold">{product.stock} متاح في المخزن</span>
+                  <span className="text-xs text-gray-400 font-bold mr-2">{product.stock} متاح بالمخزن</span>
                 </div>
               </div>
 
@@ -313,19 +338,6 @@ export default function ProductDetailPage() {
               </div>
             </div>
 
-            {/* VIP Offer Checker */}
-            <VipOfferChecker
-              productPrice={product.price * quantity}
-              onOfferApplied={(offer, finalPrice) => {
-                setAppliedOffer(offer as typeof appliedOffer);
-                setDiscountedPrice(finalPrice);
-              }}
-              onOfferRemoved={() => {
-                setAppliedOffer(null);
-                setDiscountedPrice(null);
-              }}
-            />
-
             {/* Description */}
             {product.description && (
               <div className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-sm">
@@ -334,16 +346,18 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-            {/* Order Form */}
-            <OrderForm
-              productId={product.id}
-              productName={product.name}
-              productPrice={effectivePrice * quantity}
-              selectedSize={selectedSize}
-              selectedColor={selectedColor}
-              quantity={quantity}
-              appliedOfferId={appliedOffer?.id}
-            />
+            {/* Add to Cart & Order Actions */}
+            <div className="space-y-4">
+              <OrderForm
+                productId={product.id}
+                productName={product.name}
+                productPrice={effectivePrice * quantity}
+                selectedSize={selectedSize}
+                selectedColor={selectedColor}
+                quantity={quantity}
+                onAddToCart={handleAddToCart}
+              />
+            </div>
           </div>
         </div>
       </div>

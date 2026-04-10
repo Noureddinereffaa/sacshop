@@ -3,10 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
-import {
-  ShoppingBag, Package, Users, Crown, TrendingUp,
-  ArrowLeft, Clock, CheckCircle, AlertTriangle, XCircle
-} from "lucide-react";
+import { Package, TrendingUp, Users, ShoppingBag, Crown, ArrowLeft, Clock } from "lucide-react";
 
 interface Stats {
   totalOrders: number;

@@ -83,6 +83,7 @@ CREATE TABLE IF NOT EXISTS orders (
     is_fake BOOLEAN DEFAULT FALSE,
     is_duplicate BOOLEAN DEFAULT FALSE,
     admin_notes TEXT,
+    cart_items JSONB DEFAULT '[]',        -- For multi-item cart workflows (Printing press)
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

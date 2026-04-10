@@ -6,7 +6,7 @@ import WhatsAppButton from "@/components/WhatsAppButton";
 import { ArrowRight, ShoppingBag, Truck, ShieldCheck, Zap } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import ProductCard from "@/components/ProductCard";
-import Link from "next/link";
+
 
 export default async function Home() {
   const { data: rawProducts } = supabase 
@@ -14,9 +14,9 @@ export default async function Home() {
     : { data: null };
 
   const products = rawProducts && rawProducts.length > 0 ? rawProducts : [
-    { id: "1", name: "حقيبة جلدية فاخرة", price: 4500, image_url: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&q=80&w=800", category: "حقائب جلدية" },
-    { id: "2", name: "كيس ورقي أنيق", price: 1200, image_url: "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&q=80&w=800", category: "أكياس ورقية" },
-    { id: "3", name: "حقيبة تسوق يومية", price: 2800, image_url: "https://images.unsplash.com/photo-1601924921557-45e6dea0a157?auto=format&fit=crop&q=80&w=800", category: "حقائب قماشية" },
+    { id: "1", name: "أكياس ورقية كرافت (Kraft Bags)", price: 35.00, image_url: "https://placehold.co/800x800/d2b48c/ffffff.png?text=Kraft+Bag", category: "أكياس ورقية" },
+    { id: "2", name: "أكياس فاخرة مغلفة", price: 120.00, image_url: "https://placehold.co/800x800/1a1a1a/ffffff.png?text=Luxury+Bag", category: "أكياس فاخرة" },
+    { id: "3", name: "علب شحن وتوصيل", price: 65.00, image_url: "https://placehold.co/800x800/c4a484/1a1a1a.png?text=Shipping+Box", category: "علب وتعبئة" },
   ];
   return (
     <main className="min-h-screen">

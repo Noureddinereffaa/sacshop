@@ -8,7 +8,11 @@ declare global {
   interface Window {
     fbq?: (...args: unknown[]) => void;
     _fbq?: unknown;
-    ttq?: { load: (id: string) => void; track: (event: string) => void };
+    ttq?: { load: (id: string) => void; track: (event: string, data?: object) => void; page: () => void };
+    gtag?: (...args: unknown[]) => void;
+    dataLayer?: unknown[];
+    // Our custom tracking helper used by OrderForm
+    trackMarketingEvent?: (event: "ViewContent" | "SubmitOrder" | "Purchase", data?: Record<string, unknown>) => void;
   }
 }
 
@@ -24,45 +28,77 @@ export default function MarketingPixels() {
           {}
         ) as Record<string, Record<string, string>>;
 
-        // Facebook Pixel
-        if (settings.marketing?.fbPixelId) {
-          const fbPixelId = settings.marketing.fbPixelId;
-          (function (
-            f: Window & typeof globalThis,
-            b: Document,
-            e: string,
-            v: string
-          ) {
+        const fbPixelId = settings.marketing?.fbPixelId;
+        const tiktokId = settings.marketing?.tiktokPixelId;
+        const gaId = settings.marketing?.googleAnalyticsId;
+
+        // ── Facebook Pixel ─────────────────────────────────────
+        if (fbPixelId) {
+          (function (f: Window & typeof globalThis, b: Document, _e: string, v: string) {
             if (f.fbq) return;
             const n = function (...args: unknown[]) {
               (n as unknown as { callMethod?: (...a: unknown[]) => void; queue: unknown[] }).callMethod
                 ? (n as unknown as { callMethod: (...a: unknown[]) => void }).callMethod(...args)
-                : ((n as unknown as { queue: unknown[] }).queue = (n as unknown as { queue: unknown[] }).queue || []).push(args);
+                : ((n as unknown as { queue: unknown[] }).queue =
+                    (n as unknown as { queue: unknown[] }).queue || []).push(args);
             };
             f.fbq = n;
             if (!f._fbq) f._fbq = n;
-            const t = b.createElement(e) as HTMLScriptElement;
+            const t = b.createElement("script") as HTMLScriptElement;
             t.async = true;
             t.src = v;
-            const s = b.getElementsByTagName(e)[0];
-            s.parentNode?.insertBefore(t, s);
+            b.head.appendChild(t);
           })(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
           window.fbq?.("init", fbPixelId);
           window.fbq?.("track", "PageView");
         }
 
-        // TikTok Pixel
-        const tiktokId = settings.marketing?.tiktokPixelId;
+        // ── TikTok Pixel ───────────────────────────────────────
         if (tiktokId) {
           const script = document.createElement("script");
           script.async = true;
-          script.src = `https://analytics.tiktok.com/i18n/pixel/events.js?sdkid=${settings.marketing.tiktokPixelId}`;
+          script.src = `https://analytics.tiktok.com/i18n/pixel/events.js?sdkid=${tiktokId}`;
           script.charset = "UTF-8";
           script.setAttribute("crossorigin", "*");
+          script.onload = () => {
+            window.ttq?.load(tiktokId);
+            window.ttq?.page();
+          };
           document.head.appendChild(script);
         }
-      } catch (e) {
-        // Silently fail - pixels are non-critical
+
+        // ── Google Analytics (gtag) ────────────────────────────
+        if (gaId) {
+          const script = document.createElement("script");
+          script.async = true;
+          script.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
+          document.head.appendChild(script);
+
+          window.dataLayer = window.dataLayer || [];
+          window.gtag = function (...args: unknown[]) { window.dataLayer!.push(args); };
+          window.gtag("js", new Date());
+          window.gtag("config", gaId);
+        }
+
+        // ── Global trackMarketingEvent helper ─────────────────
+        // Called by OrderForm on SubmitOrder / Purchase
+        window.trackMarketingEvent = (event, data = {}) => {
+          // FB
+          if (fbPixelId && window.fbq) {
+            window.fbq("track", event, data);
+          }
+          // TikTok
+          if (tiktokId && window.ttq) {
+            window.ttq.track(event, data);
+          }
+          // GA4
+          if (gaId && window.gtag) {
+            window.gtag("event", event.replace(/([A-Z])/g, "_$1").toLowerCase().replace(/^_/, ""), data);
+          }
+        };
+
+      } catch {
+        // Silently fail — pixels are non-critical
       }
     }
 

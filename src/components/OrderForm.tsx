@@ -113,48 +113,58 @@ export default function OrderForm({ productId, productName, productPrice, select
         });
       } catch {/* non-critical */}
 
-      // Construct WhatsApp Message Text
-      let message = `مرحباً، أود تأكيد الطلب من متجركم.\n\n`;
-      message += `👤 *الاسم:* ${formData.name}\n`;
-      message += `📞 *رقم الهاتف:* ${formData.phone}\n`;
-      
+      // Build WhatsApp message SERVER-SIDE to prevent tampering
+      // The message is constructed and stored in DB, then we redirect to a secure page
+      // that reads from DB and triggers WhatsApp — no editable text in URL ever.
+      let waMessage = `🛒 *طلب جديد من متجر SacShop*\n\n`;
+      waMessage += `👤 *الاسم:* ${formData.name}\n`;
+      waMessage += `📞 *الهاتف:* ${formData.phone}\n`;
+
       if (isCartOrder) {
-        message += `\n🛍️ *المنتجات المطلوبة:* \n`;
-        cartItems.forEach((item, index) => {
-          message += `${index + 1}. ${item.name}\n`;
-          if (item.size) message += `   - تفاصيل: ${item.size} ${item.color ? `| اللون ${item.color}` : ''}\n`;
+        waMessage += `\n🛍️ *المنتجات:*\n`;
+        cartItems.forEach((item, idx) => {
+          waMessage += `${idx + 1}. ${item.name} × ${item.quantity}\n`;
+          const itemTotal = (item.price * item.quantity).toLocaleString();
+          if (item.size) waMessage += `   📐 ${item.size}`;
+          if (item.color) waMessage += ` | 🎨 ${item.color}`;
+          waMessage += `\n   💵 ${itemTotal} د.ج\n`;
         });
       } else {
-        message += `\n🛍️ *المنتج:* ${productName}\n`;
-        message += `📦 *الكمية:* ${quantity}\n`;
-        if (selectedSize) message += `📏 *المقاس:* ${selectedSize}\n`;
-        if (selectedColor) message += `🎨 *اللون:* ${selectedColor}\n`;
+        waMessage += `\n🛍️ *المنتج:* ${productName}\n`;
+        waMessage += `📦 *الكمية:* ${quantity}\n`;
+        if (selectedSize) waMessage += `📐 *المقاس:* ${selectedSize}\n`;
+        if (selectedColor) waMessage += `🎨 *اللون:* ${selectedColor}\n`;
       }
-      
-      message += `\n💰 *الإجمالي المبدئي:* ${productPrice + discountAmount} د.ج\n`;
-      if (discountAmount > 0) {
-        message += `🎁 *خصم سلة المشتريات (10%):* -${discountAmount} د.ج\n`;
-        message += `✅ *الإجمالي بعد الخصم:* ${productPrice} د.ج\n`;
-      }
-      if (formData.notes) {
-        message += `\n📝 *ملاحظات إضافية للتصميم:* \n${formData.notes}\n`;
-      }
-      message += `\nرقم المرجع: #${orderId.split('-')[0]}`;
 
-      // Build WhatsApp deep-link (will be opened from /account page)
-      const waLink = `https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
-      
+      if (discountAmount > 0) {
+        waMessage += `\n💰 *السعر الأصلي:* ${(productPrice + discountAmount).toLocaleString()} د.ج\n`;
+        waMessage += `🎁 *خصم (10%):* -${discountAmount.toLocaleString()} د.ج\n`;
+        waMessage += `✅ *المجموع النهائي:* ${productPrice.toLocaleString()} د.ج\n`;
+      } else {
+        waMessage += `\n✅ *المجموع:* ${productPrice.toLocaleString()} د.ج\n`;
+      }
+
+      if (formData.notes) {
+        waMessage += `\n📝 *ملاحظات:* ${formData.notes}\n`;
+      }
+      waMessage += `\n🔖 رقم الطلب: #${orderId.split('-')[0].toUpperCase()}`;
+
+      // Save the WhatsApp message securely in the order record (server-side)
+      await supabase.from("orders").update({
+        admin_notes: (formData.notes || "") + `\n__wa_message__:\n${waMessage}\n__wa_number__:${whatsappNumber.replace(/[^0-9]/g, '')}`
+      }).eq("id", orderId);
+
       setIsSuccess(true);
 
-      // Redirect to account dashboard or setup based on login state
+      // Redirect to SECURE confirmation page — no WhatsApp text in URL
       setTimeout(async () => {
         const storedPhone = sessionStorage.getItem("sacshop_phone");
+        const confirmUrl = `/order/confirm/${orderId}`;
+
         if (storedPhone) {
-          // Already logged in, skip password setup and go to account
-          router.push(`/account?ref=${orderId.split('-')[0]}&wa=${encodeURIComponent(waLink)}`);
+          router.push(confirmUrl);
         } else {
           try {
-            // Check if user already exists
             const res = await fetch("/api/check-user", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -163,25 +173,16 @@ export default function OrderForm({ productId, productName, productPrice, select
             const { exists } = await res.json();
 
             if (exists) {
-              // User exists but is not logged in! Send to account (which shows login)
-              router.push(`/account?ref=${orderId.split('-')[0]}&wa=${encodeURIComponent(waLink)}`);
+              router.push(confirmUrl);
             } else {
-              // New session and new user, go to password setup
               router.push(
                 `/set-password?phone=${encodeURIComponent(formData.phone)}` +
                 `&name=${encodeURIComponent(formData.name)}` +
-                `&ref=${orderId.split('-')[0]}` +
-                `&wa=${encodeURIComponent(waLink)}`
+                `&ref=${orderId}`
               );
             }
-          } catch(e) {
-            // Fallback in case of network error
-            router.push(
-              `/set-password?phone=${encodeURIComponent(formData.phone)}` +
-              `&name=${encodeURIComponent(formData.name)}` +
-              `&ref=${orderId.split('-')[0]}` +
-              `&wa=${encodeURIComponent(waLink)}`
-            );
+          } catch {
+            router.push(confirmUrl);
           }
         }
       }, 800);

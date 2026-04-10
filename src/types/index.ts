@@ -37,3 +37,21 @@ export interface OrderItem {
   cart_items?: CartItem[];
   created_at: string;
 }
+
+export interface Product {
+  id: string;
+  name: string;
+  description: string;
+  short_description: string;
+  price: number;
+  compare_price: number | null;
+  image_url: string;
+  gallery?: string[];
+  category: string;
+  sizes: string[];
+  colors: { name: string; hex: string }[];
+  packages?: { label: string; quantity: number; price: number }[];
+  stock: number;
+  is_published: boolean;
+  is_featured: boolean;
+}

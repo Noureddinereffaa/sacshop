@@ -24,6 +24,7 @@ export default function OrderForm({ productId, productName, productPrice, select
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [pendingOrderId, setPendingOrderId] = useState<string>("");
+  const [pendingWaLink, setPendingWaLink] = useState<string>("");
   const [whatsappNumber, setWhatsappNumber] = useState<string>("213000000000");
   const router = useRouter(); // default fallback
   
@@ -155,40 +156,11 @@ export default function OrderForm({ productId, productName, productPrice, select
         admin_notes: (formData.notes || "") + `\n__wa_message__:\n${waMessage}\n__wa_number__:${whatsappNumber.replace(/[^0-9]/g, '')}`
       }).eq("id", orderId);
 
-      // Save message in DB and show success with manual button
+      // Order saved — show success screen with WhatsApp button
+      // Build the direct WhatsApp link here for the button (client-side, but message already locked in DB)
       setPendingOrderId(orderId);
+      setPendingWaLink(`https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(waMessage)}`);
       setIsSuccess(true);
-
-      // Redirect to SECURE confirmation page — no WhatsApp text in URL
-      setTimeout(async () => {
-        const storedPhone = sessionStorage.getItem("sacshop_phone");
-        const confirmUrl = `/order/confirm/${orderId}`;
-
-        if (storedPhone) {
-          router.push(confirmUrl);
-        } else {
-          try {
-            const res = await fetch("/api/check-user", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ phone: formData.phone })
-            });
-            const { exists } = await res.json();
-
-            if (exists) {
-              router.push(confirmUrl);
-            } else {
-              router.push(
-                `/set-password?phone=${encodeURIComponent(formData.phone)}` +
-                `&name=${encodeURIComponent(formData.name)}` +
-                `&ref=${orderId}`
-              );
-            }
-          } catch {
-            router.push(confirmUrl);
-          }
-        }
-      }, 800);
 
     } catch (err) {
       const error = err as any;
@@ -215,15 +187,19 @@ export default function OrderForm({ productId, productName, productPrice, select
             اضغط على الزر أدناه لفتح واتساب وإتمام التأكيد مع فريقنا.
           </p>
         </div>
-        <a
-          href={`/order/confirm/${pendingOrderId}`}
-          className="flex items-center justify-center gap-3 w-full bg-[#25D366] text-white rounded-2xl py-5 font-black text-lg shadow-lg active:scale-95 transition-transform"
-          style={{ WebkitTapHighlightColor: 'transparent' }}
-        >
-          <MessageCircle size={24} />
-          فتح واتساب والتأكيد الآن
-        </a>
-        <p className="text-xs text-gray-400">إذا لم يفتح واتساب تلقائياً، تأكد من تثبيته على هاتفك</p>
+        {pendingWaLink && (
+          <a
+            href={pendingWaLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-3 w-full bg-[#25D366] text-white rounded-2xl py-5 font-black text-lg shadow-lg active:scale-95 transition-transform"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
+          >
+            <MessageCircle size={24} />
+            فتح واتساب والتأكيد الآن
+          </a>
+        )}
+        <p className="text-xs text-gray-400">رقم الطلب: #{pendingOrderId.split('-')[0].toUpperCase()}</p>
       </motion.div>
     );
   }

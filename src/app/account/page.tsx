@@ -82,8 +82,6 @@ function parseOrderNotes(notes?: string) {
 // ─── Login sub-form (for returning visitors coming directly to /account) ───────
 function LoginForm({ onSuccess }: { onSuccess: (phone: string, name: string) => void }) {
   const [phone, setPhone] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPwd, setShowPwd] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -132,31 +130,19 @@ function LoginForm({ onSuccess }: { onSuccess: (phone: string, name: string) => 
               className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl py-4 pr-12 pl-4 font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" />
           </div>
         </div>
-        <div className="space-y-2">
-          <label className="text-sm font-black text-gray-700">كلمة السر</label>
-          <div className="relative">
-            <Lock className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={17} />
-            <input required type={showPwd ? "text" : "password"} placeholder="كلمة السر"
-              value={password} onChange={e => setPassword(e.target.value)}
-              className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl py-4 pr-12 pl-12 font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" />
-            <button type="button" onClick={() => setShowPwd(v => !v)}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary">
-              {showPwd ? <EyeOff size={17} /> : <Eye size={17} />}
-            </button>
-          </div>
-        </div>
+
         <button type="submit" disabled={isLoading}
           className="w-full bg-primary text-white py-4 rounded-2xl font-black text-lg hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-60">
           {isLoading ? <><Loader2 className="animate-spin" size={20} />جاري الدخول...</> : "الدخول إلى حسابي"}
         </button>
       </form>
       <p className="text-center text-xs text-gray-400 font-bold mt-8">
-        منظومة حسابات <strong>SacShop</strong> الآمنة. بيانتك مشفرة ولا نشاركها مع أي جهة.
+        بمجرد إدخال رقم هاتفك، ستتمكن من رؤية تاريخ طلباتك بالكامل.
       </p>
 
       <div className="mt-8 text-center relative z-10">
-         <Link href="/register" className="inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-primary transition-colors">
-            <span>ليس لديك حساب؟ إنشاء حساب جديد</span>
+         <Link href="/" className="inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-primary transition-colors">
+            <span>العودة للمتجر</span>
             <ArrowRight size={14} className="rotate-180" />
          </Link>
       </div>

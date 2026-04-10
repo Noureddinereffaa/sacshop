@@ -193,7 +193,9 @@ export async function generateAndUploadOrderPDF(data: OrderPDFData): Promise<str
     .from("orders")
     .getPublicUrl(fileName);
 
-  return `${publicUrlData.publicUrl}?download=`;
+  // force browser download with a clear filename
+  const downloadName = `SacShop-Receipt-${shortId}.pdf`;
+  return `${publicUrlData.publicUrl}?download=${downloadName}`;
 } catch (err: any) {
   console.error("PDF Generate/Upload Error:", err);
   // Show alert during this phase to help the user identify the issue

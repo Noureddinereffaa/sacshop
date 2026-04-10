@@ -15,11 +15,12 @@ interface OrderFormProps {
   selectedColor?: string;
   appliedOfferId?: string;
   cartItems?: CartItem[];
+  quantity?: number;
   discountAmount?: number;
   onAddToCart?: () => void;
 }
 
-export default function OrderForm({ productId, productName, productPrice, selectedSize, selectedColor, appliedOfferId, cartItems = [], discountAmount = 0, onAddToCart }: OrderFormProps) {
+export default function OrderForm({ productId, productName, productPrice, selectedSize, selectedColor, appliedOfferId, cartItems = [], quantity = 1, discountAmount = 0, onAddToCart }: OrderFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [whatsappNumber, setWhatsappNumber] = useState<string>("213000000000");
@@ -89,7 +90,7 @@ export default function OrderForm({ productId, productName, productPrice, select
         admin_notes: formData.notes,
         customer_address: "غير مطلوب (طلب طباعة)",
         product_id: isCartOrder ? null : productId,
-        quantity: null,          // يتم تحديدها من قبل فريق التأكيد
+        quantity: isCartOrder ? null : quantity,
         size: isCartOrder ? null : selectedSize,
         color: isCartOrder ? null : selectedColor,
         product_price: isCartOrder ? 0 : productPrice,
@@ -125,6 +126,7 @@ export default function OrderForm({ productId, productName, productPrice, select
         });
       } else {
         message += `\n🛍️ *المنتج:* ${productName}\n`;
+        message += `📦 *الكمية:* ${quantity}\n`;
         if (selectedSize) message += `📏 *المقاس:* ${selectedSize}\n`;
         if (selectedColor) message += `🎨 *اللون:* ${selectedColor}\n`;
       }

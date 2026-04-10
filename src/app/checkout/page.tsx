@@ -4,14 +4,14 @@ import { useCartStore } from "@/store/cartStore";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import OrderForm from "@/components/OrderForm";
-import { ShoppingBag, ArrowRight } from "lucide-react";
+import { ShoppingBag, ArrowRight, Minus, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function CheckoutPage() {
-  const { items, getCartTotal, getDiscountInfo, clearCart } = useCartStore();
+  const { items, getCartTotal, getDiscountInfo, clearCart, updateQuantity, removeItem } = useCartStore();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -78,15 +78,47 @@ export default function CheckoutPage() {
                         )}
                       </div>
                       <div className="flex-1">
-                        <h4 className="font-bold text-gray-900 text-sm line-clamp-2 leading-tight">{item.name}</h4>
+                        <div className="flex justify-between items-start gap-2">
+                           <h4 className="font-bold text-gray-900 text-sm line-clamp-2 leading-tight">{item.name}</h4>
+                           <button 
+                             onClick={() => removeItem(item.id)}
+                             className="text-gray-400 hover:text-red-500 w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-50 transition-all -m-1 shrink-0"
+                           >
+                             <Trash2 size={16} />
+                           </button>
+                        </div>
                         <div className="flex gap-2 mt-1 text-xs text-gray-500 font-medium">
                           {item.size && <span>{item.size}</span>}
                           {item.size && item.color && <span>-</span>}
                           {item.color && <span>{item.color}</span>}
                         </div>
-                        <div className="flex justify-between items-center mt-2">
+                        <div className="flex justify-between items-center mt-3">
                            <span className="font-black text-primary">{item.price} د.ج</span>
-                           <span className="text-xs font-bold text-gray-400 bg-white px-2 py-1 rounded-md border border-gray-200 shadow-sm">الكمية: {item.quantity}</span>
+                           
+                           <div className="flex items-center gap-1 bg-white rounded-xl border border-gray-100 p-0.5 shadow-sm">
+                             <button 
+                               onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                               className="w-7 h-7 flex items-center justify-center text-gray-600 hover:text-primary transition-colors disabled:opacity-50"
+                               disabled={item.quantity <= 1}
+                             >
+                               <Minus size={14} />
+                             </button>
+                             <input
+                               type="number"
+                               min="1"
+                               dir="ltr"
+                               inputMode="numeric"
+                               value={item.quantity}
+                               onChange={(e) => updateQuantity(item.id, Math.max(1, parseInt(e.target.value) || 1))}
+                               className="w-10 text-center font-black text-sm bg-transparent border-none focus:ring-0 outline-none appearance-none p-0"
+                             />
+                             <button 
+                               onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                               className="w-7 h-7 flex items-center justify-center text-gray-600 hover:text-primary transition-colors"
+                             >
+                               <Plus size={14} />
+                             </button>
+                           </div>
                         </div>
                       </div>
                     </div>

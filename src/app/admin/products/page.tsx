@@ -19,6 +19,7 @@ interface Product {
   category: string;
   sizes: string[];
   colors: { name: string; hex: string }[];
+  packages: { label: string; quantity: number; price: number }[];
   stock: number;
   is_published: boolean;
   is_featured: boolean;
@@ -34,6 +35,7 @@ const EMPTY_PRODUCT: Omit<Product, "id"> = {
   category: "",
   sizes: [],
   colors: [],
+  packages: [],
   stock: 0,
   is_published: true,
   is_featured: false,
@@ -52,6 +54,7 @@ export default function AdminProductsPage() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [newSize, setNewSize] = useState("");
   const [newColor, setNewColor] = useState({ name: "", hex: "#10a37f" });
+  const [newPackage, setNewPackage] = useState({ label: "", quantity: 1, price: 0 });
 
   useEffect(() => { fetchProducts(); }, []);
 
@@ -135,6 +138,16 @@ export default function AdminProductsPage() {
 
   function removeColor(name: string) {
     setEditingProduct(p => ({ ...p, colors: (p.colors || []).filter(c => c.name !== name) }));
+  }
+
+  function addPackage() {
+    if (!newPackage.label.trim() || newPackage.quantity <= 0) return;
+    setEditingProduct(p => ({ ...p, packages: [...(p.packages || []), { ...newPackage }] }));
+    setNewPackage({ label: "", quantity: 1, price: 0 });
+  }
+
+  function removePackage(label: string) {
+    setEditingProduct(p => ({ ...p, packages: (p.packages || []).filter(pkg => pkg.label !== label) }));
   }
 
   return (
@@ -451,6 +464,48 @@ export default function AdminProductsPage() {
                       <span className="w-4 h-4 rounded-full border border-gray-200" style={{ backgroundColor: c.hex }} />
                       {c.name}
                       <button onClick={() => removeColor(c.name)} className="text-gray-400 hover:text-red-500">
+                        <X size={14} />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Packages */}
+              <div className="space-y-3">
+                <label className="text-sm font-black text-gray-700">باقات الكميات (اختياري)</label>
+                <div className="flex gap-2 flex-wrap sm:flex-nowrap">
+                  <input
+                    type="text"
+                    value={newPackage.label}
+                    onChange={e => setNewPackage(p => ({ ...p, label: e.target.value }))}
+                    className="flex-1 min-w-[120px] bg-gray-50 border border-gray-200 rounded-xl py-2 px-4 focus:ring-2 focus:ring-primary/20 outline-none"
+                    placeholder="اسم الباقة (مثال: 50 حبة)"
+                  />
+                  <input
+                    type="number"
+                    value={newPackage.quantity || ""}
+                    onChange={e => setNewPackage(p => ({ ...p, quantity: Number(e.target.value) }))}
+                    className="w-24 bg-gray-50 border border-gray-200 rounded-xl py-2 px-4 focus:ring-2 focus:ring-primary/20 outline-none"
+                    placeholder="الكمية"
+                  />
+                  <input
+                    type="number"
+                    value={newPackage.price || ""}
+                    onChange={e => setNewPackage(p => ({ ...p, price: Number(e.target.value) }))}
+                    className="w-32 bg-gray-50 border border-gray-200 rounded-xl py-2 px-4 focus:ring-2 focus:ring-primary/20 outline-none"
+                    placeholder="السعر الإجمالي"
+                  />
+                  <button onClick={addPackage} className="bg-primary text-white px-4 py-2 rounded-xl font-bold text-sm shrink-0">
+                    إضافة
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {(editingProduct.packages || []).map(pkg => (
+                    <span key={pkg.label} className="flex items-center gap-2 bg-gray-100 px-3 py-1.5 rounded-xl text-sm font-bold border border-gray-200">
+                      <span className="text-gray-700">{pkg.label}</span>
+                      <span className="text-xs text-primary font-black bg-white px-2 py-0.5 rounded-md shadow-sm">{pkg.price} د.ج</span>
+                      <button onClick={() => removePackage(pkg.label)} className="text-gray-400 hover:text-red-500">
                         <X size={14} />
                       </button>
                     </span>

@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS products (
     tags TEXT[],
     colors JSONB DEFAULT '[]',             -- [{name: "أحمر", hex: "#ff0000"}]
     sizes JSONB DEFAULT '[]',              -- ["صغير", "متوسط", "كبير"]
+    packages JSONB DEFAULT '[]',           -- [{ label: "10 حبات", quantity: 10, price: 5000 }]
     stock INTEGER DEFAULT 0,
     is_published BOOLEAN DEFAULT TRUE,
     is_featured BOOLEAN DEFAULT FALSE,

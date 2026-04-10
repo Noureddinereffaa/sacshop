@@ -28,6 +28,7 @@ interface Product {
   category: string;
   sizes: string[];
   colors: { name: string; hex: string }[];
+  packages?: { label: string; quantity: number; price: number }[];
   stock: number;
 }
 
@@ -59,6 +60,8 @@ export default function ProductDetailPage() {
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
+  const [quantity, setQuantity] = useState<number>(1);
+  const [selectedPackage, setSelectedPackage] = useState<{ label: string; quantity: number; price: number } | null>(null);
   const [showToast, setShowToast] = useState(false);
   const { addItem } = useCartStore();
   const router = useRouter();
@@ -116,18 +119,19 @@ export default function ProductDetailPage() {
   }
 
   const allImages = [product.image_url, ...(product.gallery || [])].filter(Boolean);
-  const effectivePrice = product.price;
-  const discountPercent = product.compare_price
-    ? Math.round((1 - product.price / product.compare_price) * 100)
+  const effectivePrice = selectedPackage ? selectedPackage.price : product.price * quantity;
+  const originalPrice = selectedPackage ? null : (product.compare_price ? product.compare_price * quantity : null);
+  const discountPercent = originalPrice
+    ? Math.round((1 - effectivePrice / originalPrice) * 100)
     : 0;
 
   const handleAddToCart = () => {
     addItem({
-      id: `${product.id}-${selectedSize}-${selectedColor}`,
+      id: `${product.id}-${selectedSize}-${selectedColor}-${selectedPackage?.label || 'manual'}`,
       productId: product.id,
-      name: product.name,
-      price: effectivePrice,
-      quantity: 1,
+      name: `${product.name} ${selectedPackage ? `(${selectedPackage.label})` : ''}`,
+      price: selectedPackage ? selectedPackage.price / quantity : product.price,
+      quantity: quantity,
       image_url: product.image_url,
       size: selectedSize || undefined,
       color: selectedColor || undefined
@@ -255,9 +259,9 @@ export default function ProductDetailPage() {
                 <span className="text-4xl font-black text-gray-950">
                   {effectivePrice.toLocaleString()} <span className="text-xl text-primary">د.ج</span>
                 </span>
-                {product.compare_price && (
+                {originalPrice && (
                   <span className="text-xl text-gray-400 line-through mb-1">
-                    {product.compare_price.toLocaleString()} د.ج
+                    {originalPrice.toLocaleString()} د.ج
                   </span>
                 )}
               </div>
@@ -317,6 +321,54 @@ export default function ProductDetailPage() {
                 </div>
               )}
 
+              {/* Quantity and Packages */}
+              <div className="space-y-4 pt-2">
+                 <label className="text-sm font-black text-gray-700 block border-t border-gray-100 pt-4">الكمية المطلوبة</label>
+                 
+                 {product.packages && product.packages.length > 0 && (
+                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                     {product.packages.map(pkg => (
+                       <button
+                         key={pkg.label}
+                         onClick={() => { setSelectedPackage(pkg); setQuantity(pkg.quantity); }}
+                         className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all ${
+                           selectedPackage?.label === pkg.label
+                             ? "border-primary bg-primary/5 text-primary shadow-sm"
+                             : "border-gray-200 text-gray-600 hover:border-gray-300 bg-gray-50/50"
+                         }`}
+                       >
+                         <span className="font-black text-sm">{pkg.label}</span>
+                         <span className="text-xs font-bold opacity-80 mt-1">{pkg.price.toLocaleString()} د.ج</span>
+                       </button>
+                     ))}
+                   </div>
+                 )}
+
+                 <div className="flex items-center gap-4 bg-gray-50 p-2 rounded-2xl border border-gray-100 w-max">
+                    <span className="text-xs font-bold text-gray-500 px-2">كمية مخصصة:</span>
+                    <button 
+                      onClick={() => { setSelectedPackage(null); setQuantity(Math.max(1, quantity - 1)); }}
+                      className="w-10 h-10 flex items-center justify-center bg-white rounded-xl shadow-sm text-gray-600 hover:text-primary transition-colors"
+                      disabled={selectedPackage !== null && quantity <= 1}
+                    >
+                      <span className="text-lg font-black">-</span>
+                    </button>
+                    <input
+                      type="number"
+                      min="1"
+                      value={quantity}
+                      onChange={(e) => { setSelectedPackage(null); setQuantity(Math.max(1, parseInt(e.target.value) || 1)); }}
+                      className="w-16 text-center font-black text-lg bg-transparent border-none focus:ring-0 outline-none"
+                    />
+                    <button 
+                      onClick={() => { setSelectedPackage(null); setQuantity(quantity + 1); }}
+                      className="w-10 h-10 flex items-center justify-center bg-white rounded-xl shadow-sm text-gray-600 hover:text-primary transition-colors"
+                    >
+                      <span className="text-lg font-black">+</span>
+                    </button>
+                 </div>
+              </div>
+
               {/* Trust Badges */}
               <div className="grid grid-cols-2 gap-3 pt-2">
                 {[
@@ -345,8 +397,9 @@ export default function ProductDetailPage() {
             <div className="space-y-4">
               <OrderForm
                 productId={product.id}
-                productName={product.name}
+                productName={`${product.name} ${selectedPackage ? `(${selectedPackage.label})` : ''}`}
                 productPrice={effectivePrice}
+                quantity={quantity}
                 selectedSize={selectedSize}
                 selectedColor={selectedColor}
                 onAddToCart={handleAddToCart}

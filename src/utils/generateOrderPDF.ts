@@ -193,7 +193,7 @@ export async function generateAndUploadOrderPDF(data: OrderPDFData): Promise<str
     .from("orders")
     .getPublicUrl(fileName);
 
-  return publicUrlData.publicUrl;
+  return `${publicUrlData.publicUrl}?download=`;
 } catch (err: any) {
   console.error("PDF Generate/Upload Error:", err);
   // Show alert during this phase to help the user identify the issue

@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
-import { Phone, User, Loader2, Edit3, MessageCircle, ShoppingCart, Lock, Eye, EyeOff, CheckCircle2 } from "lucide-react";
+import { Phone, User, Loader2, Edit3, MessageCircle, ShoppingCart, Lock, Eye, EyeOff, CheckCircle2, Gift } from "lucide-react";
 import { CartItem } from "@/types";
 import { generateAndUploadOrderPDF } from "@/utils/generateOrderPDF";
+import { useCartStore } from "@/store/cartStore";
 
 interface OrderFormProps {
   productId: string;
@@ -141,7 +142,7 @@ export default function OrderForm({ productId, productName, productPrice, select
     let waMessage: string;
     if (pdfUrl) {
       waMessage = [
-        `🛒 *طلب جديد من SacShop*`,
+        `🛒 *طلب جديد من Service Serigraphie*`,
         `👤 الاسم: ${formData.name.trim()}`,
         `📞 الهاتف: ${formData.phone.trim()}`,
         ``,
@@ -153,7 +154,7 @@ export default function OrderForm({ productId, productName, productPrice, select
     } else {
       // Fallback: full text message if PDF failed
       waMessage = [
-        `🛒 *طلب جديد من SacShop*`,
+        `🛒 *طلب جديد من Service Serigraphie*`,
         `👤 الاسم: ${formData.name.trim()}`,
         `📞 الهاتف: ${formData.phone.trim()}`,
         `📦 المنتج: ${productName}`,
@@ -188,6 +189,9 @@ export default function OrderForm({ productId, productName, productPrice, select
 
     // ── Redirect Current Tab to Account Page ──
     setTimeout(() => {
+      if (isCartOrder) {
+        useCartStore.getState().clearCart();
+      }
       window.location.href = "/account";
     }, 1500); // 1.5s delay to let user see success state before redirect
   };
@@ -205,6 +209,12 @@ export default function OrderForm({ productId, productName, productPrice, select
         </div>
         <div>
           <h2 className="text-2xl font-black text-gray-900">تم تسجيل طلبك! ✅</h2>
+          {discountAmount > 0 && (
+            <div className="mt-1 flex items-center justify-center gap-1.5 text-primary font-black text-sm bg-primary/10 px-4 py-1.5 rounded-full w-max mx-auto border border-primary/20">
+               <Gift size={16} />
+               <span>لقد وفرت {discountAmount.toLocaleString()} د.ج في هذا الطلب!</span>
+            </div>
+          )}
           <p className="text-gray-500 mt-2 text-sm leading-relaxed">
             اضغط على الزر أدناه لفتح واتساب وإتمام التأكيد مع فريقنا.
           </p>

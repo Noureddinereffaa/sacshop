@@ -20,6 +20,15 @@ interface VipOffer {
   uses_count: number;
 }
 
+function calculateStarLevel(totalOrders: number): number {
+  if (totalOrders >= 5) return 5;
+  if (totalOrders >= 4) return 4;
+  if (totalOrders >= 3) return 3;
+  if (totalOrders >= 2) return 2;
+  if (totalOrders >= 1) return 1;
+  return 0;
+}
+
 export async function POST(request: Request) {
   try {
     const { phone } = await request.json();
@@ -60,10 +69,23 @@ export async function POST(request: Request) {
       return meetsOrders && meetsSpent && notExpired && hasUses;
     });
 
+    const starLevel = calculateStarLevel(customerData.total_orders || 0);
+
+    // 4. Fetch Discount Settings
+    const { data: discountSettings } = await supabaseAdmin
+      .from('settings')
+      .select('value')
+      .eq('key', 'discounts')
+      .single();
+
     return NextResponse.json({
-      customer: customerData,
+      customer: {
+        ...customerData,
+        star_level: starLevel,
+      },
       orders: ordersData || [],
       vipOffers: eligibleOffers,
+      discountConfig: discountSettings?.value || null
     });
 
   } catch (error) {

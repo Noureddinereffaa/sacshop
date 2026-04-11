@@ -12,7 +12,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   Star, ShieldCheck, Truck, RefreshCcw, ChevronRight,
-  CheckCircle2, Package, Zap
+  CheckCircle2, Package, Zap, Crown, Tag, Gift
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -56,14 +56,24 @@ export default function ProductDetailPage() {
 
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [discountConfig, setDiscountConfig] = useState({ enabled: true, percentage: 10 });
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
   const [quantity, setQuantity] = useState<number>(1);
   const [selectedPackage, setSelectedPackage] = useState<{ label: string; quantity: number; price: number } | null>(null);
   const [showToast, setShowToast] = useState(false);
-  const { addItem } = useCartStore();
+  const [customer, setCustomer] = useState<any>(null);
+  
+  const { 
+    addItem, 
+    customerStatus, 
+    setCustomerStatus, 
+    appliedVipOffer, 
+    setAppliedVipOffer,
+    discountConfig,
+    setDiscountConfig
+  } = useCartStore();
+  
   const router = useRouter();
 
   useEffect(() => {
@@ -73,27 +83,49 @@ export default function ProductDetailPage() {
         setIsLoading(false);
         return;
       }
+      
       const { data, error } = await supabase
         .from("products")
         .select("*")
         .eq("id", id)
         .eq("is_published", true)
         .single();
-
-      // Fetch promo settings
-      const { data: offerSetting } = await supabase.from("settings").select("value").eq("key", "offers").maybeSingle();
-      if (offerSetting && offerSetting.value) {
-        setDiscountConfig({
-          enabled: offerSetting.value.cartDiscountEnabled !== false,
-          percentage: offerSetting.value.cartDiscountPercentage || 10
-        });
-      }
-
+      
       setProduct(error || !data ? DEMO_PRODUCT : data);
       setIsLoading(false);
+      
+      // Check for logged-in user to fetch VIP status
+      const phone = sessionStorage.getItem("sacshop_phone");
+      if (phone) {
+        try {
+          const res = await fetch("/api/customer", {
+            method: "POST",
+            body: JSON.stringify({ phone }),
+          });
+          const data = await res.json();
+          if (data.customer) {
+            setCustomer(data.customer);
+            const status = (data.customer.total_orders || 0) === 0 ? 'new' : 'vip';
+            setCustomerStatus(status);
+            
+            if (data.discountConfig) {
+              setDiscountConfig({
+                enabled: data.discountConfig.newCustomerDiscountEnabled,
+                percentage: data.discountConfig.newCustomerDiscountPercent,
+                minItems: data.discountConfig.newCustomerMinItems,
+              });
+            }
+            
+            if (status === 'vip' && data.vipOffers && data.vipOffers.length > 0) {
+              // Only auto-set if none exists
+              if (!appliedVipOffer) setAppliedVipOffer(data.vipOffers[0]);
+            }
+          }
+        } catch (err) { console.error("VIP fetch error:", err); }
+      }
     }
     fetchProduct();
-  }, [id]);
+  }, [id, setCustomerStatus, setDiscountConfig, setAppliedVipOffer]);
 
   if (isLoading) {
     return (
@@ -119,7 +151,25 @@ export default function ProductDetailPage() {
   }
 
   const allImages = [product.image_url, ...(product.gallery || [])].filter(Boolean);
-  const effectivePrice = selectedPackage ? selectedPackage.price : product.price * quantity;
+  
+  // ── Pricing Logic (VIP & Welcome) ───────────────────────────
+  const basePrice = selectedPackage ? selectedPackage.price : product.price * quantity;
+  let effectivePrice = basePrice;
+  let hasVipDiscount = false;
+  let discountLabel = "";
+  let savingAmount = 0;
+
+  if (customerStatus === 'vip' && appliedVipOffer) {
+    hasVipDiscount = true;
+    if (appliedVipOffer.discount_type === 'percentage') {
+      savingAmount = Math.round(basePrice * (appliedVipOffer.discount_value / 100));
+    } else {
+      savingAmount = appliedVipOffer.discount_value;
+    }
+    effectivePrice = basePrice - savingAmount;
+    discountLabel = `خصم VIP: ${appliedVipOffer.title}`;
+  }
+
   const originalPrice = selectedPackage ? null : (product.compare_price ? product.compare_price * quantity : null);
   const discountPercent = originalPrice
     ? Math.round((1 - effectivePrice / originalPrice) * 100)
@@ -240,15 +290,61 @@ export default function ProductDetailPage() {
                 )}
               </div>
 
-              {/* Price */}
-              <div className="flex items-end gap-4">
-                <span className="text-4xl font-black text-gray-950">
-                  {effectivePrice.toLocaleString()} <span className="text-xl text-primary">د.ج</span>
-                </span>
-                {originalPrice && (
-                  <span className="text-xl text-gray-400 line-through mb-1">
-                    {originalPrice.toLocaleString()} د.ج
-                  </span>
+              {/* Price Section */}
+              <div className="space-y-4">
+                <div className="flex flex-col gap-1">
+                   {hasVipDiscount && (
+                     <div className="flex items-center gap-2 text-primary font-black text-xs uppercase tracking-widest animate-in fade-in slide-in-from-right-4">
+                        <Crown size={14} className="fill-primary" />
+                        <span>عرض حصري لك كعضو مميز</span>
+                     </div>
+                   )}
+                   <div className="flex items-end gap-3">
+                    <span className="text-4xl font-black text-gray-950">
+                      {effectivePrice.toLocaleString()} <span className="text-xl text-primary">د.ج</span>
+                    </span>
+                    {(originalPrice || hasVipDiscount) && (
+                      <span className="text-xl text-gray-400 line-through mb-1">
+                        {(hasVipDiscount ? basePrice : originalPrice!).toLocaleString()} د.ج
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* VIP Benefit Info */}
+                {hasVipDiscount && (
+                  <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 flex items-center justify-between group">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                        <Tag size={20} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-primary/60 uppercase tracking-tighter">رتبتك الحالية</p>
+                        <p className="text-sm font-black text-primary">
+                          {"⭐".repeat(customer?.star_level || 1)} زبون مميز
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-left">
+                      <p className="text-[10px] font-black text-gray-400 uppercase">مقدار التوفير</p>
+                      <p className="text-lg font-black text-primary">-{savingAmount.toLocaleString()} د.ج</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Welcome Upsell Alert */}
+                {customerStatus === 'new' && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 flex items-center gap-3">
+                    <div className="w-10 h-10 bg-yellow-400 rounded-xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-yellow-400/20">
+                      <Gift size={20} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-black text-yellow-800">جرب هدايا الترحيب! 🎁</p>
+                      <p className="text-[10px] font-bold text-yellow-700/70 leading-tight mt-0.5">
+                        أضف {discountConfig.minItems} منتجات أو أكثر وستحصل على خصم {discountConfig.percentage}% فوري على السلة كاملة!
+                      </p>
+                    </div>
+                  </div>
                 )}
               </div>
 
@@ -388,6 +484,8 @@ export default function ProductDetailPage() {
                 quantity={quantity}
                 selectedSize={selectedSize}
                 selectedColor={selectedColor}
+                appliedOfferId={appliedVipOffer?.id}
+                discountAmount={savingAmount}
                 onAddToCart={handleAddToCart}
               />
             </div>

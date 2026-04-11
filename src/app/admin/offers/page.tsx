@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   Plus, Trash2, Edit2, X, Save, Loader2, CheckCircle2,
-  Crown, Percent, DollarSign, Clock, Users, Tag, ToggleLeft, ToggleRight
+  Crown, Percent, DollarSign, Clock, Users, Tag, ToggleLeft, ToggleRight, Star
 } from "lucide-react";
 
 interface VipOffer {
@@ -129,11 +129,11 @@ export default function AdminOffersPage() {
           </div>
         </div>
         <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5 flex gap-4">
-          <Tag className="text-primary shrink-0 mt-0.5" size={22} />
+          <Star className="text-primary shrink-0 mt-0.5" size={22} />
           <div>
-            <h3 className="font-black text-gray-800 mb-1">الفرق بين هذه العروض وخصم السلة</h3>
+            <h3 className="font-black text-gray-800 mb-1">نظام النجوم (1-5)</h3>
             <p className="text-gray-600 text-sm leading-relaxed">
-              <strong>خصم السلة</strong> تلقائي لكل من يضيف منتجين أو أكثر في السلة (من إعدادات النظام). أما <strong>عروض VIP</strong> فت عرض حصرياً للزبائن العائدين بناءً على سجل طلباتهم.
+              تتم برمجة الخصومات للظهور لزبائن محددين بناءً على رتبتهم. 1 نجمة تعني طلب واحد سابق، 5 نجوم تعني 5 طلبات فأكثر.
             </p>
           </div>
         </div>
@@ -205,9 +205,9 @@ export default function AdminOffersPage() {
                         <Percent size={12} />
                         خصم: {offer.discount_value}{offer.discount_type === "percentage" ? "%" : " د.ج"}
                       </span>
-                      <span className="flex items-center gap-1 bg-gray-100 px-3 py-1.5 rounded-full">
-                        <Users size={12} />
-                        الحد الأدنى للطلبات: {offer.min_orders}
+                      <span className={`flex items-center gap-1 px-3 py-1.5 rounded-full ${offer.min_orders > 0 ? "bg-yellow-50 text-yellow-700" : "bg-gray-100 text-gray-500"}`}>
+                        <Star size={12} className={offer.min_orders > 0 ? "fill-yellow-500" : ""} />
+                        الرتبة: {offer.min_orders === 0 ? "كل الزبائن" : `${offer.min_orders} نجوم`}
                       </span>
                       {offer.max_uses && (
                         <span className="flex items-center gap-1 bg-gray-100 px-3 py-1.5 rounded-full">
@@ -316,15 +316,19 @@ export default function AdminOffersPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-black text-gray-700">الحد الأدنى للطلبات السابقة</label>
-                  <input
-                    type="number"
-                    value={editingOffer.min_orders || ""}
+                  <label className="text-sm font-black text-gray-700">الرتبة المستهدفة (عدد النجوم ⭐)</label>
+                  <select
+                    value={editingOffer.min_orders || 0}
                     onChange={e => setEditingOffer(o => ({ ...o, min_orders: Number(e.target.value) }))}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20 outline-none"
-                    placeholder="2"
-                    min="1"
-                  />
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20 outline-none font-bold"
+                  >
+                    <option value="0">متاح لجميع الزبائن (0+) </option>
+                    <option value="1">نجمة واحدة فأكثر (1+ طلب)</option>
+                    <option value="2">نجمتان فأكثر (2+ طلب)</option>
+                    <option value="3">3 نجوم فأكثر (3+ طلب)</option>
+                    <option value="4">4 نجوم فأكثر (4+ طلب)</option>
+                    <option value="5">5 نجوم (VIP ملكي)</option>
+                  </select>
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-black text-gray-700">أقصى عدد استخدامات (اختياري)</label>

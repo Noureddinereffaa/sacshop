@@ -9,15 +9,76 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Tag, Star, Crown } from "lucide-react";
 
 export default function CheckoutPage() {
-  const { items, getCartTotal, getDiscountInfo, clearCart, updateQuantity, removeItem } = useCartStore();
+  const { 
+    items, 
+    customerStatus,
+    appliedVipOffer,
+    setCustomerStatus,
+    setAppliedVipOffer,
+    setDiscountConfig,
+    getCartTotal, 
+    getDiscountInfo, 
+    clearCart, 
+    updateQuantity, 
+    removeItem 
+  } = useCartStore();
+  
   const [mounted, setMounted] = useState(false);
+  const [isLoadingOffers, setIsLoadingOffers] = useState(false);
+  const [availableOffers, setAvailableOffers] = useState<any[]>([]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
+    checkEligibility();
   }, []);
+
+  async function checkEligibility() {
+    const phone = sessionStorage.getItem("sacshop_phone");
+    if (!phone) {
+      setCustomerStatus('guest'); // Fallback to guest if not logged in
+      return;
+    }
+
+    setIsLoadingOffers(true);
+    try {
+      const res = await fetch("/api/customer", {
+        method: "POST",
+        body: JSON.stringify({ phone }),
+      });
+      const data = await res.json();
+      
+      if (data.customer) {
+        // Determine status based on order count (0 = new, >=1 = vip)
+        const status = (data.customer.total_orders || 0) === 0 ? 'new' : 'vip';
+        setCustomerStatus(status);
+        
+        if (data.discountConfig) {
+          setDiscountConfig({
+            enabled: data.discountConfig.newCustomerDiscountEnabled,
+            percentage: data.discountConfig.newCustomerDiscountPercent,
+            minItems: data.discountConfig.newCustomerMinItems,
+          });
+        }
+
+        if (status === 'vip' && data.vipOffers) {
+          setAvailableOffers(data.vipOffers);
+          // Auto-select best offer if none set
+          if (!appliedVipOffer && data.vipOffers.length > 0) {
+            setAppliedVipOffer(data.vipOffers[0]);
+          }
+        }
+      } else {
+        setCustomerStatus('new'); // Treat unknown phone as new
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoadingOffers(false);
+    }
+  }
 
   if (!mounted) return null;
 
@@ -42,7 +103,7 @@ export default function CheckoutPage() {
     );
   }
 
-  const { isEligible, subtotal, discountAmount, finalTotal } = getDiscountInfo();
+  const { isEligible, discountType, subtotal, discountAmount, finalTotal, label } = getDiscountInfo();
 
   return (
     <main className="min-h-screen bg-gray-50 flex flex-col">
@@ -125,16 +186,64 @@ export default function CheckoutPage() {
                   ))}
                 </div>
 
-                <div className="bg-primary/5 rounded-2xl p-4 border border-primary/10 space-y-2">
-                   {isEligible && (
-                     <div className="flex justify-between items-center text-green-600 font-bold text-sm">
-                        <span>خصم سلة المشتريات (10%):</span>
-                        <span>- {discountAmount} د.ج</span>
+                {/* Discount Applied */}
+                {isEligible && (
+                  <div className="flex justify-between items-center text-green-600 font-bold mb-4 bg-green-50 p-4 rounded-2xl border border-green-100 animate-in zoom-in-95">
+                     <div className="flex items-center gap-2">
+                        <Tag size={20} />
+                        <div className="flex flex-col">
+                           <span className="text-sm">{label}</span>
+                           <span className="text-[10px] opacity-70">تم التطبيق تلقائياً</span>
+                        </div>
                      </div>
-                   )}
-                   <div className="flex justify-between items-center text-primary pt-2 border-t border-primary/10">
-                      <span className="font-bold">المجموع الفرعي للإجمالي:</span>
-                      <span className="text-xl font-black">{finalTotal} د.ج</span>
+                     <span>-{discountAmount.toLocaleString()} د.ج</span>
+                  </div>
+                )}
+
+                {/* VIP Offer Selector for Returning Customers */}
+                {customerStatus === 'vip' && availableOffers.length > 1 && (
+                  <div className="mb-6 space-y-3">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-2">تغيير العرض المطبق</p>
+                    <div className="flex flex-wrap gap-2">
+                      {availableOffers.map(offer => (
+                         <button
+                           key={offer.id}
+                           onClick={() => setAppliedVipOffer(offer)}
+                           className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${appliedVipOffer?.id === offer.id ? "bg-primary border-primary text-white shadow-lg" : "bg-white border-gray-100 text-gray-500 hover:border-gray-300"}`}
+                         >
+                           {offer.title}
+                         </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="pt-4 border-t border-gray-100">
+                  <div className="flex justify-between items-center mb-6">
+                     <span className="text-gray-900 font-black text-xl">المجموع النهائي</span>
+                     <span className="text-3xl font-black text-primary">{finalTotal.toLocaleString()} د.ج</span>
+                  </div>
+                  
+                  {/* Progress Indicator Context */}
+                  {customerStatus === 'new' && !isEligible && (
+                     <div className="p-3 bg-yellow-50 rounded-xl border border-yellow-100 mb-6 flex items-center gap-3">
+                        <Star className="text-yellow-600 fill-yellow-600" size={16} />
+                        <span className="text-[10px] font-bold text-yellow-800">أضف منتجين للحصول على خصم الترحيب (10%)!</span>
+                     </div>
+                  )}
+                </div>
+             </div>
+             
+             <div className="bg-primary/5 p-6 rounded-[2rem] border border-primary/10">
+                <div className="flex gap-4">
+                   <div className="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center shrink-0">
+                      <Star className="text-primary fill-primary" size={20} />
+                   </div>
+                   <div>
+                      <p className="font-black text-primary text-sm">هدية مع كل طلب!</p>
+                      <p className="text-primary/70 text-[10px] font-bold leading-relaxed">
+                        كلما زادت طلباتك، زاد عدد نجومك ⭐ وتفتحت لك عروض أقوى في "نادي VIP" الخاص بنا.
+                      </p>
                    </div>
                 </div>
              </div>
@@ -142,27 +251,14 @@ export default function CheckoutPage() {
 
           {/* Checkout Form */}
           <div className="lg:col-span-7 lg:order-1">
-            <div onClick={() => {
-              // This is a small hack to clear cart if order succeeds.
-              // OrderForm handles success naturally. In a real complex app we'd pass an onSuccess callback.
-              const observer = new MutationObserver((mutations) => {
-                 for (const m of mutations) {
-                    if (m.target.textContent?.includes("توجيهك إلى الواتساب")) {
-                       clearCart();
-                       observer.disconnect();
-                    }
-                 }
-              });
-              observer.observe(document.body, { childList: true, subtree: true });
-            }}>
-              <OrderForm 
-                productId="cart-order" // Placeholder
-                productName="طلب متعدد (سلة)"
-                productPrice={finalTotal}
-                cartItems={items}
-                discountAmount={discountAmount}
-              />
-            </div>
+             <OrderForm 
+               productId="cart-order" 
+               productName="طلب متعدد (سلة)"
+               productPrice={finalTotal}
+               appliedOfferId={appliedVipOffer?.id}
+               cartItems={items}
+               discountAmount={discountAmount}
+             />
           </div>
 
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Loader2, Save, X, Plus, Image as ImageIcon, ArrowRight } from "lucide-react";
@@ -25,7 +25,6 @@ const EMPTY_PRODUCT: Partial<Product> = {
   is_featured: false,
 };
 
-const CATEGORIES = ["حقائب جلدية", "حقائب قماشية", "حقائب ظهر", "حقائب يد", "أكياس ورقية", "أخرى"];
 
 interface ProductFormProps {
   initialData?: Product;
@@ -36,10 +35,26 @@ export default function ProductForm({ initialData }: ProductFormProps) {
   const isEditMode = !!initialData;
   const [product, setProduct] = useState<Partial<Product>>(initialData || EMPTY_PRODUCT);
   
+  const [dynamicCategories, setDynamicCategories] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [newSize, setNewSize] = useState("");
-  const [newColor, setNewColor] = useState({ name: "", hex: "#10a37f" });
+  const [newColor, setNewColor] = useState({ name: "", hex: "#00AEEF" });
   const [newPackage, setNewPackage] = useState({ label: "", quantity: 1, price: 0 });
+
+  useEffect(() => {
+    async function fetchCategories() {
+      if (!supabase) return;
+      const { data } = await supabase.from("settings").select("value").eq("key", "branding").single();
+      if (data && data.value && data.value.navigation) {
+        const nav: { label: string }[] = data.value.navigation;
+        setDynamicCategories(nav.map(item => item.label));
+      } else {
+        // Fallback or handle missing navigation
+        setDynamicCategories(["أكياس ورقية", "ملصقات", "مطبوعات", "أخرى"]);
+      }
+    }
+    fetchCategories();
+  }, []);
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -381,7 +396,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
                      className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20 outline-none font-bold"
                    >
                      <option value="">اختر تصنيفاً...</option>
-                     {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                     {dynamicCategories.map(c => <option key={c} value={c}>{c}</option>)}
                    </select>
                  </div>
 

@@ -11,13 +11,16 @@ import {
   Mail,
   CheckCircle2,
   Tag,
-  BarChart2
+  BarChart2,
+  Trash2,
+  Crown
 } from "lucide-react";
+import Link from "next/link";
 
 
 
 export default function AdminSettings() {
-  const [activeTab, setActiveTab] = useState<"branding" | "offers" | "marketing" | "email">("branding");
+  const [activeTab, setActiveTab] = useState<"branding" | "offers" | "marketing" | "email" | "navigation">("branding");
   const [settings, setSettings] = useState<Record<string, any>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -88,10 +91,11 @@ export default function AdminSettings() {
          {/* Tabs */}
           <div className="space-y-2">
             {[
-              { id: "branding", name: "الهوية والتواصل", icon: Palette },
-              { id: "offers", name: "العروض والخصومات", icon: Tag },
-              { id: "marketing", name: "بيكسلات التتبع", icon: BarChart2 },
-              { id: "email", name: "رسائل البريد", icon: Mail },
+               { id: "branding", name: "الهوية والتواصل", icon: Palette },
+               { id: "navigation", name: "قائمة الخدمات", icon: Globe },
+               { id: "offers", name: "العروض والخصومات", icon: Tag },
+               { id: "marketing", name: "بيكسلات التتبع", icon: BarChart2 },
+               { id: "email", name: "رسائل البريد", icon: Mail },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -170,30 +174,128 @@ export default function AdminSettings() {
                  </div>
                )}
 
-               {activeTab === "offers" && (
+               {activeTab === "navigation" && (
                  <div className="space-y-8 animate-in fade-in duration-500">
-                    <div className="space-y-3">
-                       <label className="text-sm font-black text-gray-700 block mr-2">تفعيل خصم سلة المشتريات التلقائي</label>
-                       <select
-                         value={settings.offers?.cartDiscountEnabled === false ? "false" : "true"}
-                         onChange={(e) => setSettings({ ...settings, offers: { ...settings.offers, cartDiscountEnabled: e.target.value === "true" } })}
-                         className="w-full bg-gray-50 border-none rounded-xl py-4 px-4 font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 transition-all"
+                    <div className="flex justify-between items-center mb-4">
+                       <h3 className="font-bold text-gray-800">روابط القائمة العلوية (الخدمات)</h3>
+                       <button 
+                         onClick={() => {
+                           const nav = settings.navigation || [];
+                           setSettings({ ...settings, navigation: [...nav, { label: "خدمة جديدة", href: "/products" }] });
+                         }}
+                         className="bg-primary/10 text-primary px-4 py-2 rounded-lg text-sm font-bold hover:bg-primary/20 transition-all"
                        >
-                         <option value="true">مفعل (يتم تطبيق خصم عند إضافة أكثر من منتج)</option>
-                         <option value="false">معطل</option>
-                       </select>
+                         + إضافة رابط جديد
+                       </button>
                     </div>
-                    <div className="space-y-3">
-                       <label className="text-sm font-black text-gray-700 block mr-2">نسبة الخصم المئوية (%)</label>
-                       <input 
-                         type="number" 
-                         min="1"
-                         max="100"
-                         value={settings.offers?.cartDiscountPercentage || 10}
-                         onChange={(e) => setSettings({ ...settings, offers: { ...settings.offers, cartDiscountPercentage: parseInt(e.target.value) || 0 } })}
-                         className="w-full bg-gray-50 border-none rounded-xl py-4 px-4 font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 transition-all"
-                       />
-                       <p className="text-[11px] text-gray-400 font-bold mr-2 mt-2">مثال: أدخل 10 للحصول على خصم 10% من إجمالي السلة المكونة من قطعتين فما فوق.</p>
+
+                    <div className="space-y-4">
+                       {(settings.navigation || []).map((item: any, idx: number) => (
+                         <div key={idx} className="flex gap-4 items-center bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                            <div className="flex-1 space-y-2">
+                               <input 
+                                 type="text" 
+                                 placeholder="اسم الخدمة"
+                                 value={item.label}
+                                 onChange={(e) => {
+                                   const nav = [...settings.navigation];
+                                   nav[idx].label = e.target.value;
+                                   setSettings({ ...settings, navigation: nav });
+                                 }}
+                                 className="w-full bg-white border-none rounded-lg py-2 px-3 font-bold text-gray-900 shadow-sm"
+                               />
+                               <input 
+                                 type="text" 
+                                 placeholder="الرابط (مثال: /products?category=stickers)"
+                                 value={item.href}
+                                 onChange={(e) => {
+                                   const nav = [...settings.navigation];
+                                   nav[idx].href = e.target.value;
+                                   setSettings({ ...settings, navigation: nav });
+                                 }}
+                                 className="w-full bg-white border-none rounded-lg py-2 px-3 text-xs font-mono text-gray-500 shadow-sm"
+                               />
+                            </div>
+                            <button 
+                               onClick={() => {
+                                 const nav = settings.navigation.filter((_: any, i: number) => i !== idx);
+                                 setSettings({ ...settings, navigation: nav });
+                               }}
+                               className="text-red-400 hover:text-red-600 p-2"
+                            >
+                               <Trash2 size={20} />
+                            </button>
+                         </div>
+                       ))}
+                       
+                       {(settings.navigation || []).length === 0 && (
+                         <div className="text-center py-10 text-gray-400 italic">
+                           لا توجد روابط مضافة حالياً. سيظهر رابط "كل الخدمات" تلقائياً.
+                         </div>
+                       )}
+                    </div>
+                 </div>
+               )}
+
+               {activeTab === "offers" && (
+                 <div className="space-y-10 animate-in fade-in duration-500">
+                    {/* Level/Star Loyalty Info */}
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-6 flex gap-5">
+                       <Crown className="text-yellow-500 shrink-0" size={28} />
+                       <div>
+                          <h3 className="font-black text-yellow-800 mb-1">نظام نجوم الولاء (Loyalty Stars)</h3>
+                          <p className="text-yellow-700 text-sm leading-relaxed">
+                            يتم تصنيف الزبائن تلقائياً من نجمة واحدة (عند أول طلب) إلى 5 نجوم (عند 5 طلبات فما فوق). تستطيع التحكم في العروض لكل مستوى من صفحة <Link href="/admin/offers" className="underline font-black">إدارة العروض</Link>.
+                          </p>
+                       </div>
+                    </div>
+
+                    <div className="space-y-6">
+                       <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
+                          <Tag className="text-primary" size={24} />
+                          <h3 className="font-black text-gray-900 text-xl">خصم الترحيب (للزبائن الجدد فقط)</h3>
+                       </div>
+
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                          <div className="space-y-3">
+                             <label className="text-sm font-black text-gray-700 block mr-2">تفعيل الخصم</label>
+                             <select
+                               value={settings.discounts?.newCustomerDiscountEnabled === false ? "false" : "true"}
+                               onChange={(e) => setSettings({ ...settings, discounts: { ...settings.discounts, newCustomerDiscountEnabled: e.target.value === "true" } })}
+                               className="w-full bg-gray-50 border-none rounded-xl py-4 px-4 font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 transition-all"
+                             >
+                               <option value="true">مفعل (للزبائن الجدد فقط)</option>
+                               <option value="false">معطل</option>
+                             </select>
+                          </div>
+                          <div className="space-y-3">
+                             <label className="text-sm font-black text-gray-700 block mr-2">نسبة الخصم المئوية (%)</label>
+                             <input 
+                               type="number" 
+                               min="0"
+                               max="100"
+                               value={settings.discounts?.newCustomerDiscountPercent || 10}
+                               onChange={(e) => setSettings({ ...settings, discounts: { ...settings.discounts, newCustomerDiscountPercent: parseInt(e.target.value) || 0 } })}
+                               className="w-full bg-gray-50 border-none rounded-xl py-4 px-4 font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 transition-all"
+                             />
+                          </div>
+                          <div className="space-y-3">
+                             <label className="text-sm font-black text-gray-700 block mr-2">الحد الأدنى لعدد المنتجات</label>
+                             <input 
+                               type="number" 
+                               min="1"
+                               value={settings.discounts?.newCustomerMinItems || 2}
+                               onChange={(e) => setSettings({ ...settings, discounts: { ...settings.discounts, newCustomerMinItems: parseInt(e.target.value) || 1 } })}
+                               className="w-full bg-gray-50 border-none rounded-xl py-4 px-4 font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 transition-all"
+                             />
+                          </div>
+                       </div>
+                       
+                       <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10">
+                          <p className="text-xs text-primary font-bold leading-relaxed">
+                            💡 ملاحظة: هذا الخصم سيظهر تلقائياً للزبون الذي ليس لديه أي طلبات سابقة في المتجر بمجرد وصوله للعدد المحدد من المنتجات في السلة.
+                          </p>
+                       </div>
                     </div>
                  </div>
                )}

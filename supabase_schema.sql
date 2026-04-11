@@ -52,15 +52,15 @@ ON CONFLICT (wilaya_id) DO NOTHING;
 -- Default Settings
 INSERT INTO settings (key, value) VALUES
 ('branding', '{
-  "storeName": "SacShop",
+  "storeName": "Service Serigraphie",
   "logo": "",
   "favicon": "",
-  "primaryColor": "#10a37f",
+  "primaryColor": "#00AEEF",
   "secondaryColor": "#f4f4f4",
   "fontFamily": "Tajawal",
-  "heroTitle": "أفضل حقائبك بنقرة واحدة",
-  "heroSubtitle": "تشكيلة واسعة من الحقائب والأكياس بجودة عالية وتوصيل لجميع ولايات الجزائر",
-  "whatsappNumber": "213XXXXXXXXX"
+  "heroTitle": "خدمات طباعة وتغليف احترافية",
+  "heroSubtitle": "أكياس، ملصقات، ومطبوعات بجودة عالية وتوصيل سريع لجميع ولايات الجزائر",
+  "whatsappNumber": "213"
 }'),
 ('marketing', '{
   "fbPixelId": "",
@@ -69,13 +69,13 @@ INSERT INTO settings (key, value) VALUES
 }'),
 ('vip', '{
   "minOrdersForVip": 2,
-  "vipBadgeText": "زبون مميز",
-  "vipWelcomeMessage": "مرحباً بك من جديد! لديك عروض حصرية بانتظارك."
+  "vipBadgeText": "عضو مميز",
+  "vipWelcomeMessage": "مرحباً بك من جديد! رتبتك الحالية تؤهلك لعروض حصرية."
 }'),
 ('email', '{
-  "fromName": "SacShop.dz",
-  "fromEmail": "noreply@sacshop.dz",
-  "orderConfirmTemplate": "مرحباً {name}،\n\nشكراً لطلبك رقم #{order_number}.\n\nسنتواصل معك قريباً لتأكيد التوصيل.\n\nفريق SacShop.dz"
+  "fromName": "Service Serigraphie",
+  "fromEmail": "noreply@service-serigraphie.dz",
+  "orderConfirmTemplate": "مرحباً {name}،\n\nشكراً لطلبك رقم #{order_number}.\n\nسنتواصل معك قريباً لتأكيد طلبك.\n\nفريق Service Serigraphie"
 }')
 ON CONFLICT (key) DO NOTHING;
 

@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { supabase } from "@/lib/supabase";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import ProductCard from "@/components/ProductCard";
-import { Search, Filter, Loader2, Gift, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { Search, Filter, Loader2, Gift, ArrowLeft, CheckCircle2, ShoppingBag } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
+import { useSettingsStore } from "@/store/settingsStore";
 import Link from "next/link";
-
+import { useSearchParams } from "next/navigation";
 
 interface Product {
   id: string;
@@ -30,9 +31,10 @@ const STATIC_PRODUCTS: Product[] = [
   { id: "6", name: "علب شحن وتوصيل", price: 65.00, image_url: "https://placehold.co/800x800/c4a484/1a1a1a.png?text=Shipping+Box", category: "علب وتعبئة", description: "" },
 ];
 
-const CATEGORIES = ["الكل", "أكياس ورقية", "أكياس فاخرة", "أكياس بلاستيكية", "علب وتعبئة", "ملحقات التغليف"];
-
-export default function ProductsPage() {
+function ProductsList() {
+  const searchParams = useSearchParams();
+  const urlCategory = searchParams.get("category");
+  
   const [products, setProducts] = useState<Product[]>([]);
   const [filtered, setFiltered] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,12 +43,19 @@ export default function ProductsPage() {
   
   const { items, getDiscountInfo } = useCartStore();
   const { isEligible, percentage } = getDiscountInfo();
-  // Hydration fix
+  const { navigation } = useSettingsStore();
+
   const [mounted, setMounted] = useState(false);
+
+  // Derive categories from navigation settings
+  const dynamicCategories = ["الكل", ...(navigation || []).map(item => item.label)];
   
   useEffect(() => {
     setMounted(true);
-  }, []);
+    if (urlCategory) {
+      setActiveCategory(urlCategory);
+    }
+  }, [urlCategory]);
 
   useEffect(() => {
     async function fetchProducts() {
@@ -84,8 +93,7 @@ export default function ProductsPage() {
   }, [search, activeCategory, products]);
 
   return (
-    <main className="min-h-screen bg-gray-50/50">
-      <Header />
+    <>
       {/* Hero Banner */}
       <section className="bg-white border-b border-gray-100 py-14">
         <div className="container mx-auto px-4 text-right">
@@ -98,7 +106,6 @@ export default function ProductsPage() {
       </section>
 
       <div className="container mx-auto px-4 py-12">
-      
         {/* UPSell Banner B2B logic */}
         {mounted && items.length > 0 && (
           <div className={`mb-10 p-6 rounded-3xl border-2 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl transition-all ${
@@ -151,7 +158,7 @@ export default function ProductsPage() {
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <Filter size={18} className="text-gray-400 shrink-0" />
-            {CATEGORIES.map(cat => (
+            {dynamicCategories.map(cat => (
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
@@ -195,6 +202,21 @@ export default function ProductsPage() {
           </>
         )}
       </div>
+    </>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <main className="min-h-screen bg-gray-50/50">
+      <Header />
+      <Suspense fallback={
+        <div className="flex items-center justify-center py-32">
+          <Loader2 className="animate-spin text-primary" size={40} />
+        </div>
+      }>
+        <ProductsList />
+      </Suspense>
       <Footer />
       <WhatsAppButton />
     </main>

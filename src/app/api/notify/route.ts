@@ -31,7 +31,7 @@ export async function POST(req: Request) {
         subject = "تم استلام طلبك بنجاح محفظة SacShop 🛍️";
         htmlContent = `
           <div dir="rtl" style="font-family: Arial, sans-serif; text-align: right; color: #333;">
-            <h1 style="color: #10a37f;">مرحباً ${customerName}،</h1>
+            <h1 style="color: #00AEEF;">مرحباً ${customerName}،</h1>
             <p>شكراً لتسوقك من متجرنا. لقد استلمنا طلبك رقم <strong>#${orderNumber || orderId.slice(0, 8)}</strong> بنجاح.</p>
             <p>إجمالي الطلب: <strong>${totalPrice} د.ج</strong></p>
             <p>سنتصل بك قريباً لتأكيد الطلب وتحديد موعد التوصيل.</p>
@@ -45,7 +45,7 @@ export async function POST(req: Request) {
         subject = "طلبك في الطريق إليك 🚚";
         htmlContent = `
           <div dir="rtl" style="font-family: Arial, sans-serif; text-align: right; color: #333;">
-            <h1 style="color: #10a37f;">مرحباً ${customerName}،</h1>
+            <h1 style="color: #00AEEF;">مرحباً ${customerName}،</h1>
             <p>نبشرك بأن طلبك رقم <strong>#${orderNumber || orderId.slice(0, 8)}</strong> قد تم تسليمه لشركة التوصيل وهو الآن في الطريق إليك!</p>
             <p>يرجى إبقاء هاتفك مفتوحاً للتواصل معك.</p>
             <br/>
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
         subject = "تم تسليم طلبك بنجاح ✅";
         htmlContent = `
           <div dir="rtl" style="font-family: Arial, sans-serif; text-align: right; color: #333;">
-            <h1 style="color: #10a37f;">مرحباً ${customerName}،</h1>
+            <h1 style="color: #00AEEF;">مرحباً ${customerName}،</h1>
             <p>لقد تم تأكيد تسليم طلبك رقم <strong>#${orderNumber || orderId.slice(0, 8)}</strong>.</p>
             <p>نتمنى أن تكون تجربتك معنا مميزة وأن تكون المنتجات نالت إعجابك.</p>
             <br/>

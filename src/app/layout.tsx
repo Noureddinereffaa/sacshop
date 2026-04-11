@@ -10,8 +10,8 @@ const tajawal = Tajawal({
 });
 
 export const metadata: Metadata = {
-  title: "SacShop.dz | أفضل حقائب وأكياس في الجزائر",
-  description: "تسوق أجود أنواع الحقائب والأكياس بتوصيل سريع لجميع ولايات الجزائر. الدفع عند الاستلام.",
+  title: "Service Serigraphie | أفضل خدمات الطباعة والتغليف في الجزائر",
+  description: "حلول احترافية للطباعة والتغليف. أكياس، ملصقات، ومطبوعات بجودة عالية وتوصيل سريع لجميع الولايات. اطلب الآن واستفد من عروض VIP.",
 };
 
 import SettingsProvider from "@/components/SettingsProvider";

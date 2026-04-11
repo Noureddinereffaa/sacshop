@@ -15,25 +15,32 @@ export interface CartItem {
 interface CartStore {
   items: CartItem[];
   isOpen: boolean;
+  customerStatus: 'new' | 'vip' | 'guest';
+  appliedVipOffer: any | null;
   addItem: (item: CartItem) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
   toggleCart: () => void;
   setIsOpen: (isOpen: boolean) => void;
+  setCustomerStatus: (status: 'new' | 'vip' | 'guest') => void;
+  setAppliedVipOffer: (offer: any | null) => void;
   getCartTotal: () => number;
   getDiscountInfo: () => {
     isEligible: boolean;
+    discountType: 'welcome' | 'vip' | 'none';
     subtotal: number;
     discountAmount: number;
     finalTotal: number;
     percentage: number;
+    label: string;
   };
   discountConfig: {
     enabled: boolean;
     percentage: number;
+    minItems: number;
   };
-  setDiscountConfig: (enabled: boolean, percentage: number) => void;
+  setDiscountConfig: (config: { enabled: boolean; percentage: number; minItems: number }) => void;
 }
 
 export const useCartStore = create<CartStore>()(
@@ -41,9 +48,13 @@ export const useCartStore = create<CartStore>()(
     (set, get) => ({
       items: [],
       isOpen: false,
-      discountConfig: { enabled: true, percentage: 10 },
+      customerStatus: 'guest',
+      appliedVipOffer: null,
+      discountConfig: { enabled: true, percentage: 10, minItems: 2 },
       
-      setDiscountConfig: (enabled, percentage) => set({ discountConfig: { enabled, percentage } }),
+      setDiscountConfig: (config) => set({ discountConfig: config }),
+      setCustomerStatus: (status) => set({ customerStatus: status }),
+      setAppliedVipOffer: (offer) => set({ appliedVipOffer: offer }),
       
       addItem: (item) => set((state) => {
         // Find if this exact configuration exists
@@ -88,16 +99,44 @@ export const useCartStore = create<CartStore>()(
         const totalItems = state.items.reduce((acc, item) => acc + item.quantity, 0);
         const subtotal = state.items.reduce((total, item) => total + (item.price * item.quantity), 0);
         
-        const isEligible = state.discountConfig.enabled && totalItems >= 2;
-        const discountAmount = isEligible ? Math.round(subtotal * (state.discountConfig.percentage / 100)) : 0;
+        let isEligible = false;
+        let discountAmount = 0;
+        let discountType: 'welcome' | 'vip' | 'none' = 'none';
+        let label = "";
+        let percentage = 0;
+
+        // 1. VIP Offer Take Precedence if set (Returning Customers)
+        if (state.customerStatus === 'vip' && state.appliedVipOffer) {
+          isEligible = true;
+          discountType = 'vip';
+          label = `خصم VIP: ${state.appliedVipOffer.title}`;
+          if (state.appliedVipOffer.discount_type === 'percentage') {
+            percentage = state.appliedVipOffer.discount_value;
+            discountAmount = Math.round(subtotal * (percentage / 100));
+          } else {
+            discountAmount = state.appliedVipOffer.discount_value;
+            percentage = Math.round((discountAmount / subtotal) * 100);
+          }
+        } 
+        // 2. Welcome Discount (New Customers only)
+        else if (state.customerStatus === 'new' && state.discountConfig.enabled && totalItems >= state.discountConfig.minItems) {
+          isEligible = true;
+          discountType = 'welcome';
+          percentage = state.discountConfig.percentage;
+          label = "خصم ترحيبي للزبائن الجدد";
+          discountAmount = Math.round(subtotal * (percentage / 100));
+        }
+
         const finalTotal = subtotal - discountAmount;
         
         return {
           isEligible,
+          discountType,
           subtotal,
           discountAmount,
           finalTotal,
-          percentage: state.discountConfig.percentage
+          percentage,
+          label
         };
       }
     }),

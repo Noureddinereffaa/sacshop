@@ -33,8 +33,10 @@ export default function SettingsProvider({ children }: { children: React.ReactNo
           cartDiscountPercentage: settingsMap.offers?.cartDiscountPercentage || 10,
         };
 
+        const navigation = settingsMap.navigation || [];
+
         // 1. Update global store
-        setSettings(branding, offers);
+        setSettings(branding, offers, navigation);
 
         // 2. Sync Cart Store logic
         setDiscountConfig(offers.cartDiscountEnabled, offers.cartDiscountPercentage);

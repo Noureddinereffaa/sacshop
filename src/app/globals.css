@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #10a37f;
+  --color-primary: #00AEEF;
   --color-secondary: #f4f4f4;
   --color-background: #ffffff;
   --color-foreground: #171d1c;
@@ -43,7 +43,7 @@
   }
 
   .gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-600;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-[#00AEEF] to-[#0089bc];
   }
 
   .hover-lift {

@@ -46,7 +46,7 @@ export async function generateAndUploadOrderPDF(data: OrderPDFData): Promise<str
         <td style="padding: 10px 16px; text-align: center;">${item.quantity}</td>
         <td style="padding: 10px 16px; text-align: center;">${item.size || "—"}</td>
         <td style="padding: 10px 16px; text-align: center;">${item.color || "—"}</td>
-        <td style="padding: 10px 16px; text-align: left; font-weight: bold; color: #10a37f;">
+        <td style="padding: 10px 16px; text-align: left; font-weight: bold; color: #00AEEF;">
           ${(item.price * item.quantity).toLocaleString()} د.ج
         </td>
       </tr>
@@ -68,10 +68,10 @@ export async function generateAndUploadOrderPDF(data: OrderPDFData): Promise<str
   container.innerHTML = `
     <div style="padding: 40px;">
       <!-- Header -->
-      <div style="background: linear-gradient(135deg, #10a37f, #0d8a6b); color: white; padding: 28px 32px; border-radius: 12px; margin-bottom: 30px;">
+      <div style="background: linear-gradient(135deg, #00AEEF, #0089bc); color: white; padding: 28px 32px; border-radius: 12px; margin-bottom: 30px;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <div>
-            <div style="font-size: 26px; font-weight: 900; letter-spacing: -0.5px;">SacShop.dz</div>
+            <div style="font-size: 26px; font-weight: 900; letter-spacing: -0.5px;">Service Serigraphie</div>
             <div style="font-size: 12px; opacity: 0.85; margin-top: 4px;">وصل الطلب الرسمي</div>
           </div>
           <div style="text-align: left;">
@@ -104,7 +104,7 @@ export async function generateAndUploadOrderPDF(data: OrderPDFData): Promise<str
         <div style="font-size: 13px; font-weight: 900; color: #555; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;">تفاصيل المنتجات</div>
         <table style="width: 100%; border-collapse: collapse; border: 1px solid #eee; border-radius: 10px; overflow: hidden;">
           <thead>
-            <tr style="background: #f0fdf4; color: #10a37f;">
+            <tr style="background: #f0f9ff; color: #00AEEF;">
               <th style="padding: 12px 16px; text-align: right; font-size: 12px; font-weight: 900;">المنتج</th>
               <th style="padding: 12px 16px; text-align: center; font-size: 12px; font-weight: 900;">الكمية</th>
               <th style="padding: 12px 16px; text-align: center; font-size: 12px; font-weight: 900;">المقاس</th>
@@ -130,9 +130,9 @@ export async function generateAndUploadOrderPDF(data: OrderPDFData): Promise<str
             <span>- ${data.discountAmount.toLocaleString()} د.ج</span>
           </div>
         ` : ""}
-        <div style="display: flex; justify-content: space-between; border-top: 2px solid #10a37f; padding-top: 14px; margin-top: 8px;">
-          <span style="font-size: 18px; font-weight: 900; color: #10a37f;">المجموع النهائي</span>
-          <span style="font-size: 24px; font-weight: 900; color: #10a37f;">${finalTotal.toLocaleString()} د.ج</span>
+        <div style="display: flex; justify-content: space-between; border-top: 2px solid #00AEEF; padding-top: 14px; margin-top: 8px;">
+          <span style="font-size: 18px; font-weight: 900; color: #00AEEF;">المجموع النهائي</span>
+          <span style="font-size: 24px; font-weight: 900; color: #00AEEF;">${finalTotal.toLocaleString()} د.ج</span>
         </div>
       </div>
 
@@ -145,7 +145,7 @@ export async function generateAndUploadOrderPDF(data: OrderPDFData): Promise<str
 
       <!-- Footer -->
       <div style="text-align: center; color: #aaa; font-size: 11px; border-top: 1px solid #eee; padding-top: 20px; margin-top: 10px;">
-        <div style="font-weight: 900; color: #10a37f; font-size: 14px; margin-bottom: 4px;">SacShop.dz</div>
+        <div style="font-weight: 900; color: #00AEEF; font-size: 14px; margin-bottom: 4px;">Service Serigraphie</div>
         هذا وصل طلب رسمي — لا يمكن تعديله
       </div>
     </div>
@@ -194,7 +194,7 @@ export async function generateAndUploadOrderPDF(data: OrderPDFData): Promise<str
     .getPublicUrl(fileName);
 
   // force browser download with a clear filename
-  const downloadName = `SacShop-Receipt-${shortId}.pdf`;
+  const downloadName = `Service-Serigraphie-Receipt-${shortId}.pdf`;
   return `${publicUrlData.publicUrl}?download=${downloadName}`;
 } catch (err: any) {
   console.error("PDF Generate/Upload Error:", err);

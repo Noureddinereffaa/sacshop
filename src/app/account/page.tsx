@@ -22,6 +22,7 @@ interface CustomerData {
   total_orders: number;
   total_spent: number;
   is_vip: boolean;
+  star_level: number;
 }
 interface OrderItem {
   id: string;
@@ -459,15 +460,31 @@ function AccountContent() {
           <div className="text-center md:text-right mt-2">
             <div className="flex flex-col md:flex-row items-center md:items-start gap-3 mb-2 flex-wrap justify-center md:justify-start">
               <h2 className="text-3xl md:text-4xl font-black text-white">{customerData.name}</h2>
-              {customerData.is_vip && (
-                <span className="bg-gradient-to-r from-yellow-300 to-yellow-500 text-yellow-900 px-4 py-1.5 rounded-full text-xs font-black flex items-center gap-1.5 shadow-lg shadow-yellow-400/20 mt-1 md:mt-0">
-                  <Crown size={14} /> زبون VIP
-                </span>
+              {customerData.star_level > 0 && (
+                <div className="flex items-center gap-1 bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/30 shadow-lg">
+                  {[...Array(5)].map((_, i) => (
+                    <Star 
+                      key={i} 
+                      size={14} 
+                      className={`${i < customerData.star_level ? "text-yellow-400 fill-yellow-400" : "text-white/30"} transition-all duration-700`} 
+                    />
+                  ))}
+                </div>
               )}
             </div>
-            <p className="text-white/80 font-medium flex items-center gap-2 justify-center md:justify-start" dir="ltr">
-              <Phone size={14} className="opacity-70" /> {customerData.phone}
-            </p>
+            <div className="flex flex-wrap items-center gap-3 justify-center md:justify-start mt-2">
+               <p className="text-white/80 font-medium flex items-center gap-2" dir="ltr">
+                 <Phone size={14} className="opacity-70" /> {customerData.phone}
+               </p>
+               <span className="w-1.5 h-1.5 bg-white/30 rounded-full" />
+               <p className="text-white font-black text-xs uppercase tracking-widest">
+                 {customerData.star_level === 5 ? "عضو ملكي (5 نجوم)" : 
+                  customerData.star_level === 4 ? "عضو ماسي (4 نجوم)" :
+                  customerData.star_level === 3 ? "عضو ذهبي (3 نجوم)" :
+                  customerData.star_level === 2 ? "عضو فضي (2 نجوم)" :
+                  customerData.star_level === 1 ? "عضو برونزي (نجمة واحدة)" : "عضو جديد"}
+               </p>
+            </div>
           </div>
         </div>
 
@@ -484,71 +501,111 @@ function AccountContent() {
         </div>
       </div>
 
-      {/* ── VIP Offers ─────────────────────────────────────────────────────── */}
-      {vipOffers.length > 0 && (
-        <div className="space-y-4">
-          <h3 className="text-xl font-black text-gray-900 flex items-center gap-3">
-            <div className="w-9 h-9 bg-yellow-100 rounded-xl flex items-center justify-center">
-              <Crown className="text-yellow-600" size={19} />
-            </div>
-            عروضك الحصرية
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {vipOffers.map(offer => {
-              const daysLeft = offer.expires_at
-                ? Math.ceil((new Date(offer.expires_at).getTime() - Date.now()) / 86400000)
-                : null;
-              return (
-                <div key={offer.id}
-                  className="relative bg-gradient-to-br from-primary/5 via-white to-yellow-50 border-2 border-primary/20 rounded-[2rem] p-6 shadow-lg hover:shadow-xl transition-all group overflow-hidden">
-                  <Star size={12} className="absolute top-4 left-4 text-yellow-400 fill-yellow-400" />
-                  <div className="flex items-start justify-between gap-4 mb-4">
-                    <div className={`px-4 py-2 rounded-2xl font-black text-lg shadow-inner shrink-0 ${offer.discount_type === "percentage" ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"}`}>
-                      {offer.discount_type === "percentage"
-                        ? <span className="flex items-center gap-1"><Percent size={16} />{offer.discount_value}%</span>
-                        : <span className="flex items-center gap-1"><Tag size={14} />{offer.discount_value} د.ج</span>}
-                    </div>
-                    {daysLeft !== null && (
-                      <span className={`text-xs font-bold flex items-center gap-1 px-3 py-1.5 rounded-full ${daysLeft <= 3 ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-500"}`}>
-                        <AlarmClock size={12} />
-                        {daysLeft <= 0 ? "ينتهي اليوم!" : `${daysLeft} يوم`}
-                      </span>
-                    )}
-                  </div>
-                  <h4 className="text-lg font-black text-gray-900 mb-2 group-hover:text-primary transition-colors">{offer.title}</h4>
-                  {offer.description && <p className="text-gray-500 text-sm mb-5">{offer.description}</p>}
-                  <Link href="/products" className="block w-full">
-                    <button className="w-full bg-primary text-white py-3 rounded-xl font-black flex items-center justify-center gap-2 hover:bg-primary/90 shadow-lg shadow-primary/20 text-sm">
-                      <ShoppingBag size={16} /> تسوق الآن بالخصم <ArrowLeft size={14} />
-                    </button>
-                  </Link>
+      {/* ── VIP Offers & Loyalty Progress ─────────────────────────────────────────────────────── */}
+      <div className="space-y-6">
+        {/* Progress to next star */}
+        {customerData.star_level < 5 && (
+          <div className="bg-white border border-gray-100 rounded-[2rem] p-6 shadow-sm overflow-hidden relative group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-400/5 rounded-full blur-2xl -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700" />
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-yellow-50 rounded-2xl flex items-center justify-center text-yellow-600 shadow-inner">
+                  <Star size={24} className="fill-yellow-600" />
                 </div>
-              );
-            })}
-          </div>
-          <div className="bg-primary/5 border border-primary/15 rounded-2xl p-5 flex items-start gap-4">
-            <div className="w-10 h-10 bg-primary/15 rounded-xl flex items-center justify-center shrink-0 text-primary">
-              <Gift size={20} />
+                <div>
+                  <p className="font-black text-gray-900">طريقك نحو النجمة {customerData.star_level + 1}!</p>
+                  <p className="text-gray-500 text-sm">تبقّى لك طلب واحد فقط لرفع مستواك وفتح عروض أقوى.</p>
+                </div>
+              </div>
+              <div className="flex-1 max-w-xs w-full">
+                <div className="flex justify-between text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">
+                  <span>المستوى {customerData.star_level}</span>
+                  <span>المستوى {customerData.star_level + 1}</span>
+                </div>
+                <div className="h-3 bg-gray-100 rounded-full overflow-hidden border border-gray-100 shadow-inner">
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: "50%" }} // Simple logic: one more order needed
+                    className="h-full bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full shadow-lg shadow-yellow-500/20"
+                  />
+                </div>
+              </div>
             </div>
-            <div>
-              <p className="font-black text-gray-800 mb-1">تذكير: خصم إضافي عند إنشاء السلة</p>
-              <p className="text-gray-500 text-sm">أضف منتجين أو أكثر إلى سلتك للحصول على خصم السلة التلقائي إضافةً إلى عروضك الحصرية.</p>
-            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Progress to VIP */}
-      {!customerData.is_vip && (customerData.total_orders || 0) < 2 && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-5 flex items-center gap-4">
-          <CheckCircle2 className="text-yellow-500 shrink-0" size={24} />
+        {vipOffers.length > 0 && (
+          <div className="space-y-4">
+            <h3 className="text-xl font-black text-gray-900 flex items-center gap-3">
+              <div className="w-9 h-9 bg-yellow-100 rounded-xl flex items-center justify-center">
+                <Crown className="text-yellow-600" size={19} />
+              </div>
+              عروضك الحصرية كعضو {customerData.star_level} ⭐
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {vipOffers.map(offer => {
+                const daysLeft = offer.expires_at
+                  ? Math.ceil((new Date(offer.expires_at).getTime() - Date.now()) / 86400000)
+                  : null;
+                return (
+                  <div key={offer.id}
+                    className="relative bg-gradient-to-br from-white via-white to-yellow-50/50 border-2 border-yellow-200/50 rounded-[2.5rem] p-7 shadow-xl shadow-yellow-500/5 hover:shadow-2xl hover:border-yellow-300 transition-all group overflow-hidden">
+                    <div className="absolute top-0 left-0 w-32 h-32 bg-yellow-400/5 rounded-full blur-3xl -ml-16 -mt-16 group-hover:scale-150 transition-transform duration-700" />
+                    
+                    <div className="flex items-start justify-between gap-4 mb-6">
+                      <div className={`px-5 py-3 rounded-2xl font-black text-2xl shadow-lg border border-white group-hover:scale-110 transition-transform ${offer.discount_type === "percentage" ? "bg-gradient-to-br from-green-500 to-green-600 text-white" : "bg-gradient-to-br from-blue-500 to-blue-600 text-white"}`}>
+                        {offer.discount_type === "percentage"
+                          ? <><span className="text-lg opacity-80">%</span>{offer.discount_value}</>
+                          : <><span className="text-lg opacity-80">د.ج</span>{offer.discount_value}</>}
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        {daysLeft !== null && (
+                          <span className={`text-[10px] font-black flex items-center gap-1.5 px-3 py-1.5 rounded-full uppercase tracking-wider ${daysLeft <= 3 ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-500"}`}>
+                            <AlarmClock size={12} />
+                            {daysLeft <= 0 ? "ينتهي اليوم!" : `${daysLeft} يوم متبقي`}
+                          </span>
+                        )}
+                        <span className="text-[10px] bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full font-black flex items-center gap-1 border border-yellow-200">
+                          <Crown size={10} /> عرض VIP
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <h4 className="text-xl font-black text-gray-950 mb-2 group-hover:text-primary transition-colors">{offer.title}</h4>
+                    {offer.description && <p className="text-gray-500 text-sm mb-6 leading-relaxed">{offer.description}</p>}
+                    
+                    <Link href="/products" className="block w-full">
+                      <button className="w-full bg-gray-950 text-white py-4 rounded-2xl font-black flex items-center justify-center gap-3 hover:bg-primary transition-all shadow-xl active:scale-[0.98]">
+                        <ShoppingBag size={20} /> تسوق الآن بالخصم <ArrowLeft size={18} />
+                      </button>
+                    </Link>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Progress to next star level (when no VIP offers or explicitly for lower levels) */}
+      {customerData.star_level === 0 && (
+        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-[2rem] p-8 flex items-center gap-6 group hover:shadow-lg transition-all">
+          <div className="relative">
+            <div className="absolute inset-0 bg-yellow-400 blur-xl opacity-20 group-hover:opacity-40 transition-opacity" />
+            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-yellow-600 shadow-md border border-yellow-100 relative z-10 scale-110">
+              <Star size={32} className="fill-yellow-600" />
+            </div>
+          </div>
           <div className="flex-1">
-            <p className="font-black text-yellow-800">طريقك نحو الزبون المميز!</p>
-            <p className="text-yellow-700 text-sm font-medium mt-1">
-              طلب واحد إضافي <span className="font-black">{2 - (customerData.total_orders || 0)}</span> للحصول على وضع المميز وعروض حصرية.
+            <p className="font-black text-yellow-900 text-xl mb-1">ابدأ رحلة الولاء الآن!</p>
+            <p className="text-yellow-700 font-medium">
+               أكمل طلبك الأول (1) واحصل على <span className="font-black underline">النجمة الأولى ⭐</span> لفتح بوابة العروض الحصرية.
             </p>
           </div>
-          <p className="text-2xl font-black text-yellow-700 shrink-0">{customerData.total_orders || 0}/2</p>
+          <div className="hidden md:flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm p-4 rounded-3xl border border-white h-24 w-24 shadow-inner">
+             <span className="text-[10px] font-black text-yellow-800 uppercase mb-1">التقدم</span>
+             <span className="text-3xl font-black text-yellow-700">0/1</span>
+          </div>
         </div>
       )}
 

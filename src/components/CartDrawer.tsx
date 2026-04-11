@@ -19,12 +19,12 @@ export default function CartDrawer() {
     
     async function fetchDiscountConfig() {
       if (!supabase) return;
-      const { data } = await supabase.from("settings").select("value").eq("key", "offers").single();
+      const { data } = await supabase.from("settings").select("value").eq("key", "discounts").single();
       if (data && data.value) {
         setDiscountConfig({
-          enabled: data.value.cartDiscountEnabled !== false, 
-          percentage: data.value.cartDiscountPercentage || 10,
-          minItems: data.value.cartMinItems || 2
+          enabled: data.value.newCustomerDiscountEnabled !== false, 
+          percentage: data.value.newCustomerDiscountPercent || 10,
+          minItems: data.value.newCustomerMinItems || 2
         });
       }
     }

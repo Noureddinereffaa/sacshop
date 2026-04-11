@@ -6,6 +6,7 @@ import WhatsAppButton from "@/components/WhatsAppButton";
 import { ArrowRight, ShoppingBag, Truck, ShieldCheck, Zap } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import ProductCard from "@/components/ProductCard";
+import Link from "next/link";
 
 
 export const revalidate = 0; // Ensure dynamic rendering for settings changes
@@ -25,10 +26,10 @@ export default async function Home() {
   let discountEnabled = true; // Default to true as per cartStore
   let discountPercentage = 10;
   if (supabase) {
-     const { data: offerSetting } = await supabase.from("settings").select("value").eq("key", "offers").maybeSingle();
+     const { data: offerSetting } = await supabase.from("settings").select("value").eq("key", "discounts").maybeSingle();
      if (offerSetting && offerSetting.value) {
-       discountEnabled = offerSetting.value.cartDiscountEnabled !== false;
-       discountPercentage = offerSetting.value.cartDiscountPercentage || 10;
+       discountEnabled = offerSetting.value.newCustomerDiscountEnabled !== false;
+       discountPercentage = offerSetting.value.newCustomerDiscountPercent || 10;
      }
   }
   return (
@@ -87,10 +88,10 @@ export default async function Home() {
                <h2 className="text-4xl font-black text-gray-900 mb-4">أكياسنا الأكثر مبيعاً</h2>
                <p className="text-gray-500 text-lg">اكتشف تشكيلتنا الواسعة من الأكياس ذات الجودة العالية</p>
             </div>
-            <button className="flex items-center gap-2 text-primary font-bold hover:gap-4 transition-all group">
+            <Link href="/products" className="flex items-center gap-2 text-primary font-bold hover:gap-4 transition-all group">
                <span>مشاهدة كل المنتجات</span>
                <ArrowRight size={20} className="rotate-180" />
-            </button>
+            </Link>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

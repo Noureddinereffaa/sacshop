@@ -8,9 +8,10 @@ interface Branding {
   whatsappNumber: string;
 }
 
-interface Offers {
+interface Discounts {
   cartDiscountEnabled: boolean;
   cartDiscountPercentage: number;
+  cartMinItems: number;
 }
 
 interface NavigationItem {
@@ -20,10 +21,10 @@ interface NavigationItem {
 
 interface SettingsState {
   branding: Branding;
-  offers: Offers;
+  discounts: Discounts;
   navigation: NavigationItem[];
   isLoaded: boolean;
-  setSettings: (branding: Branding, offers: Offers, navigation: NavigationItem[]) => void;
+  setSettings: (branding: Branding, discounts: Discounts, navigation: NavigationItem[]) => void;
 }
 
 export const useSettingsStore = create<SettingsState>((set) => ({
@@ -34,11 +35,12 @@ export const useSettingsStore = create<SettingsState>((set) => ({
     secondaryColor: "#f4f4f4",
     whatsappNumber: "213",
   },
-  offers: {
+  discounts: {
     cartDiscountEnabled: true,
     cartDiscountPercentage: 10,
+    cartMinItems: 2
   },
   navigation: [],
   isLoaded: false,
-  setSettings: (branding, offers, navigation) => set({ branding, offers, navigation, isLoaded: true }),
+  setSettings: (branding, discounts, navigation) => set({ branding, discounts, navigation, isLoaded: true }),
 }));

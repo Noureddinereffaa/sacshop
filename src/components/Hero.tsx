@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 const slides = [
   {
@@ -76,13 +77,15 @@ export default function Hero() {
             >
               {slides[current].subtitle}
             </motion.p>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-primary hover:bg-primary/90 text-white px-10 py-4 rounded-full font-bold text-lg shadow-2xl transition-all"
-            >
-              {slides[current].buttonText}
-            </motion.button>
+            <Link href="/products">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="bg-primary hover:bg-primary/90 text-white px-10 py-4 rounded-full font-bold text-lg shadow-2xl transition-all"
+              >
+                {slides[current].buttonText}
+              </motion.button>
+            </Link>
           </div>
         </motion.div>
       </AnimatePresence>

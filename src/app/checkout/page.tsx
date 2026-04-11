@@ -228,7 +228,9 @@ export default function CheckoutPage() {
                   {customerStatus === 'new' && !isEligible && (
                      <div className="p-3 bg-yellow-50 rounded-xl border border-yellow-100 mb-6 flex items-center gap-3">
                         <Star className="text-yellow-600 fill-yellow-600" size={16} />
-                        <span className="text-[10px] font-bold text-yellow-800">أضف منتجين للحصول على خصم الترحيب (10%)!</span>
+                        <span className="text-[10px] font-bold text-yellow-800">
+                          أضف {useCartStore.getState().discountConfig.minItems} منتجات أو أكثر للحصول على خصم الترحيب ({useCartStore.getState().discountConfig.percentage}%)!
+                        </span>
                      </div>
                   )}
                 </div>

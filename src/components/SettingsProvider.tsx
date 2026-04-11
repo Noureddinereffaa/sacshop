@@ -28,21 +28,22 @@ export default function SettingsProvider({ children }: { children: React.ReactNo
           whatsappNumber: settingsMap.branding?.whatsappNumber || "213",
         };
 
-        const offers = {
-          cartDiscountEnabled: settingsMap.offers?.cartDiscountEnabled !== false,
-          cartDiscountPercentage: settingsMap.offers?.cartDiscountPercentage || 10,
+        const discounts = {
+          cartDiscountEnabled: settingsMap.discounts?.newCustomerDiscountEnabled !== false,
+          cartDiscountPercentage: settingsMap.discounts?.newCustomerDiscountPercent || 10,
+          cartMinItems: settingsMap.discounts?.newCustomerMinItems || 2,
         };
-
+ 
         const navigation = settingsMap.navigation || [];
-
+ 
         // 1. Update global store
-        setSettings(branding, offers, navigation);
-
+        setSettings(branding, discounts, navigation);
+ 
         // 2. Sync Cart Store logic
         setDiscountConfig({
-          enabled: offers.cartDiscountEnabled, 
-          percentage: offers.cartDiscountPercentage,
-          minItems: 2
+          enabled: discounts.cartDiscountEnabled, 
+          percentage: discounts.cartDiscountPercentage,
+          minItems: discounts.cartMinItems
         });
 
         // 3. Inject CSS Variables for Dynamic Branding

@@ -39,7 +39,11 @@ export default function SettingsProvider({ children }: { children: React.ReactNo
         setSettings(branding, offers, navigation);
 
         // 2. Sync Cart Store logic
-        setDiscountConfig(offers.cartDiscountEnabled, offers.cartDiscountPercentage);
+        setDiscountConfig({
+          enabled: offers.cartDiscountEnabled, 
+          percentage: offers.cartDiscountPercentage,
+          minItems: 2
+        });
 
         // 3. Inject CSS Variables for Dynamic Branding
         const root = document.documentElement;

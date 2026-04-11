@@ -21,10 +21,11 @@ export default function CartDrawer() {
       if (!supabase) return;
       const { data } = await supabase.from("settings").select("value").eq("key", "offers").single();
       if (data && data.value) {
-        setDiscountConfig(
-          data.value.cartDiscountEnabled !== false, 
-          data.value.cartDiscountPercentage || 10
-        );
+        setDiscountConfig({
+          enabled: data.value.cartDiscountEnabled !== false, 
+          percentage: data.value.cartDiscountPercentage || 10,
+          minItems: data.value.cartMinItems || 2
+        });
       }
     }
     fetchDiscountConfig();

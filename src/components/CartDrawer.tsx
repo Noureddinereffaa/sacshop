@@ -2,7 +2,7 @@
 
 import { useCartStore } from "@/store/cartStore";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight } from "lucide-react";
+import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, Gift } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { CartItem } from "@/types";
@@ -10,7 +10,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
 export default function CartDrawer() {
-  const { items, isOpen, setIsOpen, removeItem, updateQuantity, getDiscountInfo, setDiscountConfig } = useCartStore();
+  const { items, isOpen, setIsOpen, removeItem, updateQuantity, getDiscountInfo, setDiscountConfig, customerStatus } = useCartStore();
   
   // Hydration & Settings Fetch
   const [mounted, setMounted] = useState(false);

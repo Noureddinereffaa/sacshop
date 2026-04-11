@@ -17,6 +17,8 @@ interface CustomerData {
   id: string;
   name: string;
   phone: string;
+  email?: string;
+  address?: string;
   total_orders: number;
   total_spent: number;
   is_vip: boolean;
@@ -150,6 +152,8 @@ function LoginForm({ onSuccess }: { onSuccess: (phone: string, name: string) => 
       <div className="absolute top-4 left-4 opacity-10">
         <ShieldCheck size={120} />
       </div>
+        </>
+      )}
     </div>
   );
 }
@@ -168,6 +172,8 @@ function AccountContent() {
   const [isLoading, setIsLoading]   = useState(true);
   const [isReady, setIsReady]       = useState(false);
   const [waClicked, setWaClicked]   = useState(false);
+  const [activeTab, setActiveTab]   = useState<"orders" | "settings">("orders");
+  const [isUpdating, setIsUpdating] = useState(false);
 
   // Hydrate phone from sessionStorage after mount
   useEffect(() => {
@@ -200,6 +206,42 @@ function AccountContent() {
     sessionStorage.removeItem("sacshop_phone");
     sessionStorage.removeItem("sacshop_name");
     router.push("/");
+  };
+
+  const handleUpdateProfile = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!customerData) return;
+    setIsUpdating(true);
+    try {
+      const form = e.currentTarget;
+      const formData = new FormData(form);
+      const data = {
+        id: customerData.id,
+        name: formData.get("name"),
+        phone: formData.get("phone"),
+        email: formData.get("email"),
+        address: formData.get("address"),
+      };
+
+      const res = await fetch("/api/update-profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (res.ok) {
+        setCustomer({ ...customerData, ...data } as any);
+        sessionStorage.setItem("sacshop_phone", data.phone as string);
+        sessionStorage.setItem("sacshop_name", data.name as string);
+        alert("تم تحديث البيانات بنجاح ✅");
+      } else {
+        alert("فشل تحديث البيانات ❌");
+      }
+    } catch (err) {
+      alert("حدث خطأ غير متوقع");
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   // Not ready yet (SSR hydration)
@@ -236,7 +278,110 @@ function AccountContent() {
   }
 
   return (
-    <div className="flex-grow container mx-auto px-4 py-10 md:py-16 max-w-4xl text-right space-y-8" dir="rtl">
+    <div className="flex-grow container mx-auto px-4 py-10 md:py-16 max-w-4xl text-right space-y-10" dir="rtl">
+      
+      {/* ── Tabs Navigation ────────── */}
+      <div className="flex items-center justify-center p-1.5 bg-gray-100 rounded-2xl w-full max-w-sm mx-auto mb-10">
+        <button 
+          onClick={() => setActiveTab("orders")}
+          className={`flex-1 py-3 text-sm font-black rounded-xl transition-all duration-300 flex items-center justify-center gap-2 ${
+            activeTab === "orders" ? "bg-white text-primary shadow-sm" : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          <Package size={18} />
+          طلباتي
+        </button>
+        <button 
+          onClick={() => setActiveTab("settings")}
+          className={`flex-1 py-3 text-sm font-black rounded-xl transition-all duration-300 flex items-center justify-center gap-2 ${
+            activeTab === "settings" ? "bg-white text-primary shadow-sm" : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          <UserCircle size={18} />
+          إعدادات الملف
+        </button>
+      </div>
+
+      {activeTab === "settings" ? (
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-2xl border border-gray-100 max-w-2xl mx-auto"
+        >
+          <div className="flex items-center gap-4 mb-8">
+            <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
+              <UserCircle size={28} />
+            </div>
+            <div>
+              <h2 className="text-xl font-black text-gray-900">تعديل ملفك الشخصي</h2>
+              <p className="text-gray-500 text-sm">أكمل بياناتك لنقوم بخدمتك بشكل أفضل</p>
+            </div>
+          </div>
+
+          <form onSubmit={handleUpdateProfile} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-black text-gray-700 block">الاسم الكامل</label>
+                <input 
+                  name="name"
+                  defaultValue={customerData.name}
+                  className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl py-4 px-5 font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-black text-gray-700 block">رقم الهاتف</label>
+                <input 
+                  name="phone"
+                  defaultValue={customerData.phone}
+                  className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl py-4 px-5 font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-left"
+                  dir="ltr"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-black text-gray-700 block">البريد الإلكتروني</label>
+              <input 
+                name="email"
+                type="email"
+                defaultValue={customerData.email}
+                placeholder="example@email.com"
+                className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl py-4 px-5 font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-left"
+                dir="ltr"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-black text-gray-700 block">العنوان الافتراضي</label>
+              <textarea 
+                name="address"
+                defaultValue={customerData.address}
+                placeholder="اذكر ولاية، بلدية، وعنوانك المفصل..."
+                className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl py-4 px-5 font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all h-32 resize-none"
+              />
+            </div>
+
+            <button 
+              type="submit" 
+              disabled={isUpdating}
+              className="w-full bg-primary text-white py-5 rounded-2xl font-black text-lg hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-60"
+            >
+              {isUpdating ? <Loader2 className="animate-spin" /> : <CheckCircle2 size={24} />}
+              حفظ التغييرات
+            </button>
+          </form>
+
+          <button 
+            onClick={logout}
+            className="w-full mt-6 py-4 text-red-500 font-bold text-sm hover:bg-red-50 rounded-2xl transition-colors"
+          >
+            تسجيل الخروج من هذا الجهاز
+          </button>
+        </motion.div>
+      ) : (
+        <>
 
       {/* ── WhatsApp Confirm CTA (shown immediately after new order) ────────── */}
       {waLink && !waClicked && (
@@ -607,6 +752,8 @@ function AccountContent() {
           تسجيل الخروج
         </button>
       </div>
+        </>
+      )}
     </div>
   );
 }

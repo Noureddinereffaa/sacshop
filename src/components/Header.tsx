@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import CartDrawer from "./CartDrawer";
 import { useCartStore } from "@/store/cartStore";
-import { ShoppingBag } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -40,15 +40,10 @@ export default function Header() {
           </span>
         </Link>
 
-        {/* Desktop Navigation */}
         <nav className="hidden lg:flex items-center gap-8 text-sm font-medium text-gray-600">
           <Link href="/" className="hover:text-primary transition-colors">الرئيسية</Link>
           <Link href="/products" className="hover:text-primary transition-colors">المطبوعات</Link>
           <Link href="/about" className="hover:text-primary transition-colors">من نحن</Link>
-          <Link href="/account" className="flex items-center gap-1.5 text-primary font-bold hover:opacity-80 transition-opacity">
-            <UserCircle size={17} />
-            حسابي
-          </Link>
         </nav>
 
           {/* Right Actions */}
@@ -62,21 +57,21 @@ export default function Header() {
               <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
             </div>
 
-            {/* Register/Login Button for Mobile & Desktop */}
+            {/* Account Icon */}
             <Link 
-              href="/register"
+              href="/account"
               className="w-11 h-11 text-gray-700 hover:bg-gray-100 rounded-full transition-colors flex items-center justify-center -ml-1 sm:ml-0"
-              title="إنشاء حساب"
+              title="حسابي"
             >
               <UserCircle size={24} />
             </Link>
-
+ 
             {/* Cart Button */}
             <button 
               onClick={() => setIsOpen(true)}
-              className="relative w-11 h-11 text-gray-700 hover:bg-gray-100 rounded-full transition-colors flex items-center justify-center mr-2"
+              className="relative w-11 h-11 text-gray-700 hover:bg-gray-100 rounded-full transition-colors flex items-center justify-center"
             >
-              <ShoppingBag size={24} />
+              <ShoppingCart size={24} />
               {mounted && totalItems > 0 && (
                 <span className="absolute top-0 right-0 w-5 h-5 bg-primary text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white">
                   {totalItems}
@@ -99,8 +94,8 @@ export default function Header() {
           >
             <Link href="/" onClick={() => setIsMenuOpen(false)} className="py-2 text-lg font-medium border-b border-gray-50">الرئيسية</Link>
             <Link href="/products" onClick={() => setIsMenuOpen(false)} className="py-2 text-lg font-medium border-b border-gray-50">المطبوعات</Link>
-            <Link href="/track" onClick={() => setIsMenuOpen(false)} className="py-2 text-lg font-medium border-b border-gray-50">بوابة العميل</Link>
             <Link href="/about" onClick={() => setIsMenuOpen(false)} className="py-2 text-lg font-medium border-b border-gray-50">من نحن</Link>
+            <Link href="/account" onClick={() => setIsMenuOpen(false)} className="py-2 text-lg font-medium border-b border-gray-50 text-primary font-bold">بوابة العميل</Link>
           </motion.div>
         )}
       </AnimatePresence>

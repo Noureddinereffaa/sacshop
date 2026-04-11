@@ -96,7 +96,8 @@ export const useCartStore = create<CartStore>()(
       
       getDiscountInfo: () => {
         const state = get();
-        const totalItems = state.items.reduce((acc, item) => acc + item.quantity, 0);
+        // Count unique products, not total pieces
+        const productCount = new Set(state.items.map(i => i.productId)).size;
         const subtotal = state.items.reduce((total, item) => total + (item.price * item.quantity), 0);
         
         let isEligible = false;
@@ -118,8 +119,12 @@ export const useCartStore = create<CartStore>()(
             percentage = Math.round((discountAmount / subtotal) * 100);
           }
         } 
-        // 2. Welcome Discount (New Customers only)
-        else if (state.customerStatus === 'new' && state.discountConfig.enabled && totalItems >= state.discountConfig.minItems) {
+        // 2. Welcome Discount (New or Guest Customers)
+        else if (
+          (state.customerStatus === 'new' || state.customerStatus === 'guest') && 
+          state.discountConfig.enabled && 
+          productCount >= state.discountConfig.minItems
+        ) {
           isEligible = true;
           discountType = 'welcome';
           percentage = state.discountConfig.percentage;

@@ -29,7 +29,8 @@ export default function ProductCard({ id, name, price, image, category }: Produc
       quantity: 1,
       image_url: image
     });
-    router.push('/products');
+    // Open the cart side drawer for feedback instead of redirecting
+    useCartStore.getState().setIsOpen(true);
   };
 
   return (
@@ -86,7 +87,7 @@ export default function ProductCard({ id, name, price, image, category }: Produc
                className="bg-primary text-white rounded-xl w-10 h-10 flex items-center justify-center font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
                title="أضف للسلة للخصم"
              >
-                <PackagePlus size={18} />
+                <ShoppingCart size={18} />
              </button>
            </div>
         </div>

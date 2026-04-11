@@ -185,6 +185,15 @@ export default function CartDrawer() {
             {/* Footer / Checkout */}
             {items.length > 0 && (
               <div className="p-6 pb-8 md:pb-6 bg-white border-t border-gray-100 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)] sticky bottom-0 z-10 w-full">
+                {/* Discount Progress */}
+                {!isEligible && (customerStatus === 'new' || customerStatus === 'guest') && (
+                  <div className="mb-4 p-3 bg-yellow-50 rounded-xl border border-yellow-100 flex items-center gap-2 animate-pulse">
+                    <Gift size={16} className="text-yellow-600" />
+                    <span className="text-[10px] font-bold text-yellow-800">
+                      أضف {useCartStore.getState().discountConfig.minItems} منتجات مختلفة للحصول على خصم الترحيب!
+                    </span>
+                  </div>
+                )}
                 <div className="space-y-2 mb-4">
                   {isEligible && (
                     <div className="flex items-center justify-between text-green-600 text-sm font-bold">

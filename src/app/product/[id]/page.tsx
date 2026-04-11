@@ -539,39 +539,44 @@ export default function ProductDetailPage() {
               )}
 
               {/* Printing Options */}
-              <div className="space-y-4 pt-4 border-t border-gray-100">
-                 <div className="flex flex-col sm:flex-row gap-4">
-                    {/* Num Colors */}
-                    <div className="flex-1 space-y-2">
-                       <label className="text-xs font-black text-gray-500 uppercase tracking-tighter">عدد ألوان التصميم</label>
-                       <select 
-                         value={numColors}
-                         onChange={(e) => setNumColors(Number(e.target.value))}
-                         className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 font-bold outline-none focus:ring-2 focus:ring-primary/20"
-                       >
-                          {[1, 2, 3, 4].map(n => {
-                             const extraCost = (n - 1) * (product?.printing_config?.extra_color_price || 0);
-                             const labelStr = n === 1 ? 'لون واحد' : n === 2 ? 'لونين' : `${n} ألوان`;
-                             const priceStr = extraCost > 0 ? ` (+${extraCost} د.ج)` : '';
-                             return <option key={n} value={n}>{labelStr}{priceStr}</option>;
-                          })}
-                       </select>
-                    </div>
-                    {/* Double Sided Toggle */}
-                    <div className="flex-1 space-y-2">
-                       <label className="text-xs font-black text-gray-500 uppercase tracking-tighter">مكان الطباعة</label>
-                       <div className="flex p-1 bg-gray-50 rounded-xl border border-gray-200">
-                          <button 
-                            onClick={() => setIsDoubleSided(false)}
-                            className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${!isDoubleSided ? 'bg-white shadow-sm text-primary' : 'text-gray-500'}`}
-                          >جهة واحدة</button>
-                          <button 
-                            onClick={() => setIsDoubleSided(true)}
-                            className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${isDoubleSided ? 'bg-white shadow-sm text-primary' : 'text-gray-500'}`}
-                          >جهتين (Double)</button>
-                       </div>
-                    </div>
-                 </div>
+              {(((product?.printing_config?.extra_color_price || 0) > 0) || ((product?.printing_config?.double_sided_price || 0) > 0)) && (
+                <div className="space-y-4 pt-4 border-t border-gray-100">
+                   <div className="flex flex-col sm:flex-row gap-4">
+                      {/* Num Colors */}
+                      {(product?.printing_config?.extra_color_price || 0) > 0 && (
+                        <div className="flex-1 space-y-2">
+                           <label className="text-xs font-black text-gray-500 uppercase tracking-tighter">عدد ألوان التصميم</label>
+                           <select 
+                             value={numColors}
+                             onChange={(e) => setNumColors(Number(e.target.value))}
+                             className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 font-bold outline-none focus:ring-2 focus:ring-primary/20"
+                           >
+                              {[1, 2, 3, 4].map(n => {
+                                 const extraCost = (n - 1) * (product?.printing_config?.extra_color_price || 0);
+                                 const labelStr = n === 1 ? 'لون واحد' : n === 2 ? 'لونين' : `${n} ألوان`;
+                                 const priceStr = extraCost > 0 ? ` (+${extraCost} د.ج)` : '';
+                                 return <option key={n} value={n}>{labelStr}{priceStr}</option>;
+                              })}
+                           </select>
+                        </div>
+                      )}
+                      {/* Double Sided Toggle */}
+                      {(product?.printing_config?.double_sided_price || 0) > 0 && (
+                        <div className="flex-1 space-y-2">
+                           <label className="text-xs font-black text-gray-500 uppercase tracking-tighter">مكان الطباعة</label>
+                           <div className="flex p-1 bg-gray-50 rounded-xl border border-gray-200">
+                              <button 
+                                onClick={() => setIsDoubleSided(false)}
+                                className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${!isDoubleSided ? 'bg-white shadow-sm text-primary' : 'text-gray-500'}`}
+                              >جهة واحدة</button>
+                              <button 
+                                onClick={() => setIsDoubleSided(true)}
+                                className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${isDoubleSided ? 'bg-white shadow-sm text-primary' : 'text-gray-500'}`}
+                              >جهتين (Double)</button>
+                           </div>
+                        </div>
+                      )}
+                   </div>
 
                  {/* Price Breakdown Helper */}
                  <div className="bg-primary/5 rounded-2xl p-4 border border-primary/10">

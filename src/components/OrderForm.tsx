@@ -179,10 +179,17 @@ export default function OrderForm({ productId, productName, productPrice, select
     setPendingWaLink(waLink);
     setStep("success");
 
-    // Automatic redirect to WhatsApp
+    // ── Save session for automatic login ──
+    sessionStorage.setItem("sacshop_phone", formData.phone.trim());
+    sessionStorage.setItem("sacshop_name", formData.name.trim());
+
+    // ── Open WhatsApp in New Tab (might be blocked by popup blockers) ──
+    const waWindow = window.open(waLink, "_blank");
+
+    // ── Redirect Current Tab to Account Page ──
     setTimeout(() => {
-      window.location.href = waLink;
-    }, 100);
+      window.location.href = "/account";
+    }, 1500); // 1.5s delay to let user see success state before redirect
   };
 
   // ─── SUCCESS SCREEN ─────────────────────────────────────────────────────────

@@ -46,7 +46,7 @@ export default function ProductCard({ id, name, price, image, category }: Produc
       </div>
 
       {/* Image Container */}
-      <Link href={`/product/${id}`} className="block aspect-[4/5] bg-gray-100 rounded-[2rem] mb-6 overflow-hidden relative">
+      <Link href={`/products/${id}`} className="block aspect-[4/5] bg-gray-100 rounded-[2rem] mb-6 overflow-hidden relative">
         <Image
           src={image || "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&q=80&w=800"}
           alt={name}
@@ -76,7 +76,7 @@ export default function ProductCard({ id, name, price, image, category }: Produc
            
            <div className="flex gap-2">
              <Link 
-               href={`/product/${id}`}
+               href={`/products/${id}`}
                className="bg-white border-2 border-gray-100 text-gray-600 rounded-xl px-4 flex items-center justify-center hover:border-gray-300 hover:text-gray-900 transition-all shadow-sm"
                title="التفاصيل"
              >

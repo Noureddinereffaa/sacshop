@@ -117,6 +117,22 @@ CREATE POLICY "public_read_settings" ON settings FOR SELECT USING (true);
 CREATE POLICY "public_read_wilayas" ON wilayas FOR SELECT USING (true);
 
 -- =====================================================
+-- ADMINISTRATIVE POLICIES (For Dashboard Management)
+-- =====================================================
+
+-- Allow full access to products (For development/admin)
+CREATE POLICY "admin_manage_products" ON products FOR ALL USING (true) WITH CHECK (true);
+
+-- Allow full access to settings
+CREATE POLICY "admin_manage_settings" ON settings FOR ALL USING (true) WITH CHECK (true);
+
+-- Allow full access to VIP offers
+CREATE POLICY "admin_manage_vip_offers" ON vip_offers FOR ALL USING (true) WITH CHECK (true);
+
+-- Allow public to select from customers (needed for VIP check)
+CREATE POLICY "public_read_customers" ON customers FOR SELECT USING (true);
+
+-- =====================================================
 -- HELPFUL FUNCTIONS
 -- =====================================================
 

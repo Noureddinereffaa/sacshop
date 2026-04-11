@@ -49,8 +49,15 @@ export interface Product {
   gallery?: string[];
   category: string;
   sizes: string[];
-  colors: { name: string; hex: string }[];
+  colors: { name: string; hex: string; extra_cost?: number }[];
   packages?: { label: string; quantity: number; price: number }[];
+  quantity_tiers?: any[];
+  variant_images?: { size?: string; color?: string; image_url: string }[];
+  printing_config?: {
+    extra_color_price?: number;
+    base_colors_included?: number;
+    double_sided_price?: number;
+  };
   stock: number;
   is_published: boolean;
   is_featured: boolean;

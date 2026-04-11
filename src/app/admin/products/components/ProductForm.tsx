@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { Loader2, Save, X, Plus, Image as ImageIcon, ArrowRight } from "lucide-react";
+import { Loader2, Save, X, Plus, Image as ImageIcon, ArrowRight, Zap, Tag } from "lucide-react";
 import ImageUploader from "@/components/ImageUploader";
 import Link from "next/link";
+import Image from "next/image";
 import { Product } from "@/types"; // We will make sure this exists
 
 const EMPTY_PRODUCT: Partial<Product> = {
@@ -19,10 +20,12 @@ const EMPTY_PRODUCT: Partial<Product> = {
   category: "",
   sizes: [],
   colors: [],
-  packages: [],
   stock: 0,
   is_published: true,
   is_featured: false,
+  quantity_tiers: [],
+  variant_images: [],
+  printing_config: { extra_color_price: 15, base_colors_included: 1 },
 };
 
 
@@ -39,7 +42,8 @@ export default function ProductForm({ initialData }: ProductFormProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [newSize, setNewSize] = useState("");
   const [newColor, setNewColor] = useState({ name: "", hex: "#00AEEF" });
-  const [newPackage, setNewPackage] = useState({ label: "", quantity: 1, price: 0 });
+  const [newTier, setNewTier] = useState({ min_qty: 200, unit_price: 0 });
+  const [newVariantImage, setNewVariantImage] = useState({ size: "", color: "", image_url: "" });
 
   useEffect(() => {
     async function fetchCategories() {
@@ -95,12 +99,19 @@ export default function ProductForm({ initialData }: ProductFormProps) {
   };
   const removeColor = (n: string) => setProduct(p => ({ ...p, colors: (p.colors || []).filter(x => x.name !== n) }));
 
-  const addPackage = () => {
-    if (!newPackage.label.trim() || newPackage.quantity <= 0) return;
-    setProduct(p => ({ ...p, packages: [...(p.packages || []), { ...newPackage }] }));
-    setNewPackage({ label: "", quantity: 1, price: 0 });
+  const addTier = () => {
+    if (newTier.min_qty <= 0 || newTier.unit_price <= 0) return;
+    setProduct(p => ({ ...p, quantity_tiers: [...(p.quantity_tiers || []), { ...newTier }].sort((a,b) => a.min_qty - b.min_qty) }));
+    setNewTier({ min_qty: 200, unit_price: 0 });
   };
-  const removePackage = (lbl: string) => setProduct(p => ({ ...p, packages: (p.packages || []).filter(x => x.label !== lbl) }));
+  const removeTier = (min_qty: number) => setProduct(p => ({ ...p, quantity_tiers: (p.quantity_tiers || []).filter(x => x.min_qty !== min_qty) }));
+
+  const addVariantImage = () => {
+    if (!newVariantImage.image_url) return;
+    setProduct(p => ({ ...p, variant_images: [...(p.variant_images || []), { ...newVariantImage }] }));
+    setNewVariantImage({ size: "", color: "", image_url: "" });
+  };
+  const removeVariantImage = (idx: number) => setProduct(p => ({ ...p, variant_images: (p.variant_images || []).filter((_, i) => i !== idx) }));
 
   return (
     <form onSubmit={handleSave} className="space-y-8 pb-20">
@@ -251,45 +262,61 @@ export default function ProductForm({ initialData }: ProductFormProps) {
                 )}
               </div>
 
-              {/* Packages */}
-              <div className="space-y-3 pt-6 border-t border-gray-50">
-                <label className="text-sm font-black text-primary block flex items-center gap-2">
-                   <Plus size={16} /> باقات الكميات المخصصة
+              {/* Quantity Tiers (Strict Order Amounts) */}
+              <div className="space-y-4 pt-6 border-t border-gray-50">
+                <label className="text-sm font-black text-gray-900 block flex items-center gap-2">
+                   <Tag size={16} className="text-primary" /> تحديد كميات الطلب المتاحة وأسعارها
                 </label>
-                <div className="flex gap-2 flex-wrap sm:flex-nowrap">
-                  <input
-                    type="text"
-                    value={newPackage.label}
-                    onChange={e => setNewPackage(p => ({ ...p, label: e.target.value }))}
-                    className="flex-1 min-w-[120px] bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20"
-                    placeholder="التسمية (باقة 50)"
-                  />
-                  <input
-                    type="number"
-                    value={newPackage.quantity || ""}
-                    onChange={e => setNewPackage(p => ({ ...p, quantity: Number(e.target.value) }))}
-                    className="w-24 bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20"
-                    placeholder="الكمية"
-                  />
-                  <input
-                    type="number"
-                    value={newPackage.price || ""}
-                    onChange={e => setNewPackage(p => ({ ...p, price: Number(e.target.value) }))}
-                    className="w-32 bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20 text-primary font-black"
-                    placeholder="السعر الإجمالي"
-                  />
-                  <button type="button" onClick={addPackage} className="bg-primary text-white px-5 rounded-xl font-bold shrink-0 shadow-md">إضافة</button>
+                <p className="text-xs text-gray-500 font-medium bg-blue-50 p-3 rounded-xl border border-blue-100/50">
+                  ملاحظة: النظام سيسمح للزبون بالاختيار فقط من بين هذه الكميات المحددة.
+                </p>
+                <div className="flex gap-2 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                  <div className="flex-1 space-y-1">
+                    <label className="text-[10px] font-black text-gray-400 uppercase pr-1">الكمية</label>
+                    <input
+                      type="number"
+                      value={newTier.min_qty || ""}
+                      onChange={e => setNewTier(p => ({ ...p, min_qty: Number(e.target.value) }))}
+                      className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 font-bold text-gray-900"
+                      placeholder="مثلاً 200"
+                    />
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <label className="text-[10px] font-black text-gray-400 uppercase pr-1">سعر القطعة (د.ج)</label>
+                    <input
+                      type="number"
+                      value={newTier.unit_price || ""}
+                      onChange={e => setNewTier(p => ({ ...p, unit_price: Number(e.target.value) }))}
+                      className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 font-black text-primary"
+                      placeholder="مثلاً 63"
+                    />
+                  </div>
+                  <button 
+                    type="button" 
+                    onClick={addTier} 
+                    className="self-end bg-gray-900 text-white px-6 h-[50px] rounded-xl font-bold hover:bg-black transition-all shadow-lg active:scale-95"
+                  >
+                    إضافة
+                  </button>
                 </div>
-                {product.packages && product.packages.length > 0 && (
-                   <div className="flex flex-wrap gap-2 pt-3">
-                     {product.packages.map(pkg => (
-                       <span key={pkg.label} className="flex flex-col gap-1 bg-white border border-gray-200 px-4 py-3 rounded-2xl relative min-w-[120px] shadow-sm">
-                         <span className="font-bold text-gray-800 text-sm">{pkg.label} ({pkg.quantity}x)</span>
-                         <span className="text-primary font-black">{pkg.price} د.ج</span>
-                         <button type="button" onClick={() => removePackage(pkg.label)} className="absolute top-2 left-2 text-gray-300 hover:text-red-500 transition-colors">
-                            <X size={16} />
-                         </button>
-                       </span>
+                {product.quantity_tiers && product.quantity_tiers.length > 0 && (
+                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                     {product.quantity_tiers.map(tier => (
+                       <div key={tier.min_qty} className="flex justify-between items-center bg-white p-4 rounded-2xl border border-gray-100 shadow-sm group hover:border-primary/30 transition-all">
+                         <div>
+                            <span className="text-[10px] font-black text-gray-400 block uppercase">كمية محددة</span>
+                            <span className="font-black text-gray-900">{tier.min_qty} قطعة</span>
+                         </div>
+                         <div className="flex items-center gap-4">
+                           <div className="text-left">
+                              <span className="text-[10px] font-black text-gray-400 block uppercase">السعر</span>
+                              <span className="font-black text-primary">{tier.unit_price} د.ج</span>
+                           </div>
+                           <button type="button" onClick={() => removeTier(tier.min_qty)} className="w-8 h-8 flex items-center justify-center bg-red-50 text-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white">
+                              <X size={14} />
+                           </button>
+                         </div>
+                       </div>
                      ))}
                    </div>
                 )}
@@ -339,47 +366,136 @@ export default function ProductForm({ initialData }: ProductFormProps) {
                     />
                  )}
               </div>
+
+              {/* Variant Images Section */}
+              <div className="space-y-4 pt-6 border-t border-gray-50">
+                  <label className="text-sm font-black text-gray-900 block flex items-center gap-2">
+                     <ImageIcon size={16} /> ربط الصور بالمقاسات والألوان
+                  </label>
+                  <div className="space-y-3 bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                     <div className="grid grid-cols-2 gap-2">
+                        <select 
+                          value={newVariantImage.size}
+                          onChange={e => setNewVariantImage(v => ({...v, size: e.target.value}))}
+                          className="bg-white border border-gray-200 rounded-xl p-2 text-xs font-bold"
+                        >
+                           <option value="">المقاس...</option>
+                           {product.sizes?.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                        <select 
+                          value={newVariantImage.color}
+                          onChange={e => setNewVariantImage(v => ({...v, color: e.target.value}))}
+                          className="bg-white border border-gray-200 rounded-xl p-2 text-xs font-bold"
+                        >
+                           <option value="">اللون...</option>
+                           {product.colors?.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+                        </select>
+                     </div>
+                     <ImageUploader 
+                       value={newVariantImage.image_url}
+                       onChange={url => setNewVariantImage(v => ({...v, image_url: url}))}
+                       label=""
+                       placeholder="صورة المتغير..."
+                     />
+                     <button 
+                       type="button" 
+                       onClick={addVariantImage}
+                       className="w-full bg-primary/10 text-primary py-2 rounded-xl font-bold flex items-center justify-center gap-2"
+                     >
+                        <Plus size={16} /> تثبيت صورة المتغير
+                     </button>
+                  </div>
+
+                   {product.variant_images && product.variant_images.length > 0 && (
+                    <div className="grid grid-cols-1 gap-2">
+                       {product.variant_images.map((vi, idx) => (
+                         <div key={idx} className="flex items-center gap-3 bg-white p-3 rounded-2xl border border-gray-100 shadow-sm group hover:border-primary/20 transition-all">
+                            <div className="w-14 h-14 relative rounded-xl overflow-hidden border border-gray-100 shrink-0 bg-gray-50">
+                               <Image src={vi.image_url} alt="" fill className="object-cover" unoptimized />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                               <p className="text-[10px] font-black text-gray-400 uppercase leading-none mb-1">تخصيص العرض لـ:</p>
+                               <div className="flex flex-wrap gap-1.5">
+                                  <span className="bg-gray-50 text-gray-700 px-2 py-0.5 rounded-md text-[10px] font-black border border-gray-100">
+                                     {vi.size || 'كل المقاسات'}
+                                  </span>
+                                  <span className="bg-gray-50 text-gray-700 px-2 py-0.5 rounded-md text-[10px] font-black border border-gray-100">
+                                     {vi.color || 'كل الألوان'}
+                                  </span>
+                               </div>
+                            </div>
+                            <button 
+                              type="button" 
+                              onClick={() => removeVariantImage(idx)} 
+                              className="w-10 h-10 flex items-center justify-center bg-gray-50 text-gray-400 rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-red-50 hover:text-red-500"
+                            >
+                               <X size={18} />
+                            </button>
+                         </div>
+                       ))}
+                    </div>
+                  )}
+               </div>
            </div>
 
-           {/* Pricing & Stock Card */}
-           <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
-              <h2 className="text-lg font-black text-gray-900 flex items-center gap-2 border-b border-gray-50 pb-4">
-                 التسعير والمخزون
-              </h2>
-              
-              <div className="space-y-4">
-                <div className="space-y-2">
-                   <label className="text-sm font-black text-gray-700 block text-primary">السعر الفردي (د.ج) *</label>
-                   <input
-                     required
-                     type="number"
-                     value={product.price || ""}
-                     onChange={e => setProduct(p => ({ ...p, price: Number(e.target.value) }))}
-                     className="w-full bg-primary/5 border border-primary/20 rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/40 outline-none font-black text-primary text-xl"
-                   />
-                </div>
+            {/* Pricing & Stock Card */}
+            <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
+               <h2 className="text-lg font-black text-gray-900 flex items-center gap-2 border-b border-gray-50 pb-4">
+                  التسعير والمخزون
+               </h2>
+               
+               <div className="space-y-4">
+                 <div className="space-y-2">
+                    <label className="text-sm font-black text-gray-700 block text-primary">السعر الفردي العادي (د.ج) *</label>
+                    <input
+                      required
+                      type="number"
+                      value={product.price || ""}
+                      onChange={e => setProduct(p => ({ ...p, price: Number(e.target.value) }))}
+                      className="w-full bg-primary/5 border border-primary/20 rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/40 outline-none font-black text-primary text-xl"
+                    />
+                 </div>
 
-                <div className="space-y-2">
-                   <label className="text-sm font-bold text-gray-500 block">السعر قبل التخفيض المشطوب (د.ج)</label>
-                   <input
-                     type="number"
-                     value={product.compare_price || ""}
-                     onChange={e => setProduct(p => ({ ...p, compare_price: Number(e.target.value) || null }))}
-                     className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20 outline-none line-through text-gray-400"
-                   />
-                </div>
+                 {/* Printing Config (Added based on user request) */}
+                 <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 space-y-3">
+                    <label className="text-xs font-black text-gray-500 uppercase flex items-center gap-2">
+                       <Zap size={14} className="text-yellow-500" /> إعدادات الطباعة Serigraphie
+                    </label>
+                    <div className="space-y-2">
+                       <label className="text-xs font-bold text-gray-600">سعر اللون الإضافي (د.ج)</label>
+                       <input 
+                         type="number"
+                         value={product.printing_config?.extra_color_price || 15}
+                         onChange={e => setProduct(p => ({
+                           ...p, 
+                           printing_config: { ...p.printing_config, extra_color_price: Number(e.target.value) }
+                         }))}
+                         className="w-full bg-white border border-gray-200 rounded-lg p-2 text-sm font-bold"
+                       />
+                    </div>
+                 </div>
 
-                <div className="space-y-2">
-                   <label className="text-sm font-black text-gray-700 block">الكمية في المخزن</label>
-                   <input
-                     type="number"
-                     value={product.stock || ""}
-                     onChange={e => setProduct(p => ({ ...p, stock: Number(e.target.value) }))}
-                     className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20 outline-none"
-                   />
-                </div>
-              </div>
-           </div>
+                 <div className="space-y-2">
+                    <label className="text-sm font-bold text-gray-500 block">السعر قبل التخفيض المشطوب (د.ج)</label>
+                    <input
+                      type="number"
+                      value={product.compare_price || ""}
+                      onChange={e => setProduct(p => ({ ...p, compare_price: Number(e.target.value) || null }))}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20 outline-none line-through text-gray-400"
+                    />
+                 </div>
+
+                 <div className="space-y-2">
+                    <label className="text-sm font-black text-gray-700 block">الكمية في المخزن</label>
+                    <input
+                      type="number"
+                      value={product.stock || ""}
+                      onChange={e => setProduct(p => ({ ...p, stock: Number(e.target.value) }))}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20 outline-none"
+                    />
+                 </div>
+               </div>
+            </div>
 
            {/* Classification Card */}
            <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">

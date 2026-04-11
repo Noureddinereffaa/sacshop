@@ -18,13 +18,28 @@ interface OrderFormProps {
   cartItems?: CartItem[];
   quantity?: number;
   discountAmount?: number;
+  numColors?: number;
+  isDoubleSided?: boolean;
   onAddToCart?: () => void;
 }
 
 // step: "info" → "success"
 type Step = "info" | "success";
 
-export default function OrderForm({ productId, productName, productPrice, selectedSize, selectedColor, appliedOfferId, cartItems = [], quantity = 1, discountAmount = 0, onAddToCart }: OrderFormProps) {
+export default function OrderForm({ 
+  productId, 
+  productName, 
+  productPrice, 
+  selectedSize, 
+  selectedColor, 
+  appliedOfferId, 
+  cartItems = [], 
+  quantity = 1, 
+  discountAmount = 0, 
+  numColors,
+  isDoubleSided,
+  onAddToCart 
+}: OrderFormProps) {
   const [step, setStep] = useState<Step>("info");
   const [isLoading, setIsLoading] = useState(false);
   const [isPdfGenerating, setIsPdfGenerating] = useState(false);
@@ -107,6 +122,7 @@ export default function OrderForm({ productId, productName, productPrice, select
       delivery_type: "home",
       cart_items: isCartOrder ? cartItems : [],
       admin_notes: formData.notes.trim() || null,
+      metadata: !isCartOrder ? { num_colors: numColors, is_double_sided: isDoubleSided } : null
     });
     if (error) throw new Error(error.message);
 
@@ -126,6 +142,8 @@ export default function OrderForm({ productId, productName, productPrice, select
         selectedColor,
         notes: formData.notes.trim() || undefined,
         cartItems: isCartOrder ? cartItems : undefined,
+        numColors,
+        isDoubleSided,
       });
 
       // Also save PDF URL in order record (avoiding extra select to bypass RLS issues)
@@ -158,6 +176,7 @@ export default function OrderForm({ productId, productName, productPrice, select
         `👤 الاسم: ${formData.name.trim()}`,
         `📞 الهاتف: ${formData.phone.trim()}`,
         `📦 المنتج: ${productName}`,
+        `🎨 الطباعة: ${numColors} ألوان ${isDoubleSided ? '(جهتين)' : ''}`,
         `💰 المجموع: ${productPrice.toLocaleString()} د.ج`,
         ``,
         `⚠️ (الوصل متاح في حسابك الشخصي)`,

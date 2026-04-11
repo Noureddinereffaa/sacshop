@@ -15,6 +15,8 @@ interface OrderPDFData {
   selectedColor?: string;
   notes?: string;
   cartItems?: CartItem[];
+  numColors?: number;
+  isDoubleSided?: boolean;
 }
 
 /**
@@ -54,7 +56,10 @@ export async function generateAndUploadOrderPDF(data: OrderPDFData): Promise<str
   } else {
     itemsHtml = `
       <tr>
-        <td style="padding: 10px 16px; text-align: right; font-weight: bold;">${data.productName}</td>
+        <td style="padding: 10px 16px; text-align: right; font-weight: bold;">
+          ${data.productName}
+          ${data.numColors ? `<div style="font-size: 11px; color: #666; font-weight: normal;">(طباعة ${data.numColors} ألوان ${data.isDoubleSided ? ' - جهتين' : ''})</div>` : ''}
+        </td>
         <td style="padding: 10px 16px; text-align: center;">${data.quantity}</td>
         <td style="padding: 10px 16px; text-align: center;">${data.selectedSize || "—"}</td>
         <td style="padding: 10px 16px; text-align: center;">${data.selectedColor || "—"}</td>

@@ -253,7 +253,7 @@ export default function ProductDetailPage() {
     
     if (isDoubleSided) {
        if (doubleSidedFixedCost > 0) {
-          totalUnit += doubleSidedFixedCost;
+          totalUnit += (doubleSidedFixedCost * numColors);
        } else {
           totalUnit *= 2; // legacy fallback
        }
@@ -505,7 +505,10 @@ export default function ProductDetailPage() {
                           className="w-5 h-5 rounded-full border border-gray-200 shadow-inner"
                           style={{ backgroundColor: color.hex }}
                         />
-                        <span className="text-sm text-gray-700">{color.name}</span>
+                        <span className="text-sm text-gray-700 font-bold">
+                           {color.name}
+                           {color.extra_cost ? <span className="text-primary mr-1 text-xs">(+{color.extra_cost} د.ج)</span> : ''}
+                        </span>
                       </button>
                     ))}
                   </div>
@@ -546,9 +549,12 @@ export default function ProductDetailPage() {
                          onChange={(e) => setNumColors(Number(e.target.value))}
                          className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 font-bold outline-none focus:ring-2 focus:ring-primary/20"
                        >
-                          {[1, 2, 3, 4, 5].map(n => (
-                            <option key={n} value={n}>{n} {n === 1 ? 'لون واحد' : n === 2 ? 'لونين' : 'ألوان'}</option>
-                          ))}
+                          {[1, 2, 3, 4].map(n => {
+                             const extraCost = (n - 1) * (product?.printing_config?.extra_color_price || 0);
+                             const labelStr = n === 1 ? 'لون واحد' : n === 2 ? 'لونين' : `${n} ألوان`;
+                             const priceStr = extraCost > 0 ? ` (+${extraCost} د.ج)` : '';
+                             return <option key={n} value={n}>{labelStr}{priceStr}</option>;
+                          })}
                        </select>
                     </div>
                     {/* Double Sided Toggle */}
@@ -581,8 +587,8 @@ export default function ProductDetailPage() {
                     )}
                     {isDoubleSided && (
                       <div className="flex justify-between text-xs font-bold text-primary mb-2 pt-2 border-t border-primary/10">
-                         <span>إضافة الطباعة على جهتين:</span>
-                         <span>{product?.printing_config?.double_sided_price ? `+${product.printing_config.double_sided_price} د.ج` : '× 2'}</span>
+                         <span>إضافة الطباعة على جهتين ({numColors} ألوان):</span>
+                         <span>{product?.printing_config?.double_sided_price ? `+${product.printing_config.double_sided_price * numColors} د.ج` : '× 2'}</span>
                       </div>
                     )}
                     <div className="flex justify-between text-sm font-black text-primary pt-2 border-t border-primary/20">

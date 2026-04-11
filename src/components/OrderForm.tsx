@@ -253,7 +253,6 @@ export default function OrderForm({ productId, productName, productPrice, select
                   className="w-full bg-gray-50 border-none rounded-2xl py-4 pr-12 pl-4 focus:ring-2 focus:ring-primary/20 outline-none font-medium text-base"
                   value={formData.name}
                   onChange={e => setFormData({ ...formData, name: e.target.value })}
-                  disabled={isLoggedIn}
                 />
               </div>
             </div>
@@ -271,7 +270,6 @@ export default function OrderForm({ productId, productName, productPrice, select
                   className="w-full bg-gray-50 border-none rounded-2xl py-4 pr-12 pl-4 focus:ring-2 focus:ring-primary/20 outline-none font-bold text-left text-base"
                   value={formData.phone}
                   onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                  disabled={isLoggedIn}
                 />
               </div>
             </div>

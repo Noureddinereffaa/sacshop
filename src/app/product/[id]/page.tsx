@@ -143,21 +143,7 @@ export default function ProductDetailPage() {
     <main className="min-h-screen bg-gray-50/50">
       <Header />
       
-      {/* Promotional Banner */}
-      {discountConfig.enabled && (
-        <div className="bg-gradient-to-l from-primary to-primary/80 text-white shadow-xl shadow-primary/20 relative z-10 overflow-hidden">
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-          <div className="container mx-auto px-4 py-3 md:py-4 flex flex-col md:flex-row items-center justify-center gap-3 relative z-20">
-             <div className="flex items-center gap-3 bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/20 shadow-inner">
-               <Zap size={18} className="text-yellow-300 animate-pulse" fill="currentColor" />
-               <span className="font-black text-sm tracking-wide">حدث حصري للشركات (B2B)</span>
-             </div>
-             <p className="font-bold text-sm md:text-base text-center">
-                احصل على تخفيض فوري بقيمة <span className="text-yellow-300 font-black text-lg mx-1">{discountConfig.percentage}%</span> عند إضافة <span className="underline underline-offset-4 font-black">منتجين أو أكثر</span> إلى سلة التسوق!
-             </p>
-          </div>
-        </div>
-      )}
+
 
       {/* Breadcrumb */}
       <div className="bg-white border-b border-gray-100">

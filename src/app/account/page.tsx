@@ -149,11 +149,6 @@ function LoginForm({ onSuccess }: { onSuccess: (phone: string, name: string) => 
          </Link>
       </div>
 
-      <div className="absolute top-4 left-4 opacity-10">
-        <ShieldCheck size={120} />
-      </div>
-        </>
-      )}
     </div>
   );
 }

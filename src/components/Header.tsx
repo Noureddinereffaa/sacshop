@@ -4,13 +4,15 @@ import Link from "next/link";
 import { Search, Menu, X, UserCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import CartDrawer from "./CartDrawer";
 import { useCartStore } from "@/store/cartStore";
+import { useSettingsStore } from "@/store/settingsStore";
 import { ShoppingCart } from "lucide-react";
+import Image from "next/image";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { items, setIsOpen } = useCartStore();
+  const { items } = useCartStore();
+  const { branding } = useSettingsStore();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -32,11 +34,17 @@ export default function Header() {
 
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-xl">
-            S
-          </div>
+          {branding.logo ? (
+            <div className="relative w-10 h-10 overflow-hidden rounded-xl">
+              <Image src={branding.logo} alt={branding.storeName} fill className="object-contain" />
+            </div>
+          ) : (
+            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-xl">
+              {branding.storeName.charAt(0)}
+            </div>
+          )}
           <span className="hidden sm:block font-bold text-xl tracking-tight text-gray-900">
-            SacShop <span className="text-primary">.dz</span>
+            {branding.storeName} <span className="text-primary font-black">.</span>
           </span>
         </Link>
 
@@ -66,9 +74,9 @@ export default function Header() {
               <UserCircle size={24} />
             </Link>
  
-            {/* Cart Button */}
-            <button 
-              onClick={() => setIsOpen(true)}
+            {/* Cart Button - Direct Redirect */}
+            <Link 
+              href="/checkout"
               className="relative w-11 h-11 text-gray-700 hover:bg-gray-100 rounded-full transition-colors flex items-center justify-center"
             >
               <ShoppingCart size={24} />
@@ -77,11 +85,11 @@ export default function Header() {
                   {totalItems}
                 </span>
               )}
-            </button>
+            </Link>
           </div>
         </div>
 
-      <CartDrawer />
+
 
       {/* Mobile Menu */}
       <AnimatePresence>

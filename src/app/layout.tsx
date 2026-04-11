@@ -14,6 +14,8 @@ export const metadata: Metadata = {
   description: "تسوق أجود أنواع الحقائب والأكياس بتوصيل سريع لجميع ولايات الجزائر. الدفع عند الاستلام.",
 };
 
+import SettingsProvider from "@/components/SettingsProvider";
+
 export default function RootLayout({
   children,
 }: {
@@ -22,8 +24,10 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl">
       <body className={`${tajawal.variable} font-sans`}>
-        <MarketingPixels />
-        {children}
+        <SettingsProvider>
+          <MarketingPixels />
+          {children}
+        </SettingsProvider>
       </body>
     </html>
   );

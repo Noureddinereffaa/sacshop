@@ -175,8 +175,14 @@ export default function OrderForm({ productId, productName, productPrice, select
     } catch { /* non-critical */ }
 
     setPendingOrderId(orderId);
-    setPendingWaLink(`https://wa.me/${waNumber}?text=${encodeURIComponent(waMessage)}`);
+    const waLink = `https://wa.me/${waNumber}?text=${encodeURIComponent(waMessage)}`;
+    setPendingWaLink(waLink);
     setStep("success");
+
+    // Automatic redirect to WhatsApp
+    setTimeout(() => {
+      window.location.href = waLink;
+    }, 100);
   };
 
   // ─── SUCCESS SCREEN ─────────────────────────────────────────────────────────

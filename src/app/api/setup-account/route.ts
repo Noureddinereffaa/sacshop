@@ -14,7 +14,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'البيانات غير مكتملة' }, { status: 400 });
     }
 
-    const email = `${phone.replace(/\s+/g, '')}@sacshop.dz`;
+    const email = `${phone.replace(/\s+/g, '')}@serigraphie.dz`;
 
     // Check if auth user already exists
     const { data: { users } } = await supabaseAdmin.auth.admin.listUsers();

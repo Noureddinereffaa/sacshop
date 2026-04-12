@@ -14,7 +14,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'يرجى إدخال جميع البيانات' }, { status: 400 });
     }
 
-    const email = `${phone.replace(/\s+/g, '')}@sacshop.dz`;
+    const email = `${phone.replace(/\s+/g, '')}@serigraphie.dz`;
 
     // 1. Check if auth user already exists
     const { data: { users } } = await supabaseAdmin.auth.admin.listUsers();

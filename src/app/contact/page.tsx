@@ -32,7 +32,7 @@ export default function ContactPage() {
               </div>
               <div>
                 <h3 className="text-xl font-bold text-gray-900 mb-1">البريد الإلكتروني</h3>
-                <p className="text-gray-600">support@sacshop.dz</p>
+                <p className="text-gray-600">support@serigraphie.dz</p>
               </div>
             </div>
 

@@ -135,7 +135,7 @@ export default function AdminOrders() {
 
   const openWhatsApp = (phone: string, orderNumber: number) => {
     const formattedPhone = phone.replace(/\s+/g, '');
-    const wsUrl = `https://wa.me/213${formattedPhone.startsWith('0') ? formattedPhone.slice(1) : formattedPhone}?text=مرحباً بك، نتواصل معك بخصوص طلبك رقم ${orderNumber} من SacShop.`;
+    const wsUrl = `https://wa.me/213${formattedPhone.startsWith('0') ? formattedPhone.slice(1) : formattedPhone}?text=مرحباً بك، نتواصل معك بخصوص طلبك رقم ${orderNumber} من Service Serigraphie.`;
     window.open(wsUrl, '_blank');
   };
 

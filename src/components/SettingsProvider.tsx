@@ -21,7 +21,7 @@ export default function SettingsProvider({ children }: { children: React.ReactNo
         );
 
         const branding = {
-          storeName: settingsMap.branding?.storeName || "SacShop",
+          storeName: settingsMap.branding?.storeName || "Service Serigraphie",
           logo: settingsMap.branding?.logo || "",
           footerLogo: settingsMap.branding?.footerLogo || settingsMap.branding?.logo || "",
           primaryColor: settingsMap.branding?.primaryColor || "#00AEEF",

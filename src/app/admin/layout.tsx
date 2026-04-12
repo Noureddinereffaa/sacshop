@@ -95,7 +95,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               S
             </div>
             <div>
-              <p className="font-black text-lg tracking-tight">SacShop</p>
+              <p className="font-black text-lg tracking-tight">Service Serigraphie</p>
               <p className="text-gray-500 text-xs font-bold">لوحة التحكم</p>
             </div>
           </Link>
@@ -153,7 +153,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <Link href="/" className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center font-black text-xl">S</div>
                   <div>
-                    <p className="font-black text-lg tracking-tight">SacShop</p>
+                    <p className="font-black text-lg tracking-tight">Service Serigraphie</p>
                     <p className="text-gray-500 text-xs font-bold">لوحة التحكم</p>
                   </div>
                 </Link>
@@ -201,7 +201,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
             <div>
               <p className="font-black text-gray-900 text-sm leading-none">المشرف</p>
-              <p className="text-gray-400 text-xs">admin@sacshop.dz</p>
+              <p className="text-gray-400 text-xs">admin@serigraphie.dz</p>
             </div>
           </div>
           <p className="text-gray-400 text-sm hidden md:block">

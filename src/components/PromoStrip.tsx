@@ -10,10 +10,13 @@ export default function PromoStrip() {
 
   if (!promobar || !promobar.enabled) return null;
 
-  const buttons = promobar.buttons || [
-    { label: "إذا كنت صاحب صيدلية اضغط هنا", link: "/products?category=pharmacy", color: "green", position: "right" },
-    { label: "العروض والتخفيضات", link: "/offers", color: "white", position: "left" }
-  ];
+  const savedButtons = promobar.buttons;
+  const buttons = (Array.isArray(savedButtons) && savedButtons.length > 0)
+    ? savedButtons
+    : [
+        { label: "إذا كنت صاحب صيدلية اضغط هنا", link: "/products?category=pharmacy", color: "green", position: "right" },
+        { label: "العروض والتخفيضات", link: "/offers", color: "white", position: "left" }
+      ];
 
   const rightButtons = buttons.filter((b: any) => b.position === "right");
   const leftButtons = buttons.filter((b: any) => b.position === "left");

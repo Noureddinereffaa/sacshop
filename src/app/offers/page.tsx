@@ -26,7 +26,7 @@ export default function OffersPage() {
             className="inline-flex items-center gap-2 bg-primary/10 text-primary px-5 py-2 rounded-full font-black text-xs uppercase tracking-widest mb-6"
           >
             <Zap size={14} className="animate-pulse" />
-            حصرياً لزبائن SacShop
+            حصراً لزبائن Service Serigraphie
           </motion.div>
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}

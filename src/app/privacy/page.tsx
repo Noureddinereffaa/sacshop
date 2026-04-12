@@ -11,7 +11,7 @@ export default function PrivacyPolicy() {
         <div className="space-y-8 text-gray-600 leading-relaxed text-lg">
           <section>
              <h2 className="text-2xl font-bold text-gray-900 mb-4">1. مقدمة</h2>
-             <p>نحن في SacShop نولي أهمية كبرى لخصوصية بياناتكم. توضح هذه السياسة كيفية جمع واستخدام وحماية معلوماتكم عند استخدام موقعنا.</p>
+             <p>نحن في Service Serigraphie نولي أهمية كبرى لخصوصية بياناتكم. توضح هذه السياسة كيفية جمع واستخدام وحماية معلوماتكم عند استخدام موقعنا.</p>
           </section>
 
           <section>

@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     // إنشاء محتوى الإيمايل بناءً على حالة الطلب
     switch (status) {
       case "new":
-        subject = "تم استلام طلبك بنجاح محفظة SacShop 🛍️";
+        subject = "تم استلام طلبك بنجاح | Service Serigraphie 🛏️";
         htmlContent = `
           <div dir="rtl" style="font-family: Arial, sans-serif; text-align: right; color: #333;">
             <h1 style="color: #00AEEF;">مرحباً ${customerName}،</h1>
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
             <p>إجمالي الطلب: <strong>${totalPrice} د.ج</strong></p>
             <p>سنتصل بك قريباً لتأكيد الطلب وتحديد موعد التوصيل.</p>
             <br/>
-            <p>مع تحيات،<br/>فريق SacShop.dz</p>
+            <p>مع تحيات،<br/>فريق Service Serigraphie</p>
           </div>
         `;
         break;
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
             <p>نبشرك بأن طلبك رقم <strong>#${orderNumber || orderId.slice(0, 8)}</strong> قد تم تسليمه لشركة التوصيل وهو الآن في الطريق إليك!</p>
             <p>يرجى إبقاء هاتفك مفتوحاً للتواصل معك.</p>
             <br/>
-            <p>مع تحيات،<br/>فريق SacShop.dz</p>
+            <p>مع تحيات،<br/>فريق Service Serigraphie</p>
           </div>
         `;
         break;
@@ -64,7 +64,7 @@ export async function POST(req: Request) {
             <br/>
             <p>لا تنسَ مشاركتنا رأيك!</p>
             <br/>
-            <p>مع تحيات،<br/>فريق SacShop.dz</p>
+            <p>مع تحيات،<br/>فريق Service Serigraphie</p>
           </div>
         `;
         break;
@@ -77,26 +77,26 @@ export async function POST(req: Request) {
             <p>لقد تم إلغاء طلبك رقم <strong>#${orderNumber || orderId.slice(0, 8)}</strong>.</p>
             <p>إذا كان هناك أي خطأ أو أردت طلب منتجات أخرى، يسعدنا تواصلك معنا دائماً.</p>
             <br/>
-            <p>مع تحيات،<br/>فريق SacShop.dz</p>
+            <p>مع تحيات،<br/>فريق Service Serigraphie</p>
           </div>
         `;
         break;
 
       default:
-        subject = "تحديث بخصوص طلبك من SacShop";
+        subject = "تحديث بخصوص طلبك من Service Serigraphie";
         htmlContent = `
           <div dir="rtl" style="font-family: Arial, sans-serif; text-align: right; color: #333;">
             <h1 style="color: #10a37f;">مرحباً ${customerName}،</h1>
             <p>هناك تحديث جديد بخصوص طلبك رقم <strong>#${orderNumber || orderId.slice(0, 8)}</strong>.</p>
             <p>الحالة الحالية: ${status}</p>
             <br/>
-            <p>مع تحيات،<br/>فريق SacShop.dz</p>
+            <p>مع تحيات،<br/>فريق Service Serigraphie</p>
           </div>
         `;
     }
 
     const data = await resend.emails.send({
-      from: "SacShop <onboarding@resend.dev>", // يجب تغييره لدومين حقيقي لاحقاً
+      from: "Service Serigraphie <onboarding@resend.dev>", // يجب تغييره لدومين حقيقي لاحقاً
       to: [customerEmail],
       subject: subject,
       html: htmlContent,

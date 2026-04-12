@@ -5,8 +5,8 @@ import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 
 export const metadata = {
-  title: "من نحن | SacShop.dz",
-  description: "تعرف على متجر SacShop، الوجهة الأولى للأكياس والحقائب في الجزائر",
+  title: "من نحن | Service Serigraphie",
+  description: "تعرف على Service Serigraphie، الوجهة الأولى لخدمات الطباعة والسيريغرافي في الجزائر",
 };
 
 export default function AboutPage() {
@@ -23,7 +23,7 @@ export default function AboutPage() {
             <span className="text-primary">تستحق الأفضل</span>
           </h1>
           <p className="text-gray-500 text-xl leading-relaxed max-w-2xl">
-            SacShop هو متجر إلكتروني جزائري متخصص في توفير أجود أنواع الحقائب والأكياس للأفراد والمؤسسات في جميع أنحاء الجزائر.
+            Service Serigraphie هو خدمة طباعة جزائرية متخصصة في تقديم خدمات السيريغرافي والطباعة للشركات والمؤسسات في جميع أنحاء الجزائر.
           </p>
         </div>
       </section>

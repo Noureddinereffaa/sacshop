@@ -3,8 +3,14 @@
 import { motion } from "framer-motion";
 import { useSettingsStore } from "@/store/settingsStore";
 
+import { usePathname } from "next/navigation";
+
 export default function WhatsAppButton() {
+  const pathname = usePathname();
   const { branding } = useSettingsStore();
+
+  if (pathname?.startsWith("/admin")) return null;
+
   const whatsappNumber = branding.whatsappNumber?.replace(/[^0-9]/g, "") || "213";
   const message = `مرحباً ${branding.storeName}، أريد الاستفسار عن منتجاتكم.`;
   const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;

@@ -4,8 +4,14 @@ import { useSettingsStore } from "@/store/settingsStore";
 import Header from "./Header";
 import PromoStrip from "./PromoStrip";
 
+import { usePathname } from "next/navigation";
+
 export default function GlobalNavigation() {
+  const pathname = usePathname();
   const { promobar } = useSettingsStore();
+
+  if (pathname?.startsWith("/admin")) return null;
+
   const position = promobar?.position || 'top';
 
   return (

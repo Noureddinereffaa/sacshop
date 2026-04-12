@@ -5,8 +5,14 @@ import { Phone, Mail, MapPin } from "lucide-react";
 import { useSettingsStore } from "@/store/settingsStore";
 import Image from "next/image";
 
+import { usePathname } from "next/navigation";
+
 export default function Footer() {
+  const pathname = usePathname();
   const { branding } = useSettingsStore();
+
+  if (pathname?.startsWith("/admin")) return null;
+
   const footerLogoSrc = branding.footerLogo || branding.logo || "/brand/logo-mark.png";
   const waNumber = branding.whatsappNumber?.replace(/[^0-9]/g, "") || "213";
 
@@ -111,6 +117,9 @@ export default function Footer() {
 
       <div className="container mx-auto px-4 mt-16 pt-8 border-t border-gray-900 text-center text-sm text-gray-500">
         <p>© {new Date().getFullYear()} {branding.storeName} الجزائر. جميع الحقوق محفوظة.</p>
+        <p className="mt-3 text-[10px] text-gray-700 font-bold tracking-widest uppercase">
+           by <a href="https://wa.me/213557585066" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-primary transition-colors">noureddine reffaa</a>
+        </p>
       </div>
     </footer>
   );

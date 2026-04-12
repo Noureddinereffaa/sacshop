@@ -8,10 +8,16 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, useMemo, useEffect } from "react";
 
+import { useRouter, usePathname } from "next/navigation";
+import { useState, useMemo, useEffect } from "react";
+
 export default function QuickAddModal() {
+  const pathname = usePathname();
   const { isOpen, product, close } = useQuickAddStore();
   const { addItem, setCustomerStatus } = useCartStore();
   const router = useRouter();
+
+  if (pathname?.startsWith("/admin")) return null;
 
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");

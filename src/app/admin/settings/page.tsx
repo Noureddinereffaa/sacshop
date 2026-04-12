@@ -22,7 +22,7 @@ import Link from "next/link";
 import ImageUploader from "@/components/ImageUploader";
 
 export default function AdminSettings() {
-  const [activeTab, setActiveTab] = useState<"branding" | "offers" | "marketing" | "email" | "navigation" | "promobar" | "slider" | "partners">("branding");
+  const [activeTab, setActiveTab] = useState<"branding" | "offers" | "marketing" | "navigation" | "promobar" | "slider" | "partners">("branding");
   const [settings, setSettings] = useState<Record<string, any>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -70,7 +70,7 @@ export default function AdminSettings() {
       <div className="flex justify-between items-center">
         <div>
            <h1 className="text-3xl font-black text-gray-900">إعدادات النظام</h1>
-           <p className="text-gray-500 font-medium">تحكم في هوية المتجر وأسعار التوصيل والإشعارات</p>
+           <p className="text-gray-500 font-medium">تحكم في هوية المتجر والأسعار والخصومات</p>
         </div>
         <button 
           onClick={saveSettings}
@@ -100,7 +100,6 @@ export default function AdminSettings() {
                { id: "promobar", name: "شريط العروض", icon: Zap },
                { id: "offers", name: "العروض والخصومات", icon: Tag },
                { id: "marketing", name: "بيكسلات التتبع", icon: BarChart2 },
-               { id: "email", name: "رسائل البريد", icon: Mail },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -872,20 +871,6 @@ export default function AdminSettings() {
                            className="w-full bg-gray-50 border-none rounded-xl py-4 pr-12 pl-4 font-mono font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 transition-all"
                          />
                        </div>
-                    </div>
-                 </div>
-               )}
-
-               {activeTab === "email" && (
-                 <div className="space-y-8 animate-in fade-in duration-500">
-                    <div className="space-y-3">
-                       <label className="text-sm font-black text-gray-700 block mr-2">قالب رسالة تأكيد الطلب</label>
-                       <textarea 
-                         value={settings.email?.emailTemplate || ""}
-                         onChange={(e) => setSettings({ ...settings, email: { ...settings.email, emailTemplate: e.target.value } })}
-                         className="w-full bg-gray-50 border-none rounded-xl py-4 px-4 font-medium h-64 resize-none focus:ring-2 focus:ring-primary/20 transition-all"
-                       />
-                       <p className="text-[10px] text-gray-400 font-bold mr-2 uppercase tracking-tighter">استخدم المتغيرات التالية: {"{name}"}, {"{order_number}"}, {"{link}"}</p>
                     </div>
                  </div>
                )}

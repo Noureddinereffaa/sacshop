@@ -49,7 +49,7 @@ export default function AdminOrders() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [toast, setToast] = useState<{message: string, type: 'success'|'error'} | null>(null);
-  const [confirmData, setConfirmData] = useState({ quantity: '', finalPrice: '', notes: '' });
+  const [confirmData, setConfirmData] = useState({ quantity: '', finalPrice: '', notes: '', wilaya: '' });
   const [isConfirming, setIsConfirming] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -153,6 +153,10 @@ export default function AdminOrders() {
       total_price: finalPrice,
     };
     if (confirmData.notes) updates.admin_notes = confirmData.notes;
+    if (confirmData.wilaya) {
+      const wilayaNote = `📍 الولاية: ${confirmData.wilaya}`;
+      updates.admin_notes = updates.admin_notes ? `${updates.admin_notes}\n${wilayaNote}` : wilayaNote;
+    }
 
     const { error } = await supabase.from('orders').update(updates).eq('id', selectedOrder.id);
 
@@ -182,7 +186,7 @@ export default function AdminOrders() {
 
       showToast(`✅ تم تأكيد الطلب #${selectedOrder.order_number} بنجاح!`);
       setSelectedOrder({ ...selectedOrder, ...updates, status: 'confirmed' } as Order);
-      setConfirmData({ quantity: '', finalPrice: '', notes: '' });
+      setConfirmData({ quantity: '', finalPrice: '', notes: '', wilaya: '' });
       fetchOrders();
     } else {
       showToast('حدث خطأ أثناء تأكيد الطلب', 'error');
@@ -501,6 +505,14 @@ export default function AdminOrders() {
                               className="w-full bg-white border-2 border-primary/20 rounded-xl py-3 px-4 font-black text-gray-900 focus:border-primary outline-none transition-all text-center text-lg"
                             />
                           </div>
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-black text-gray-600 uppercase tracking-wide">الولاية / المدينة (تحديد يدوي)</label>
+                          <input type="text" placeholder="مثال: الجزائر العاصمة، وهران..." 
+                            value={confirmData.wilaya}
+                            onChange={e => setConfirmData(p => ({ ...p, wilaya: e.target.value }))}
+                            className="w-full bg-white border-2 border-primary/20 rounded-xl py-3 px-4 font-bold text-gray-900 focus:border-primary outline-none transition-all text-sm"
+                          />
+                        </div>
                         </div>
                         <div className="space-y-1">
                           <label className="text-[11px] font-black text-gray-600 uppercase tracking-wide">ملاحظات فريق التأكيد</label>

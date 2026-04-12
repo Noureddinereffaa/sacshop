@@ -295,7 +295,8 @@ export default function OrderForm({
           <CheckCircle2 size={44} />
         </div>
         <div>
-          <h2 className="text-2xl font-black text-gray-900">تم تسجيل طلبك! ✅</h2>
+          <h2 className="text-2xl font-black text-gray-900">تفاصيل طلبك جاهزة! ✅</h2>
+          <p className="text-primary font-bold text-sm mt-1">بانتظار تأكيدك النهائي عبر واتساب لإتمام التسجيل</p>
           {discountAmount > 0 && (
             <div className="mt-1 flex items-center justify-center gap-1.5 text-primary font-black text-sm bg-primary/10 px-4 py-1.5 rounded-full w-max mx-auto border border-primary/20">
                <Gift size={16} />

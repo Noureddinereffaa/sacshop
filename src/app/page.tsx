@@ -7,6 +7,7 @@ import { ArrowRight, ShoppingBag, Truck, ShieldCheck, Zap } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import ProductCard from "@/components/ProductCard";
 import Link from "next/link";
+import PromoStrip from "@/components/PromoStrip";
 
 
 export const revalidate = 0; // Ensure dynamic rendering for settings changes
@@ -35,7 +36,7 @@ export default async function Home() {
   return (
     <main className="min-h-screen">
       <Header />
-      
+      <PromoStrip />
 
 
       <Hero />
@@ -98,11 +99,7 @@ export default async function Home() {
              {products.map((p) => (
                <ProductCard
                  key={p.id}
-                 id={p.id}
-                 name={p.name}
-                 price={p.price}
-                 image={p.image_url}
-                 category={p.category}
+                 product={p as any}
                />
              ))}
           </div>

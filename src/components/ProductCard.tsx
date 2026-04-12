@@ -4,33 +4,22 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ShoppingCart, Eye, PackagePlus } from "lucide-react";
-import { useCartStore } from "@/store/cartStore";
 import { useRouter } from "next/navigation";
+import { useQuickAddStore } from "@/store/quickAddStore";
+import { Product } from "@/types";
 
 interface ProductCardProps {
-  id: string;
-  name: string;
-  price: number;
-  image: string;
-  category: string;
+  product: Product;
 }
 
-export default function ProductCard({ id, name, price, image, category }: ProductCardProps) {
-  const { addItem } = useCartStore();
+export default function ProductCard({ product }: ProductCardProps) {
+  const { id, name, price, image_url: image, category } = product;
+  const { open } = useQuickAddStore();
   const router = useRouter();
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
-    addItem({
-      id: `${id}-default-default`,
-      productId: id,
-      name,
-      price,
-      quantity: 1,
-      image_url: image
-    });
-    // Open the cart side drawer for feedback instead of redirecting
-    useCartStore.getState().setIsOpen(true);
+    open(product);
   };
 
   return (

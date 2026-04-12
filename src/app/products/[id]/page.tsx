@@ -324,6 +324,7 @@ export default function ProductDetailPage() {
     });
     // Open drawer
     useCartStore.getState().setIsOpen(true);
+    router.push('/products');
   };
 
   return (
@@ -518,7 +519,7 @@ export default function ProductDetailPage() {
                     {selectedColor && <span className="text-primary font-bold">({selectedColor})</span>}
                   </label>
                   <div className="flex gap-3 flex-wrap">
-                    {availableColors.map((color: any) => (
+                    {availableColors?.map((color: any) => (
                       <button
                         key={color.name}
                         onClick={() => setSelectedColor(color.name === selectedColor ? "" : color.name)}
@@ -635,7 +636,7 @@ export default function ProductDetailPage() {
               {/* Custom Variant Groups */}
               {product.custom_variants && product.custom_variants.length > 0 && (
                 <div className="space-y-4 pt-4 border-t border-gray-100">
-                  {product.custom_variants.map((group: any, gIdx: number) => (
+                  {product.custom_variants?.map((group: any, gIdx: number) => (
                     <div key={`cv-${gIdx}`} className="space-y-2">
                        <label className="text-sm font-black text-gray-700 flex items-center gap-2">
                         {group.label}
@@ -645,7 +646,7 @@ export default function ProductDetailPage() {
                         )}
                       </label>
                       <div className="flex gap-2 flex-wrap">
-                        {group.options.map((opt: string) => (
+                        {group.options?.map((opt: string) => (
                           <button
                             type="button"
                             key={opt}

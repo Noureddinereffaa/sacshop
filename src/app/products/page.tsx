@@ -12,23 +12,16 @@ import { useSettingsStore } from "@/store/settingsStore";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  image_url: string;
-  category: string;
-  description: string;
-}
+import { Product } from "@/types";
 
 // Fallback static products when Supabase not connected
 const STATIC_PRODUCTS: Product[] = [
-  { id: "1", name: "أكياس ورقية كرافت (Kraft Bags)", price: 35.00, image_url: "https://placehold.co/800x800/d2b48c/ffffff.png?text=Kraft+Bag", category: "أكياس ورقية", description: "" },
-  { id: "2", name: "أكياس فاخرة مغلفة", price: 120.00, image_url: "https://placehold.co/800x800/1a1a1a/ffffff.png?text=Luxury+Bag", category: "أكياس فاخرة", description: "" },
-  { id: "3", name: "أكياس بلاستيكية مطبوعة", price: 15.00, image_url: "https://placehold.co/800x800/e8e8e8/1a1a1a.png?text=Plastic+Bag", category: "أكياس بلاستيكية", description: "" },
-  { id: "4", name: "ورق تغليف داخلي", price: 8.00, image_url: "https://placehold.co/800x800/f8f9fa/1a1a1a.png?text=Tissue+Paper", category: "ملحقات التغليف", description: "" },
-  { id: "5", name: "ملصقات وشعارات دائرية", price: 4.00, image_url: "https://placehold.co/800x800/10a37f/ffffff.png?text=Stickers", category: "ملحقات التغليف", description: "" },
-  { id: "6", name: "علب شحن وتوصيل", price: 65.00, image_url: "https://placehold.co/800x800/c4a484/1a1a1a.png?text=Shipping+Box", category: "علب وتعبئة", description: "" },
+  { id: "1", name: "أكياس ورقية كرافت (Kraft Bags)", price: 35.00, image_url: "https://placehold.co/800x800/d2b48c/ffffff.png?text=Kraft+Bag", category: "أكياس ورقية", description: "", short_description: "", compare_price: null, sizes: [], colors: [], stock: 0, is_published: true, is_featured: false },
+  { id: "2", name: "أكياس فاخرة مغلفة", price: 120.00, image_url: "https://placehold.co/800x800/1a1a1a/ffffff.png?text=Luxury+Bag", category: "أكياس فاخرة", description: "", short_description: "", compare_price: null, sizes: [], colors: [], stock: 0, is_published: true, is_featured: false },
+  { id: "3", name: "أكياس بلاستيكية مطبوعة", price: 15.00, image_url: "https://placehold.co/800x800/e8e8e8/1a1a1a.png?text=Plastic+Bag", category: "أكياس بلاستيكية", description: "", short_description: "", compare_price: null, sizes: [], colors: [], stock: 0, is_published: true, is_featured: false },
+  { id: "4", name: "ورق تغليف داخلي", price: 8.00, image_url: "https://placehold.co/800x800/f8f9fa/1a1a1a.png?text=Tissue+Paper", category: "ملحقات التغليف", description: "", short_description: "", compare_price: null, sizes: [], colors: [], stock: 0, is_published: true, is_featured: false },
+  { id: "5", name: "ملصقات وشعارات دائرية", price: 4.00, image_url: "https://placehold.co/800x800/10a37f/ffffff.png?text=Stickers", category: "ملحقات التغليف", description: "", short_description: "", compare_price: null, sizes: [], colors: [], stock: 0, is_published: true, is_featured: false },
+  { id: "6", name: "علب شحن وتوصيل", price: 65.00, image_url: "https://placehold.co/800x800/c4a484/1a1a1a.png?text=Shipping+Box", category: "علب وتعبئة", description: "", short_description: "", compare_price: null, sizes: [], colors: [], stock: 0, is_published: true, is_featured: false },
 ];
 
 function ProductsList() {
@@ -191,11 +184,7 @@ function ProductsList() {
               {filtered.map(product => (
                 <ProductCard
                   key={product.id}
-                  id={product.id}
-                  name={product.name}
-                  price={product.price}
-                  image={product.image_url}
-                  category={product.category}
+                  product={product as Product}
                 />
               ))}
             </div>

@@ -23,8 +23,10 @@ interface SettingsState {
   branding: Branding;
   discounts: Discounts;
   navigation: NavigationItem[];
+  promobar: any;
+  marketing: any;
   isLoaded: boolean;
-  setSettings: (branding: Branding, discounts: Discounts, navigation: NavigationItem[]) => void;
+  setSettings: (branding: Branding, discounts: Discounts, navigation: NavigationItem[], promobar?: any, marketing?: any) => void;
 }
 
 export const useSettingsStore = create<SettingsState>((set) => ({
@@ -41,6 +43,9 @@ export const useSettingsStore = create<SettingsState>((set) => ({
     cartMinItems: 2
   },
   navigation: [],
+  promobar: { enabled: true, bgColor: "#00AEEF", buttons: [] },
+  marketing: {},
   isLoaded: false,
-  setSettings: (branding, discounts, navigation) => set({ branding, discounts, navigation, isLoaded: true }),
+  setSettings: (branding, discounts, navigation, promobar, marketing) => 
+    set({ branding, discounts, navigation, promobar: promobar || { enabled: true, bgColor: "#00AEEF", buttons: [{ label: "إذا كنت صاحب صيدلية اضغط هنا", link: "/products?category=pharmacy", color: "green", position: "right" }, { label: "العروض والتخفيضات", link: "/offers", color: "white", position: "left" }] }, marketing: marketing || {}, isLoaded: true }),
 }));

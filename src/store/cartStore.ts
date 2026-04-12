@@ -37,6 +37,7 @@ interface CartStore {
     finalTotal: number;
     percentage: number;
     label: string;
+    minItems: number;
   };
   discountConfig: {
     enabled: boolean;
@@ -150,7 +151,8 @@ export const useCartStore = create<CartStore>()(
           discountAmount,
           finalTotal,
           percentage,
-          label
+          label,
+          minItems: state.discountConfig.minItems
         };
       }
     }),

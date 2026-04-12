@@ -15,6 +15,7 @@ export const metadata: Metadata = {
 };
 
 import SettingsProvider from "@/components/SettingsProvider";
+import QuickAddModal from "@/components/QuickAddModal";
 
 export default function RootLayout({
   children,
@@ -27,6 +28,7 @@ export default function RootLayout({
         <SettingsProvider>
           <MarketingPixels />
           {children}
+          <QuickAddModal />
         </SettingsProvider>
       </body>
     </html>

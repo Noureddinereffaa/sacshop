@@ -35,9 +35,11 @@ export default function SettingsProvider({ children }: { children: React.ReactNo
         };
  
         const navigation = settingsMap.navigation || [];
+        const promobar = settingsMap.promobar || null;
+        const marketing = settingsMap.marketing || null;
  
         // 1. Update global store
-        setSettings(branding, discounts, navigation);
+        setSettings(branding, discounts, navigation, promobar, marketing);
  
         // 2. Sync Cart Store logic
         setDiscountConfig({

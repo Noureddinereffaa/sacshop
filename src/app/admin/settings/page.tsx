@@ -13,15 +13,14 @@ import {
   Tag,
   BarChart2,
   Trash2,
-  Crown
+  Crown,
+  Zap
 } from "lucide-react";
 import Link from "next/link";
 import ImageUploader from "@/components/ImageUploader";
 
-
-
 export default function AdminSettings() {
-  const [activeTab, setActiveTab] = useState<"branding" | "offers" | "marketing" | "email" | "navigation">("branding");
+  const [activeTab, setActiveTab] = useState<"branding" | "offers" | "marketing" | "email" | "navigation" | "promobar">("branding");
   const [settings, setSettings] = useState<Record<string, any>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -94,6 +93,7 @@ export default function AdminSettings() {
             {[
                { id: "branding", name: "الهوية والتواصل", icon: Palette },
                { id: "navigation", name: "قائمة الخدمات", icon: Globe },
+               { id: "promobar", name: "شريط العروض", icon: Zap },
                { id: "offers", name: "العروض والخصومات", icon: Tag },
                { id: "marketing", name: "بيكسلات التتبع", icon: BarChart2 },
                { id: "email", name: "رسائل البريد", icon: Mail },
@@ -112,6 +112,140 @@ export default function AdminSettings() {
          {/* Tab Content */}
          <div className="lg:col-span-3">
             <div className="bg-white rounded-[2.5rem] border border-gray-100 p-10 shadow-xl space-y-8">
+               {activeTab === "promobar" && (
+                 <div className="space-y-8 animate-in fade-in duration-500 text-right">
+                    <div className="flex items-center justify-between mb-4">
+                       <h3 className="font-bold text-gray-800">إعدادات شريط العروض العلوي</h3>
+                       <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-gray-400">حالة الشريط:</span>
+                          <button 
+                            onClick={() => setSettings({ ...settings, promobar: { ...settings.promobar, enabled: !settings.promobar?.enabled } })}
+                            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${settings.promobar?.enabled ? "bg-green-500 text-white" : "bg-gray-200 text-gray-500"}`}
+                          >
+                            {settings.promobar?.enabled ? "مفعّل" : "معطّل"}
+                          </button>
+                       </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                       <div className="space-y-3">
+                          <label className="text-sm font-black text-gray-700 block mr-2">لون الخلفية (مستطيل العروض)</label>
+                          <div className="flex gap-4 items-center">
+                             <input 
+                               type="color" 
+                               value={settings.promobar?.bgColor || "#00AEEF"}
+                               onChange={(e) => setSettings({ ...settings, promobar: { ...settings.promobar, bgColor: e.target.value } })}
+                               className="w-12 h-12 rounded-lg cursor-pointer border-none p-0 bg-transparent"
+                             />
+                             <input 
+                               type="text" 
+                               value={settings.promobar?.bgColor || "#00AEEF"}
+                               dir="ltr"
+                               className="flex-1 bg-gray-50 border-none rounded-xl py-3 px-4 font-bold text-gray-600"
+                               readOnly
+                             />
+                          </div>
+                       </div>
+                    </div>
+
+                    <div className="space-y-4">
+                       <div className="flex justify-between items-center">
+                          <label className="text-sm font-black text-gray-700">أزرار الشريط (Buttons)</label>
+                          <button 
+                            onClick={() => {
+                              const btns = settings.promobar?.buttons || [];
+                              setSettings({ ...settings, promobar: { ...settings.promobar, buttons: [...btns, { label: "زر جديد", link: "/", color: "green", position: "right" }] } });
+                            }}
+                            className="text-primary text-xs font-bold hover:underline"
+                          >
+                            + إضافة زر إضافي
+                          </button>
+                       </div>
+                       
+                       {(settings.promobar?.buttons || [
+                         { label: "إذا كنت صاحب صيدلية اضغط هنا", link: "/products?category=pharmacy", color: "green", position: "right" },
+                         { label: "العروض والتخفيضات", link: "/offers", color: "white", position: "left" }
+                       ]).map((btn: any, idx: number) => (
+                         <div key={idx} className="bg-gray-50 p-6 rounded-2xl border border-gray-100 flex flex-col gap-4 text-right" dir="rtl">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                               <div className="space-y-2">
+                                  <label className="text-[10px] font-black text-gray-400 uppercase">نص الزر</label>
+                                  <input 
+                                    type="text" 
+                                    value={btn.label}
+                                    onChange={(e) => {
+                                      const btns = [...settings.promobar.buttons];
+                                      btns[idx].label = e.target.value;
+                                      setSettings({ ...settings, promobar: { ...settings.promobar, buttons: btns } });
+                                    }}
+                                    className="w-full bg-white border border-gray-200 rounded-xl py-2 px-3 font-bold text-sm"
+                                  />
+                                </div>
+                               <div className="space-y-2">
+                                  <label className="text-[10px] font-black text-gray-400 uppercase">الرابط (Link)</label>
+                                  <input 
+                                    type="text" 
+                                    value={btn.link}
+                                    dir="ltr"
+                                    onChange={(e) => {
+                                      const btns = [...settings.promobar.buttons];
+                                      btns[idx].link = e.target.value;
+                                      setSettings({ ...settings, promobar: { ...settings.promobar, buttons: btns } });
+                                    }}
+                                    className="w-full bg-white border border-gray-200 rounded-xl py-2 px-3 font-mono text-xs"
+                                  />
+                               </div>
+                            </div>
+                            <div className="flex items-center justify-between">
+                               <div className="flex gap-4">
+                                  <div className="flex items-center gap-2">
+                                     <span className="text-[10px] font-black text-gray-400">اللون:</span>
+                                     <select 
+                                       value={btn.color}
+                                       onChange={(e) => {
+                                         const btns = [...settings.promobar.buttons];
+                                         btns[idx].color = e.target.value;
+                                         setSettings({ ...settings, promobar: { ...settings.promobar, buttons: btns } });
+                                       }}
+                                       className="bg-white border text-xs p-1 rounded-md"
+                                     >
+                                        <option value="green">أخضر (Pharmacy)</option>
+                                        <option value="white">أبيض (Offers)</option>
+                                        <option value="primary">اللون الأساسي</option>
+                                     </select>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                     <span className="text-[10px] font-black text-gray-400">الموضع:</span>
+                                     <select 
+                                       value={btn.position}
+                                       onChange={(e) => {
+                                         const btns = [...settings.promobar.buttons];
+                                         btns[idx].position = e.target.value;
+                                         setSettings({ ...settings, promobar: { ...settings.promobar, buttons: btns } });
+                                       }}
+                                       className="bg-white border text-xs p-1 rounded-md"
+                                     >
+                                        <option value="right">يمين</option>
+                                        <option value="left">يسار</option>
+                                     </select>
+                                  </div>
+                               </div>
+                               <button 
+                                 onClick={() => {
+                                   const btns = settings.promobar.buttons.filter((_: any, i: number) => i !== idx);
+                                   setSettings({ ...settings, promobar: { ...settings.promobar, buttons: btns } });
+                                 }}
+                                 className="text-red-400 hover:text-red-600 transition-colors"
+                               >
+                                 <Trash2 size={16} />
+                               </button>
+                            </div>
+                         </div>
+                       ))}
+                    </div>
+                 </div>
+               )}
+
                {activeTab === "branding" && (
                  <div className="space-y-8 animate-in fade-in duration-500">
                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

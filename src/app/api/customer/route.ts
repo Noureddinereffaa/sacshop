@@ -38,14 +38,27 @@ export async function POST(request: Request) {
     }
 
     // 1. Fetch customer by phone
-    const { data: customerData, error: customerError } = await supabaseAdmin
+    let { data: customerData, error: customerError } = await supabaseAdmin
       .from('customers')
       .select('*')
       .eq('phone', phone)
-      .single();
+      .maybeSingle();
 
-    if (customerError || !customerData) {
-      return NextResponse.json({ error: "Customer not found" }, { status: 404 });
+    // If not found, create automatically (Auto-Registration)
+    if (!customerData) {
+       const { data: newCustomer, error: createError } = await supabaseAdmin
+         .from('customers')
+         .insert({
+           phone: phone,
+           name: "زبون جديد", // Default name
+           total_orders: 0,
+           total_spent: 0
+         })
+         .select()
+         .single();
+       
+       if (createError) throw createError;
+       customerData = newCustomer;
     }
 
     // 2. Fetch their past orders

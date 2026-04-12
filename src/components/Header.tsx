@@ -33,24 +33,26 @@ export default function Header() {
         </button>
 
         {/* Logo - Increased Size */}
-        <Link href="/" className="flex items-center gap-2 sm:gap-3">
+        <Link href="/" className="flex items-center gap-2 sm:gap-3 group">
           {branding.logo ? (
-            <div className="relative w-12 h-12 sm:w-20 sm:h-20 overflow-hidden">
-              <Image src={branding.logo} alt={branding.storeName} fill className="object-contain" />
+            <div className="relative w-32 h-10 sm:w-48 sm:h-14 overflow-hidden flex-shrink-0 hover:scale-[1.02] transition-transform">
+              <Image src={branding.logo} alt={branding.storeName} fill className="object-contain object-right" />
             </div>
           ) : (
             <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-lg sm:text-2xl">
               {branding.storeName.charAt(0)}
             </div>
           )}
-          <div className="flex flex-col">
-            <span className="font-black text-lg sm:text-xl lg:text-2xl tracking-tight text-gray-900 leading-tight">
-              {branding.storeName}
-            </span>
-            <span className="hidden sm:block text-[10px] uppercase font-bold text-primary tracking-[0.2em]">
-              Premium Services
-            </span>
-          </div>
+          {!branding.logo && (
+            <div className="flex flex-col">
+              <span className="font-black text-lg sm:text-xl lg:text-2xl tracking-tight text-gray-900 leading-tight">
+                {branding.storeName}
+              </span>
+              <span className="hidden sm:block text-[10px] uppercase font-bold text-primary tracking-[0.2em]">
+                Premium Services
+              </span>
+            </div>
+          )}
         </Link>
 
         {/* Dynamic Navigation */}

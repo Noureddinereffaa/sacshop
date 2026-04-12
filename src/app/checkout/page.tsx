@@ -1,6 +1,7 @@
 "use client";
 
 import { useCartStore } from "@/store/cartStore";
+import { useSettingsStore } from "@/store/settingsStore";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import OrderForm from "@/components/OrderForm";
@@ -12,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { Tag, Star, Crown } from "lucide-react";
 
 export default function CheckoutPage() {
+  const { branding } = useSettingsStore();
   const { 
     items, 
     customerStatus,
@@ -125,10 +127,23 @@ export default function CheckoutPage() {
           
           {/* Order Summary (Items) */}
           <div className="lg:col-span-5 space-y-6 lg:order-2">
-             <div className="bg-white rounded-[2.5rem] p-6 border border-gray-100 shadow-sm">
-                <h3 className="font-black text-xl text-gray-900 mb-6 border-b border-gray-100 pb-4">ملخص الطلب ({items.length})</h3>
+             <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-xl relative overflow-hidden">
+                {/* Brand watermark */}
+                <div className="absolute -left-10 -top-10 opacity-[0.03] w-64 h-64 pointer-events-none">
+                   <Image src="/brand/logo-mark.png" alt="watermark" fill className="object-contain" />
+                </div>
                 
-                <div className="space-y-4 max-h-[50vh] overflow-y-auto custom-scrollbar pr-2 mb-6">
+                <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-6 relative z-10">
+                   <div className="text-right">
+                     <h3 className="font-black text-2xl text-gray-900">فاتورة الطلب</h3>
+                     <p className="text-gray-400 text-xs font-bold mt-1">عدد العناصر: {items.length}</p>
+                   </div>
+                   <div className="relative w-28 h-10 sm:w-36 sm:h-12 hidden xs:block">
+                      <Image src={branding?.logo || "/brand/logo-horizontal-1.png"} alt="Brand" fill className="object-contain object-left" />
+                   </div>
+                </div>
+                
+                <div className="relative z-10 space-y-4 max-h-[50vh] overflow-y-auto custom-scrollbar pr-2 mb-6">
                   {items.map((item) => (
                     <div key={item.id} className="flex gap-4 p-3 bg-gray-50 rounded-2xl">
                       <div className="w-16 h-16 bg-white rounded-xl overflow-hidden relative flex-shrink-0 border border-gray-100">

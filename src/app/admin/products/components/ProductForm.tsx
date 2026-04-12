@@ -3,11 +3,11 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { Loader2, Save, X, Plus, Image as ImageIcon, ArrowRight, Zap, Tag } from "lucide-react";
+import { Loader2, Save, X, Plus, Image as ImageIcon, ArrowRight, Zap, Tag, Sliders } from "lucide-react";
 import ImageUploader from "@/components/ImageUploader";
 import Link from "next/link";
 import Image from "next/image";
-import { Product } from "@/types"; // We will make sure this exists
+import { Product, CustomVariantGroup } from "@/types";
 
 const EMPTY_PRODUCT: Partial<Product> = {
   name: "",
@@ -26,6 +26,8 @@ const EMPTY_PRODUCT: Partial<Product> = {
   quantity_tiers: [],
   variant_images: [],
   printing_config: { extra_color_price: 15, base_colors_included: 1 },
+  custom_variants: [],
+  size_color_availability: {},
 };
 
 
@@ -36,12 +38,19 @@ interface ProductFormProps {
 export default function ProductForm({ initialData }: ProductFormProps) {
   const router = useRouter();
   const isEditMode = !!initialData;
+  const initialIsMatrix = Array.isArray(initialData?.quantity_tiers) && 
+    initialData!.quantity_tiers.length > 0 && 
+    !!(initialData!.quantity_tiers[0] as any).size;
+  
+  const [pricingMode, setPricingMode] = useState<"flat" | "matrix">(initialIsMatrix ? "matrix" : "flat");
+  const [matrixSizeSelection, setMatrixSizeSelection] = useState("");
+  
   const [product, setProduct] = useState<Partial<Product>>(initialData || EMPTY_PRODUCT);
   
   const [dynamicCategories, setDynamicCategories] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [newSize, setNewSize] = useState("");
-  const [newColor, setNewColor] = useState({ name: "", hex: "#00AEEF" });
+  const [newColor, setNewColor] = useState({ name: "", hex: "#00AEEF", extra_cost: 0 });
   const [newTier, setNewTier] = useState({ min_qty: 200, unit_price: 0 });
   const [newVariantImage, setNewVariantImage] = useState({ size: "", color: "", image_url: "" });
 
@@ -95,16 +104,43 @@ export default function ProductForm({ initialData }: ProductFormProps) {
   const addColor = () => {
     if (!newColor.name.trim()) return;
     setProduct(p => ({ ...p, colors: [...(p.colors || []), { ...newColor }] }));
-    setNewColor({ name: "", hex: "#10a37f" });
+    setNewColor({ name: "", hex: "#10a37f", extra_cost: 0 });
   };
   const removeColor = (n: string) => setProduct(p => ({ ...p, colors: (p.colors || []).filter(x => x.name !== n) }));
 
-  const addTier = () => {
+  const addFlatTier = () => {
     if (newTier.min_qty <= 0 || newTier.unit_price <= 0) return;
-    setProduct(p => ({ ...p, quantity_tiers: [...(p.quantity_tiers || []), { ...newTier }].sort((a,b) => a.min_qty - b.min_qty) }));
+    setProduct(p => ({ ...p, quantity_tiers: [...(p.quantity_tiers || []), { ...newTier }].sort((a:any, b:any) => a.min_qty - b.min_qty) }));
     setNewTier({ min_qty: 200, unit_price: 0 });
   };
-  const removeTier = (min_qty: number) => setProduct(p => ({ ...p, quantity_tiers: (p.quantity_tiers || []).filter(x => x.min_qty !== min_qty) }));
+  const removeFlatTier = (min_qty: number) => setProduct(p => ({ ...p, quantity_tiers: (p.quantity_tiers || []).filter((x:any) => x.min_qty !== min_qty) }));
+
+  const addMatrixTier = () => {
+     if (!matrixSizeSelection || newTier.min_qty <= 0 || newTier.unit_price <= 0) return;
+     setProduct(p => {
+       const qt = [...(p.quantity_tiers || [])];
+       const sizeIdx = qt.findIndex((q:any) => q.size === matrixSizeSelection);
+       if (sizeIdx >= 0) {
+         qt[sizeIdx].tiers.push({ min_qty: newTier.min_qty, unit_price: newTier.unit_price });
+         qt[sizeIdx].tiers.sort((a:any, b:any) => a.min_qty - b.min_qty);
+       } else {
+         qt.push({ size: matrixSizeSelection, tiers: [{ min_qty: newTier.min_qty, unit_price: newTier.unit_price }] });
+       }
+       return { ...p, quantity_tiers: qt };
+     });
+     setNewTier({ min_qty: 200, unit_price: 0 });
+  };
+  const removeMatrixTier = (size: string, min_qty: number) => {
+     setProduct(p => {
+       const qt: any[] = [...(p.quantity_tiers || [])];
+       const sizeIdx = qt.findIndex((q:any) => q.size === size);
+       if (sizeIdx >= 0) {
+         qt[sizeIdx].tiers = qt[sizeIdx].tiers.filter((t: any) => t.min_qty !== min_qty);
+         if (qt[sizeIdx].tiers.length === 0) qt.splice(sizeIdx, 1);
+       }
+       return { ...p, quantity_tiers: qt };
+     });
+  };
 
   const addVariantImage = () => {
     if (!newVariantImage.image_url) return;
@@ -112,6 +148,64 @@ export default function ProductForm({ initialData }: ProductFormProps) {
     setNewVariantImage({ size: "", color: "", image_url: "" });
   };
   const removeVariantImage = (idx: number) => setProduct(p => ({ ...p, variant_images: (p.variant_images || []).filter((_, i) => i !== idx) }));
+
+  // ── Custom Variant Groups ──────────────────────────────────────────────────
+  const [newGroup, setNewGroup] = useState<{ label: string; required: boolean }>({ label: "", required: true });
+  const [newOption, setNewOption] = useState<{ [groupIdx: number]: string }>({});
+
+  const addVariantGroup = () => {
+    if (!newGroup.label.trim()) return;
+    const group: CustomVariantGroup = { label: newGroup.label.trim(), required: newGroup.required, options: [] };
+    setProduct(p => ({ ...p, custom_variants: [...(p.custom_variants || []), group] }));
+    setNewGroup({ label: "", required: true });
+  };
+  const removeVariantGroup = (idx: number) =>
+    setProduct(p => ({ ...p, custom_variants: (p.custom_variants || []).filter((_, i) => i !== idx) }));
+
+  const addOptionToGroup = (groupIdx: number) => {
+    const val = (newOption[groupIdx] || "").trim();
+    if (!val) return;
+    setProduct(p => {
+      const cvs = [...(p.custom_variants || [])] as CustomVariantGroup[];
+      cvs[groupIdx] = { ...cvs[groupIdx], options: [...cvs[groupIdx].options, val] };
+      return { ...p, custom_variants: cvs };
+    });
+    setNewOption(o => ({ ...o, [groupIdx]: "" }));
+  };
+  const removeOptionFromGroup = (groupIdx: number, optIdx: number) =>
+    setProduct(p => {
+      const cvs = [...(p.custom_variants || [])] as CustomVariantGroup[];
+      cvs[groupIdx] = { ...cvs[groupIdx], options: cvs[groupIdx].options.filter((_, i) => i !== optIdx) };
+      return { ...p, custom_variants: cvs };
+    });
+
+  // ── Size-Color Availability ────────────────────────────────────────────────────
+  const [sizeColorMode, setSizeColorMode] = useState<"all" | "per-size">(
+    initialData?.size_color_availability && Object.keys(initialData.size_color_availability).length > 0
+      ? "per-size" : "all"
+  );
+
+  const toggleSizeColorEntry = (size: string, colorName: string) => {
+    setProduct(p => {
+      const curr: Record<string, string[]> = { ...(p.size_color_availability || {}) };
+      if (!curr[size]) curr[size] = (p.colors || []).map(c => c.name); // default all
+      if (curr[size].includes(colorName)) {
+        curr[size] = curr[size].filter(c => c !== colorName);
+      } else {
+        curr[size] = [...curr[size], colorName];
+      }
+      return { ...p, size_color_availability: curr };
+    });
+  };
+
+  const initSizeColorMatrix = () => {
+    // Pre-populate: every size gets all colors
+    const map: Record<string, string[]> = {};
+    (product.sizes || []).forEach(s => {
+      map[s] = (product.colors || []).map(c => c.name);
+    });
+    setProduct(p => ({ ...p, size_color_availability: map }));
+  };
 
   return (
     <form onSubmit={handleSave} className="space-y-8 pb-20">
@@ -229,25 +323,39 @@ export default function ProductForm({ initialData }: ProductFormProps) {
 
               {/* Colors */}
               <div className="space-y-3">
-                <label className="text-sm font-black text-gray-700 block">الألوان</label>
-                <div className="flex gap-2">
-                  <input
-                    type="color"
-                    value={newColor.hex}
-                    onChange={e => setNewColor(c => ({ ...c, hex: e.target.value }))}
-                    className="w-14 h-12 rounded-xl cursor-pointer border-none p-0 overflow-hidden"
-                  />
-                  <input
-                    type="text"
-                    value={newColor.name}
-                    onChange={e => setNewColor(c => ({ ...c, name: e.target.value }))}
-                    onKeyDown={e => {
-                       if(e.key === "Enter") { e.preventDefault(); addColor(); }
-                    }}
-                    className="flex-1 bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20 outline-none"
-                    placeholder="اسم اللون (أبيض، أسود...)"
-                  />
-                  <button type="button" onClick={addColor} className="bg-primary/10 text-primary px-6 rounded-xl font-bold hover:bg-primary/20 transition-colors">إضافة</button>
+                <label className="text-sm font-black text-gray-700 block">الألوان وتكلفة اللون (ضع 0 لجعله مجانياً)</label>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <div className="flex gap-2 flex-1">
+                    <input
+                      type="color"
+                      value={newColor.hex}
+                      onChange={e => setNewColor(c => ({ ...c, hex: e.target.value }))}
+                      className="w-14 h-12 rounded-xl cursor-pointer border-none p-0 overflow-hidden"
+                    />
+                    <input
+                      type="text"
+                      value={newColor.name}
+                      onChange={e => setNewColor(c => ({ ...c, name: e.target.value }))}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20 outline-none"
+                      placeholder="اسم اللون (أبيض، أسود...)"
+                    />
+                  </div>
+                  <div className="flex gap-2 sm:w-[200px]">
+                    <div className="relative w-full">
+                       <input
+                         type="number"
+                         value={newColor.extra_cost || ""}
+                         onChange={e => setNewColor(c => ({ ...c, extra_cost: Number(e.target.value) || 0 }))}
+                         onKeyDown={e => {
+                            if(e.key === "Enter") { e.preventDefault(); addColor(); }
+                         }}
+                         className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20 outline-none"
+                         placeholder="سعر إضافي"
+                       />
+                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">د.ج</span>
+                    </div>
+                    <button type="button" onClick={addColor} className="bg-primary/10 text-primary px-4 rounded-xl font-bold hover:bg-primary/20 transition-colors shrink-0">إضافة</button>
+                  </div>
                 </div>
                 {product.colors && product.colors.length > 0 && (
                    <div className="flex flex-wrap gap-2 pt-2">
@@ -255,6 +363,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
                        <span key={c.name} className="flex items-center gap-2 bg-gray-100/80 px-4 py-2 rounded-full text-sm font-bold text-gray-700">
                          <span className="w-4 h-4 rounded-full border border-gray-200 shadow-sm" style={{ backgroundColor: c.hex }} />
                          {c.name}
+                         {c.extra_cost ? <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded-md text-[10px] font-black">(+{c.extra_cost} د.ج)</span> : <span className="bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-md text-[10px] font-bold">مجاني</span>}
                          <button type="button" onClick={() => removeColor(c.name)} className="text-gray-400 hover:text-red-500 bg-white rounded-full p-0.5"><X size={14} /></button>
                        </span>
                      ))}
@@ -264,63 +373,215 @@ export default function ProductForm({ initialData }: ProductFormProps) {
 
               {/* Quantity Tiers (Strict Order Amounts) */}
               <div className="space-y-4 pt-6 border-t border-gray-50">
-                <label className="text-sm font-black text-gray-900 block flex items-center gap-2">
-                   <Tag size={16} className="text-primary" /> تحديد كميات الطلب المتاحة وأسعارها
-                </label>
-                <p className="text-xs text-gray-500 font-medium bg-blue-50 p-3 rounded-xl border border-blue-100/50">
-                  ملاحظة: النظام سيسمح للزبون بالاختيار فقط من بين هذه الكميات المحددة.
-                </p>
-                <div className="flex gap-2 p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                  <div className="flex-1 space-y-1">
-                    <label className="text-[10px] font-black text-gray-400 uppercase pr-1">الكمية</label>
-                    <input
-                      type="number"
-                      value={newTier.min_qty || ""}
-                      onChange={e => setNewTier(p => ({ ...p, min_qty: Number(e.target.value) }))}
-                      className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 font-bold text-gray-900"
-                      placeholder="مثلاً 200"
-                    />
-                  </div>
-                  <div className="flex-1 space-y-1">
-                    <label className="text-[10px] font-black text-gray-400 uppercase pr-1">سعر القطعة (د.ج)</label>
-                    <input
-                      type="number"
-                      value={newTier.unit_price || ""}
-                      onChange={e => setNewTier(p => ({ ...p, unit_price: Number(e.target.value) }))}
-                      className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 font-black text-primary"
-                      placeholder="مثلاً 63"
-                    />
-                  </div>
-                  <button 
-                    type="button" 
-                    onClick={addTier} 
-                    className="self-end bg-gray-900 text-white px-6 h-[50px] rounded-xl font-bold hover:bg-black transition-all shadow-lg active:scale-95"
-                  >
-                    إضافة
-                  </button>
-                </div>
-                {product.quantity_tiers && product.quantity_tiers.length > 0 && (
-                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                     {product.quantity_tiers.map(tier => (
-                       <div key={tier.min_qty} className="flex justify-between items-center bg-white p-4 rounded-2xl border border-gray-100 shadow-sm group hover:border-primary/30 transition-all">
-                         <div>
-                            <span className="text-[10px] font-black text-gray-400 block uppercase">كمية محددة</span>
-                            <span className="font-black text-gray-900">{tier.min_qty} قطعة</span>
-                         </div>
-                         <div className="flex items-center gap-4">
-                           <div className="text-left">
-                              <span className="text-[10px] font-black text-gray-400 block uppercase">السعر</span>
-                              <span className="font-black text-primary">{tier.unit_price} د.ج</span>
-                           </div>
-                           <button type="button" onClick={() => removeTier(tier.min_qty)} className="w-8 h-8 flex items-center justify-center bg-red-50 text-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white">
-                              <X size={14} />
-                           </button>
-                         </div>
-                       </div>
-                     ))}
+                 <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+                   <label className="text-sm font-black text-gray-900 flex items-center gap-2">
+                      <Tag size={16} className="text-primary" /> التسعير بالكمية
+                   </label>
+                   <div className="flex bg-gray-100 p-1 rounded-xl self-start xl:self-auto">
+                      <button 
+                        type="button" 
+                        onClick={() => { setPricingMode("flat"); setProduct(p => ({...p, quantity_tiers: []})) }}
+                        className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${pricingMode === "flat" ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-700"}`}
+                      >
+                         تسعير موحد للكميات
+                      </button>
+                      <button 
+                        type="button" 
+                        onClick={() => { setPricingMode("matrix"); setProduct(p => ({...p, quantity_tiers: []})) }}
+                        className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${pricingMode === "matrix" ? "bg-white shadow text-primary" : "text-gray-500 hover:text-gray-700"}`}
+                      >
+                         تسعير المصفوفة (لكل مقاس)
+                      </button>
                    </div>
-                )}
+                 </div>
+
+                 <p className="text-xs text-gray-500 font-medium bg-blue-50 p-3 rounded-xl border border-blue-100/50">
+                   ملاحظة: النظام سيسمح للزبون بالاختيار فقط من بين هذه الكميات المحددة.
+                 </p>
+                 
+                 {pricingMode === "flat" ? (
+                   <>
+                      <div className="flex gap-2 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                        <div className="flex-1 space-y-1">
+                          <label className="text-[10px] font-black text-gray-400 uppercase pr-1">الكمية</label>
+                          <input
+                            type="number"
+                            value={newTier.min_qty || ""}
+                            onChange={e => setNewTier(p => ({ ...p, min_qty: Number(e.target.value) }))}
+                            className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 font-bold text-gray-900"
+                            placeholder="مثلاً 200"
+                          />
+                        </div>
+                        <div className="flex-1 space-y-1">
+                          <label className="text-[10px] font-black text-gray-400 uppercase pr-1">سعر القطعة (د.ج)</label>
+                          <input
+                            type="number"
+                            value={newTier.unit_price || ""}
+                            onChange={e => setNewTier(p => ({ ...p, unit_price: Number(e.target.value) }))}
+                            className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 font-black text-primary"
+                            placeholder="مثلاً 63"
+                          />
+                        </div>
+                        <button 
+                          type="button" 
+                          onClick={addFlatTier} 
+                          className="self-end bg-gray-900 text-white px-6 h-[50px] rounded-xl font-bold hover:bg-black transition-all shadow-lg active:scale-95"
+                        >
+                          إضافة
+                        </button>
+                      </div>
+                      {product.quantity_tiers && product.quantity_tiers.length > 0 && (
+                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                           {product.quantity_tiers.map((tier:any, idx: number) => (
+                             <div key={tier.min_qty || idx} className="flex justify-between items-center bg-white p-4 rounded-2xl border border-gray-100 shadow-sm group hover:border-primary/30 transition-all">
+                               <div>
+                                  <span className="text-[10px] font-black text-gray-400 block uppercase">كمية محددة</span>
+                                  <span className="font-black text-gray-900">{tier.min_qty} قطعة</span>
+                               </div>
+                               <div className="flex items-center gap-4">
+                                 <div className="text-left">
+                                    <span className="text-[10px] font-black text-gray-400 block uppercase">السعر</span>
+                                    <span className="font-black text-primary">{tier.unit_price} د.ج</span>
+                                 </div>
+                                 <button type="button" onClick={() => removeFlatTier(tier.min_qty)} className="w-8 h-8 flex items-center justify-center bg-red-50 text-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white">
+                                    <X size={14} />
+                                 </button>
+                               </div>
+                             </div>
+                           ))}
+                         </div>
+                      )}
+                   </>
+                 ) : (
+                   <>
+                      <div className="flex flex-col gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-black text-gray-400 uppercase pr-1">تحديد المقاس المستهدف</label>
+                          <select 
+                             value={matrixSizeSelection} 
+                             onChange={e => setMatrixSizeSelection(e.target.value)}
+                             className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 font-bold text-primary"
+                          >
+                             <option value="">اختر مقاساً لبناء مصفوفة التسعير الخاصة به...</option>
+                             {product.sizes?.map(s => <option key={s} value={s}>{s}</option>)}
+                          </select>
+                        </div>
+                        <div className="flex gap-2">
+                          <div className="flex-1 space-y-1">
+                            <label className="text-[10px] font-black text-gray-400 uppercase pr-1">الكمية</label>
+                            <input
+                              type="number"
+                              value={newTier.min_qty || ""}
+                              onChange={e => setNewTier(p => ({ ...p, min_qty: Number(e.target.value) }))}
+                              className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 font-bold text-gray-900"
+                            />
+                          </div>
+                          <div className="flex-1 space-y-1">
+                            <label className="text-[10px] font-black text-gray-400 uppercase pr-1">سعر القطعة (د.ج)</label>
+                            <input
+                              type="number"
+                              value={newTier.unit_price || ""}
+                              onChange={e => setNewTier(p => ({ ...p, unit_price: Number(e.target.value) }))}
+                              className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 font-black text-primary"
+                            />
+                          </div>
+                          <button 
+                            type="button" 
+                            onClick={addMatrixTier} 
+                            disabled={!matrixSizeSelection}
+                            className="self-end bg-primary text-white px-6 h-[50px] rounded-xl font-bold hover:bg-primary/90 transition-all shadow-lg active:scale-95 disabled:opacity-50 flex items-center justify-center whitespace-nowrap"
+                          >
+                            مصفوفة +
+                          </button>
+                        </div>
+                      </div>
+                      
+                      {product.quantity_tiers && product.quantity_tiers.length > 0 && (
+                         <div className="space-y-4 pt-2">
+                           {product.quantity_tiers.map((matrixObj:any, idx) => (
+                              <div key={`${matrixObj.size}-${idx}`} className="border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+                                 <div className="bg-gray-100 p-3 flex justify-between items-center border-b border-gray-200">
+                                    <span className="font-black text-gray-800 text-sm flex items-center gap-2">
+                                       <Tag size={14} className="text-primary"/> مقاس: {matrixObj.size}
+                                    </span>
+                                 </div>
+                                 <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3 bg-white">
+                                    {matrixObj.tiers && matrixObj.tiers.map((tier:any, tIdx: number) => (
+                                       <div key={`${tier.min_qty}-${tIdx}`} className="flex justify-between items-center bg-gray-50 p-3 rounded-xl border border-gray-100 group">
+                                          <div className="flex flex-col">
+                                             <span className="text-[10px] font-black text-gray-400 uppercase">كمية محددة</span>
+                                             <span className="font-black text-gray-900">{tier.min_qty}</span>
+                                          </div>
+                                          <div className="flex items-center gap-4">
+                                            <div className="text-left flex flex-col">
+                                               <span className="text-[10px] font-black text-gray-400 uppercase">السعر</span>
+                                               <span className="font-black text-primary">{tier.unit_price} د.ج</span>
+                                            </div>
+                                            <button type="button" onClick={() => removeMatrixTier(matrixObj.size, tier.min_qty)} className="w-8 h-8 flex items-center justify-center bg-white text-red-500 rounded-full shadow-sm hover:bg-red-500 hover:text-white transition-all">
+                                               <X size={14} />
+                                            </button>
+                                          </div>
+                                       </div>
+                                    ))}
+                                 </div>
+                              </div>
+                           ))}
+                         </div>
+                      )}
+                   </>
+                 )}
               </div>
+
+                 {/* Printing Config */}
+                 <div className="mt-8 p-5 bg-gray-50/50 rounded-2xl border border-gray-100 space-y-4">
+                    <label className="text-sm font-black text-gray-900 flex items-center justify-between">
+                       <span className="flex items-center gap-2"><Zap size={16} className="text-yellow-500" /> إعدادات طباعة Serigraphie</span>
+                    </label>
+                    <p className="text-[10px] text-gray-400 font-bold border-b border-gray-100 pb-2">سجل 0 في أي خيار هنا لإخفائه تماماً من واجهة اختيار الزبون (مثل طباعة Offset).</p>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Extra Color Price */}
+                      <div className="space-y-2 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                         <label className="text-xs font-black text-gray-700 flex flex-col gap-1">
+                            سعر لون السيريغرافي الإضافي
+                            <span className="text-[10px] text-gray-400 font-normal">هذا السعر للون الواحد (مثال: تصميم 3 ألوان سيضيف ضعف هذا السعر).</span>
+                         </label>
+                         <div className="relative">
+                            <input 
+                              type="number"
+                              value={product.printing_config?.extra_color_price || 0}
+                              onChange={e => setProduct(p => ({
+                                ...p, 
+                                printing_config: { ...p.printing_config, extra_color_price: Number(e.target.value) }
+                              }))}
+                              className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm font-black focus:ring-2 focus:ring-primary/20 outline-none"
+                            />
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">د.ج / للون</span>
+                         </div>
+                      </div>
+
+                      {/* Double Sided Price */}
+                      <div className="space-y-2 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                         <label className="text-xs font-black text-gray-700 flex flex-col gap-1">
+                            سعر الطباعة على جهتين
+                            <span className="text-[10px] text-gray-400 font-normal">السعر المضاف عند اختيار طباعة من الجهتين (لكل لون).</span>
+                         </label>
+                         <div className="relative">
+                            <input 
+                              type="number"
+                              value={product.printing_config?.double_sided_price || 0}
+                              onChange={e => setProduct(p => ({
+                                ...p, 
+                                printing_config: { ...p.printing_config, double_sided_price: Number(e.target.value) }
+                              }))}
+                              className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm font-black focus:ring-2 focus:ring-primary/20 outline-none"
+                            />
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">د.ج / للون</span>
+                         </div>
+                      </div>
+                    </div>
+                 </div>
+
            </div>
         </div>
 
@@ -377,7 +638,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
                         <select 
                           value={newVariantImage.size}
                           onChange={e => setNewVariantImage(v => ({...v, size: e.target.value}))}
-                          className="bg-white border border-gray-200 rounded-xl p-2 text-xs font-bold"
+                          className="w-full bg-white border border-gray-200 rounded-xl p-2 text-xs font-bold focus:ring-2 focus:ring-primary/20 outline-none"
                         >
                            <option value="">المقاس...</option>
                            {product.sizes?.map(s => <option key={s} value={s}>{s}</option>)}
@@ -385,7 +646,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
                         <select 
                           value={newVariantImage.color}
                           onChange={e => setNewVariantImage(v => ({...v, color: e.target.value}))}
-                          className="bg-white border border-gray-200 rounded-xl p-2 text-xs font-bold"
+                          className="w-full bg-white border border-gray-200 rounded-xl p-2 text-xs font-bold focus:ring-2 focus:ring-primary/20 outline-none"
                         >
                            <option value="">اللون...</option>
                            {product.colors?.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
@@ -400,19 +661,16 @@ export default function ProductForm({ initialData }: ProductFormProps) {
                      <button 
                        type="button" 
                        onClick={addVariantImage}
-                       className="w-full bg-primary/10 text-primary py-2 rounded-xl font-bold flex items-center justify-center gap-2"
+                       className="w-full bg-primary/10 text-primary py-2 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-primary/20 transition-all font-bold"
                      >
                         <Plus size={16} /> تثبيت صورة المتغير
                      </button>
                   </div>
 
-                   {product.variant_images && product.variant_images.length > 0 && (
+                  {product.variant_images && product.variant_images.length > 0 && (
                     <div className="grid grid-cols-1 gap-2">
                        {product.variant_images.map((vi, idx) => (
                          <div key={idx} className="flex items-center gap-3 bg-white p-3 rounded-2xl border border-gray-100 shadow-sm group hover:border-primary/20 transition-all">
-                            <div className="w-14 h-14 relative rounded-xl overflow-hidden border border-gray-100 shrink-0 bg-gray-50">
-                               <Image src={vi.image_url} alt="" fill className="object-cover" unoptimized />
-                            </div>
                             <div className="flex-1 min-w-0">
                                <p className="text-[10px] font-black text-gray-400 uppercase leading-none mb-1">تخصيص العرض لـ:</p>
                                <div className="flex flex-wrap gap-1.5">
@@ -438,64 +696,45 @@ export default function ProductForm({ initialData }: ProductFormProps) {
                </div>
            </div>
 
-            {/* Pricing & Stock Card */}
-            <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
-               <h2 className="text-lg font-black text-gray-900 flex items-center gap-2 border-b border-gray-50 pb-4">
-                  التسعير والمخزون
-               </h2>
-               
-               <div className="space-y-4">
-                 <div className="space-y-2">
-                    <label className="text-sm font-black text-gray-700 block text-primary">السعر الفردي العادي (د.ج) *</label>
-                    <input
-                      required
-                      type="number"
-                      value={product.price || ""}
-                      onChange={e => setProduct(p => ({ ...p, price: Number(e.target.value) }))}
-                      className="w-full bg-primary/5 border border-primary/20 rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/40 outline-none font-black text-primary text-xl"
-                    />
-                 </div>
+           {/* Pricing & Stock Card */}
+           <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
+              <h2 className="text-lg font-black text-gray-900 flex items-center gap-2 border-b border-gray-50 pb-4">
+                 التسعير والمخزون
+              </h2>
+              
+              <div className="space-y-4">
+                <div className="space-y-2">
+                   <label className="text-sm font-black text-gray-700 block text-primary">السعر الفردي العادي (د.ج) *</label>
+                   <input
+                     required
+                     type="number"
+                     value={product.price || ""}
+                     onChange={e => setProduct(p => ({ ...p, price: Number(e.target.value) }))}
+                     className="w-full bg-primary/5 border border-primary/20 rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/40 outline-none font-black text-primary text-xl"
+                   />
+                </div>
 
-                 {/* Printing Config (Added based on user request) */}
-                 <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 space-y-3">
-                    <label className="text-xs font-black text-gray-500 uppercase flex items-center gap-2">
-                       <Zap size={14} className="text-yellow-500" /> إعدادات الطباعة Serigraphie
-                    </label>
-                    <div className="space-y-2">
-                       <label className="text-xs font-bold text-gray-600">سعر اللون الإضافي (د.ج)</label>
-                       <input 
-                         type="number"
-                         value={product.printing_config?.extra_color_price || 15}
-                         onChange={e => setProduct(p => ({
-                           ...p, 
-                           printing_config: { ...p.printing_config, extra_color_price: Number(e.target.value) }
-                         }))}
-                         className="w-full bg-white border border-gray-200 rounded-lg p-2 text-sm font-bold"
-                       />
-                    </div>
-                 </div>
+                <div className="space-y-2">
+                   <label className="text-sm font-bold text-gray-500 block">السعر قبل التخفيض المشطوب (د.ج)</label>
+                   <input
+                     type="number"
+                     value={product.compare_price || ""}
+                     onChange={e => setProduct(p => ({ ...p, compare_price: Number(e.target.value) || null }))}
+                     className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20 outline-none line-through text-gray-400"
+                   />
+                </div>
 
-                 <div className="space-y-2">
-                    <label className="text-sm font-bold text-gray-500 block">السعر قبل التخفيض المشطوب (د.ج)</label>
-                    <input
-                      type="number"
-                      value={product.compare_price || ""}
-                      onChange={e => setProduct(p => ({ ...p, compare_price: Number(e.target.value) || null }))}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20 outline-none line-through text-gray-400"
-                    />
-                 </div>
-
-                 <div className="space-y-2">
-                    <label className="text-sm font-black text-gray-700 block">الكمية في المخزن</label>
-                    <input
-                      type="number"
-                      value={product.stock || ""}
-                      onChange={e => setProduct(p => ({ ...p, stock: Number(e.target.value) }))}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20 outline-none"
-                    />
-                 </div>
-               </div>
-            </div>
+                <div className="space-y-2">
+                   <label className="text-sm font-black text-gray-700 block">الكمية في المخزن</label>
+                   <input
+                     type="number"
+                     value={product.stock || ""}
+                     onChange={e => setProduct(p => ({ ...p, stock: Number(e.target.value) }))}
+                     className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20 outline-none"
+                   />
+                </div>
+              </div>
+           </div>
 
            {/* Classification Card */}
            <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
@@ -541,8 +780,173 @@ export default function ProductForm({ initialData }: ProductFormProps) {
               </div>
            </div>
 
-        </div>
+         </div>
       </div>
+
+      {/* ======== FULL WIDTH: Custom Variants + Size-Color Matrix ======== */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+        {/* Custom Variant Groups Card */}
+        <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
+           <div className="flex items-center justify-between border-b border-gray-50 pb-4">
+              <h2 className="text-lg font-black text-gray-900 flex items-center gap-2">
+                 <Sliders size={20} className="text-primary" />
+                 خيارات إضافية للمنتج
+              </h2>
+              <span className="text-[10px] bg-blue-50 text-blue-600 font-black px-3 py-1 rounded-full border border-blue-100">لا تؤثّر على السعر</span>
+           </div>
+           <p className="text-xs text-gray-500 font-medium bg-amber-50 p-3 rounded-xl border border-amber-100">
+              مثال: نوع التشطيب (Matte / Glossy)، نوع الحبل (قطني / كلاسيكي)... الزبون يختار دون أي تغيير في السعر.
+           </p>
+           <div className="flex flex-col sm:flex-row gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+              <div className="flex-1 space-y-1">
+                 <label className="text-[10px] font-black text-gray-400 uppercase pr-1">اسم مجموعة الخيار</label>
+                 <input type="text" value={newGroup.label}
+                   onChange={e => setNewGroup(g => ({ ...g, label: e.target.value }))}
+                   onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addVariantGroup(); } }}
+                   className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 outline-none"
+                   placeholder="مثال: نوع التشطيب" />
+              </div>
+              <div className="flex items-end gap-3">
+                 <label className="flex items-center gap-2 pb-3 cursor-pointer select-none">
+                    <input type="checkbox" checked={newGroup.required}
+                      onChange={e => setNewGroup(g => ({ ...g, required: e.target.checked }))}
+                      className="w-4 h-4 accent-primary rounded" />
+                    <span className="text-xs font-bold text-gray-700">إجباري</span>
+                 </label>
+                 <button type="button" onClick={addVariantGroup}
+                   className="bg-gray-900 text-white px-5 py-3 rounded-xl font-bold hover:bg-black transition-all shadow-lg active:scale-95 whitespace-nowrap text-sm">
+                   + إضافة مجموعة
+                 </button>
+              </div>
+           </div>
+           {product.custom_variants && product.custom_variants.length > 0 && (
+              <div className="space-y-4">
+                 {product.custom_variants.map((group, gIdx) => (
+                    <div key={`grp-${gIdx}-${group.label}`} className="border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+                       <div className="bg-gray-50 p-4 flex items-center justify-between border-b border-gray-200">
+                          <div className="flex items-center gap-3">
+                             <Sliders size={15} className="text-primary shrink-0" />
+                             <span className="font-black text-gray-900 text-sm">{group.label}</span>
+                             {group.required && <span className="text-[10px] bg-primary/10 text-primary font-black px-2 py-0.5 rounded-full">إجباري</span>}
+                          </div>
+                          <button type="button" onClick={() => removeVariantGroup(gIdx)}
+                            className="w-8 h-8 flex items-center justify-center bg-white text-red-400 rounded-full hover:bg-red-500 hover:text-white transition-all shadow-sm">
+                             <X size={14} />
+                          </button>
+                       </div>
+                       <div className="p-4 bg-white space-y-3">
+                          {group.options.length > 0 ? (
+                             <div className="flex flex-wrap gap-2">
+                                {group.options.map((opt, oIdx) => (
+                                   <span key={`opt-${gIdx}-${oIdx}`} className="flex items-center gap-1.5 bg-primary/10 text-primary border border-primary/20 px-3 py-1.5 rounded-full text-sm font-bold">
+                                      {opt}
+                                      <button type="button" onClick={() => removeOptionFromGroup(gIdx, oIdx)} className="text-primary/60 hover:text-red-500 transition-colors"><X size={12} /></button>
+                                   </span>
+                                ))}
+                             </div>
+                          ) : (
+                             <p className="text-xs text-gray-400 italic">لا توجد خيارات — أضف خياراً أدناه</p>
+                          )}
+                          <div className="flex gap-2 pt-1">
+                             <input type="text" value={newOption[gIdx] || ""}
+                               onChange={e => setNewOption(o => ({ ...o, [gIdx]: e.target.value }))}
+                               onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addOptionToGroup(gIdx); } }}
+                               className="flex-1 bg-gray-50 border border-gray-200 rounded-xl py-2.5 px-4 text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
+                               placeholder={`خيار جديد لـ "${group.label}"...`} />
+                             <button type="button" onClick={() => addOptionToGroup(gIdx)}
+                               className="bg-primary/10 text-primary px-4 rounded-xl font-bold hover:bg-primary/20 transition-colors text-sm">
+                                إضافة
+                             </button>
+                          </div>
+                       </div>
+                    </div>
+                 ))}
+              </div>
+           )}
+        </div>
+
+        {/* Size-Color Availability Card */}
+        <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
+           <div className="flex items-center justify-between border-b border-gray-50 pb-4">
+              <h2 className="text-lg font-black text-gray-900 flex items-center gap-2">
+                 <Tag size={20} className="text-primary" />
+                 توفر الألوان حسب المقاس
+              </h2>
+           </div>
+
+           {/* Mode Toggle */}
+           <div className="flex bg-gray-100 p-1 rounded-xl">
+              <button type="button"
+                onClick={() => { setSizeColorMode("all"); setProduct(p => ({...p, size_color_availability: {}})); }}
+                className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${ sizeColorMode === "all" ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-700" }`}>
+                كل الألوان متاحة لكل المقاسات
+              </button>
+              <button type="button"
+                onClick={() => { setSizeColorMode("per-size"); initSizeColorMatrix(); }}
+                className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${ sizeColorMode === "per-size" ? "bg-white shadow text-primary" : "text-gray-500 hover:text-gray-700" }`}>
+                تحديد ألوان لكل مقاس بشكل مستقل
+              </button>
+           </div>
+
+           {sizeColorMode === "all" ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center space-y-2">
+                 <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center">
+                    <Plus size={28} className="text-green-500" />
+                 </div>
+                 <p className="font-bold text-gray-700">كل الألوان متاحة لجميع المقاسات</p>
+                 <p className="text-xs text-gray-400">اختر وضع “تحديد ألوان” إذا كانت بعض الألوان غير متاحة لمقاسات معينة</p>
+              </div>
+           ) : (
+              <>
+                {(!product.sizes || product.sizes.length === 0 || !product.colors || product.colors.length === 0) ? (
+                   <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 text-center">
+                      <p className="text-sm font-bold text-amber-700">يجب إضافة المقاسات والألوان أولاً من قسم الخصائص</p>
+                   </div>
+                ) : (
+                   <div className="space-y-4 overflow-y-auto max-h-[500px] pl-1">
+                      {product.sizes?.map(size => {
+                         const availableColors = product.size_color_availability?.[size]
+                           ?? (product.colors || []).map(c => c.name);
+                         return (
+                            <div key={size} className="border border-gray-200 rounded-2xl overflow-hidden">
+                               <div className="bg-gray-50 px-4 py-3 flex items-center gap-2 border-b border-gray-100">
+                                  <Tag size={13} className="text-primary" />
+                                  <span className="font-black text-gray-900 text-sm">مقاس: {size}</span>
+                                  <span className="mr-auto text-[10px] text-gray-400 font-bold">{availableColors.length} / {product.colors?.length} لون</span>
+                               </div>
+                               <div className="p-3 flex flex-wrap gap-2">
+                                  {product.colors?.map(color => {
+                                     const isAvail = availableColors.includes(color.name);
+                                     return (
+                                        <button
+                                          type="button"
+                                          key={color.name}
+                                          onClick={() => toggleSizeColorEntry(size, color.name)}
+                                          className={`flex items-center gap-2 px-3 py-1.5 rounded-full border-2 text-xs font-bold transition-all ${
+                                            isAvail
+                                              ? "border-primary bg-primary/10 text-primary"
+                                              : "border-gray-200 bg-gray-50 text-gray-400 line-through"
+                                          }`}
+                                        >
+                                          <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: color.hex }} />
+                                          {color.name}
+                                          {isAvail ? <span className="text-green-500">✓</span> : <X size={10} />}
+                                        </button>
+                                     );
+                                  })}
+                               </div>
+                            </div>
+                         );
+                      })}
+                   </div>
+                )}
+              </>
+           )}
+        </div>
+
+      </div>
+
     </form>
   );
 }

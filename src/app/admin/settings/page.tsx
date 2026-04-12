@@ -16,6 +16,7 @@ import {
   Crown
 } from "lucide-react";
 import Link from "next/link";
+import ImageUploader from "@/components/ImageUploader";
 
 
 
@@ -113,50 +114,70 @@ export default function AdminSettings() {
             <div className="bg-white rounded-[2.5rem] border border-gray-100 p-10 shadow-xl space-y-8">
                {activeTab === "branding" && (
                  <div className="space-y-8 animate-in fade-in duration-500">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                       <div className="space-y-3">
-                          <label className="text-sm font-black text-gray-700 block mr-2">لون البراند الأساسي</label>
-                          <div className="flex gap-4 items-center">
-                             <input 
-                               type="color" 
-                               value={settings.branding?.primaryColor || "#4a7c7c"}
-                               onChange={(e) => setSettings({ ...settings, branding: { ...settings.branding, primaryColor: e.target.value } })}
-                               className="w-12 h-12 rounded-lg cursor-pointer border-none p-0 bg-transparent"
-                             />
-                             <input 
-                               type="text" 
-                               value={settings.branding?.primaryColor || "#4a7c7c"}
-                               dir="ltr"
-                               className="flex-1 bg-gray-50 border-none rounded-xl py-3 px-4 font-bold text-gray-600"
-                               readOnly
-                             />
-                          </div>
-                       </div>
-                       <div className="space-y-3">
-                          <label className="text-sm font-black text-gray-700 block mr-2">اسم المتجر</label>
-                          <input 
-                            type="text" 
-                            value={settings.branding?.storeName || "SacShop"}
-                            onChange={(e) => setSettings({ ...settings, branding: { ...settings.branding, storeName: e.target.value } })}
-                            className="w-full bg-gray-50 border-none rounded-xl py-3 px-4 font-bold text-gray-900"
-                          />
-                       </div>
-                    </div>
+                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <div className="space-y-3">
+                           <label className="text-sm font-black text-gray-700 block mr-2">اسم المتجر</label>
+                           <input 
+                             type="text" 
+                             value={settings.branding?.storeName || "Service Serigraphie"}
+                             onChange={(e) => setSettings({ ...settings, branding: { ...settings.branding, storeName: e.target.value } })}
+                             className="w-full bg-gray-50 border-none rounded-xl py-3 px-4 font-bold text-gray-900"
+                           />
+                        </div>
+                        <div className="space-y-3">
+                           <label className="text-sm font-black text-gray-700 block mr-2">لون أساسي (Primary)</label>
+                           <div className="flex gap-4 items-center">
+                              <input 
+                                type="color" 
+                                value={settings.branding?.primaryColor || "#00AEEF"}
+                                onChange={(e) => setSettings({ ...settings, branding: { ...settings.branding, primaryColor: e.target.value } })}
+                                className="w-12 h-12 rounded-lg cursor-pointer border-none p-0 bg-transparent"
+                              />
+                              <input 
+                                type="text" 
+                                value={settings.branding?.primaryColor || "#00AEEF"}
+                                dir="ltr"
+                                className="flex-1 bg-gray-50 border-none rounded-xl py-3 px-4 font-bold text-gray-600"
+                                readOnly
+                              />
+                           </div>
+                        </div>
+                        <div className="space-y-3">
+                           <label className="text-sm font-black text-gray-700 block mr-2">لون ثانوي (Secondary)</label>
+                           <div className="flex gap-4 items-center">
+                              <input 
+                                type="color" 
+                                value={settings.branding?.secondaryColor || "#e6007e"}
+                                onChange={(e) => setSettings({ ...settings, branding: { ...settings.branding, secondaryColor: e.target.value } })}
+                                className="w-12 h-12 rounded-lg cursor-pointer border-none p-0 bg-transparent"
+                              />
+                              <input 
+                                type="text" 
+                                value={settings.branding?.secondaryColor || "#e6007e"}
+                                dir="ltr"
+                                className="flex-1 bg-gray-50 border-none rounded-xl py-3 px-4 font-bold text-gray-600"
+                                readOnly
+                              />
+                           </div>
+                        </div>
+                     </div>
 
-                    <div className="space-y-3">
-                       <label className="text-sm font-black text-gray-700 block mr-2">رابط اللوجو (Logo URL)</label>
-                       <div className="relative">
-                          <Globe className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                          <input 
-                            type="text" 
-                            placeholder="https://..."
-                            value={settings.branding?.logo || ""}
-                            onChange={(e) => setSettings({ ...settings, branding: { ...settings.branding, logo: e.target.value } })}
-                            className="w-full bg-gray-50 border-none rounded-xl py-3 pr-12 pl-4 font-medium"
-                          />
-                       </div>
-                    </div>
-                    
+                     <div className="space-y-3">
+                        <label className="text-sm font-black text-gray-700 flex items-center justify-between mr-2">
+                           رفع شعار المتجر (Logo)
+                           <span className="text-[10px] text-gray-400 font-bold bg-gray-50 px-2 py-1 rounded-md">يُفضّل عرضي (Horizontal)</span>
+                        </label>
+                        <div className="bg-gray-50 p-4 rounded-3xl border border-gray-100">
+                           <ImageUploader 
+                              value={settings.branding?.logo || ""} 
+                              onChange={(url) => setSettings({ ...settings, branding: { ...settings.branding, logo: url } })}
+                              label=""
+                              placeholder="اسحب أو ارفع اللوجو هنا..."
+                           />
+                        </div>
+                     </div>
+
+
                     <div className="space-y-3">
                        <label className="text-sm font-black text-gray-700 block mr-2">رقم الواتساب للاستفسارات واستقبال الطلبات</label>
                        <div className="relative">

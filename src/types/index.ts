@@ -58,7 +58,20 @@ export interface Product {
     base_colors_included?: number;
     double_sided_price?: number;
   };
+  /** Custom variant groups (e.g. Finition: Matte | Glossy) — no price impact */
+  custom_variants?: CustomVariantGroup[];
+  /** Per-size color availability map. If empty/null = all colors available for all sizes */
+  size_color_availability?: Record<string, string[]>;
   stock: number;
   is_published: boolean;
   is_featured: boolean;
+}
+
+export interface CustomVariantGroup {
+  /** Group label shown to customer, e.g. "نوع التشطيب" */
+  label: string;
+  /** Whether the customer MUST choose one option */
+  required: boolean;
+  /** The selectable options */
+  options: string[];
 }

@@ -23,8 +23,8 @@ export default function SettingsProvider({ children }: { children: React.ReactNo
         const branding = {
           storeName: settingsMap.branding?.storeName || "SacShop",
           logo: settingsMap.branding?.logo || "",
-          primaryColor: settingsMap.branding?.primaryColor || "#10a37f",
-          secondaryColor: settingsMap.branding?.secondaryColor || "#f4f4f4",
+          primaryColor: settingsMap.branding?.primaryColor || "#00AEEF",
+          secondaryColor: settingsMap.branding?.secondaryColor || "#e6007e",
           whatsappNumber: settingsMap.branding?.whatsappNumber || "213",
         };
 

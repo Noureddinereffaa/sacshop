@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { 
   Search, Filter, Eye, CheckCircle2, 
@@ -26,14 +26,23 @@ interface Order {
   customer_phone: string;
   customer_email?: string;
   customer_address: string;
+  product_id?: string;
+  quantity?: number;
+  size?: string;
+  color?: string;
+  product_price: number;
   total_price: number;
   status: string;
   is_fake: boolean;
   is_duplicate: boolean;
   created_at: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   cart_items?: any[];
   admin_notes?: string;
+  metadata?: {
+    num_colors?: number;
+    is_double_sided?: boolean;
+    custom_variants?: Record<string, string>;
+  };
 }
 
 export default function AdminOrders() {
@@ -43,6 +52,8 @@ export default function AdminOrders() {
   const [toast, setToast] = useState<{message: string, type: 'success'|'error'} | null>(null);
   const [confirmData, setConfirmData] = useState({ quantity: '', finalPrice: '', notes: '' });
   const [isConfirming, setIsConfirming] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(() => {
     fetchOrders();
@@ -67,6 +78,19 @@ export default function AdminOrders() {
     if (data) setOrders(data);
     setIsLoading(false);
   }
+
+  const filteredOrders = useMemo(() => {
+    return orders.filter(order => {
+      const matchesSearch = 
+        order.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.customer_phone.includes(searchTerm) ||
+        order.order_number.toString().includes(searchTerm);
+      
+      const matchesStatus = statusFilter === "all" || order.status === statusFilter;
+      
+      return matchesSearch && matchesStatus;
+    });
+  }, [orders, searchTerm, statusFilter]);
 
   const updateStatus = async (order: Order, status: string) => {
     if (!supabase) return;
@@ -134,7 +158,7 @@ export default function AdminOrders() {
     const { error } = await supabase.from('orders').update(updates).eq('id', selectedOrder.id);
 
     if (!error) {
-      // Update customer stats: increment total_orders by 1 and add final price to total_spent
+      // Update customer stats
       const { data: existingCustomer } = await supabase
         .from('customers')
         .select('id, total_orders, total_spent')
@@ -148,7 +172,6 @@ export default function AdminOrders() {
           last_order_at: new Date().toISOString(),
         }).eq('id', existingCustomer.id);
       } else {
-        // Customer not in DB yet — create them
         await supabase.from('customers').insert({
           name: selectedOrder.customer_name,
           phone: selectedOrder.customer_phone,
@@ -177,10 +200,16 @@ export default function AdminOrders() {
            <p className="text-gray-500">متابعة وتأكيد طلبات العملاء والتحكم في حالات الشحن.</p>
         </div>
         <div className="flex gap-3">
-           <button className="bg-white border border-gray-200 px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-gray-50 transition-all text-gray-700">
-              <Filter size={18} />
-              <span>تصفية</span>
-           </button>
+           <select 
+             value={statusFilter}
+             onChange={(e) => setStatusFilter(e.target.value)}
+             className="bg-white border border-gray-200 px-4 py-3 rounded-xl font-bold text-gray-700 outline-none focus:ring-2 focus:ring-primary/20 appearance-none min-w-[140px]"
+           >
+              <option value="all">كل الحالات</option>
+              {Object.entries(STATUS_MAP).map(([val, info]) => (
+                <option key={val} value={val}>{info.label}</option>
+              ))}
+           </select>
         </div>
       </div>
 
@@ -191,12 +220,14 @@ export default function AdminOrders() {
               <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               <input 
                 type="text" 
-                placeholder="البحث برقم الهاتف أو اسم الزبون..."
+                placeholder="البحث برقم الهاتف، الاسم، أو رقم الطلب..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full bg-gray-50 border-none rounded-xl py-3 pr-12 pl-4 focus:ring-2 focus:ring-primary/20 transition-all font-medium"
               />
            </div>
            <p className="text-primary bg-primary/5 px-4 py-2 rounded-xl text-sm font-black flex items-center gap-2">
-              عرض {orders.length} طلب
+              نتيجة: {filteredOrders.length} طلب
            </p>
         </div>
 
@@ -217,11 +248,11 @@ export default function AdminOrders() {
                 <tr>
                    <td colSpan={6} className="px-6 py-20 text-center text-gray-400 font-bold">جاري تحميل أحدث الطلبات...</td>
                 </tr>
-              ) : orders.length === 0 ? (
+              ) : filteredOrders.length === 0 ? (
                 <tr>
-                   <td colSpan={6} className="px-6 py-20 text-center text-gray-400 font-bold">لا توجد طلبات في هذا الوقت.</td>
+                   <td colSpan={6} className="px-6 py-20 text-center text-gray-400 font-bold">لا توجد طلبات تطابق معايير البحث.</td>
                 </tr>
-              ) : orders.map((order) => {
+              ) : filteredOrders.map((order) => {
                 const st = STATUS_MAP[order.status] || STATUS_MAP.new;
                 const StatusIcon = st.icon;
 
@@ -262,7 +293,6 @@ export default function AdminOrders() {
                     <td className="px-4 py-3 lg:px-6 lg:py-5 block lg:table-cell flex items-center justify-between lg:justify-end lg:text-left mt-2 lg:mt-0">
                       <span className="lg:hidden text-xs text-gray-400 font-bold">الإجراءات</span>
                       <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                         {/* Quick Advance Status (if applicable) */}
                          {st.nextStatus && (
                             <button 
                               onClick={() => updateStatus(order, st.nextStatus!)} 
@@ -272,7 +302,6 @@ export default function AdminOrders() {
                               ترقية <ChevronDown size={14} className="rotate-90 hidden lg:block" />
                             </button>
                          )}
-                         {/* One-Click WhatsApp Action */}
                          <button onClick={() => openWhatsApp(order.customer_phone, order.order_number)} className="px-4 py-2.5 lg:p-2.5 text-white bg-[#25D366] hover:bg-[#20b858] rounded-xl transition-all shadow-md hover:shadow-lg flex items-center gap-2" title="مراسلة العميل عبر واتساب">
                             <MessageCircle size={18} />
                             <span className="lg:hidden text-xs font-bold">مراسلة</span>
@@ -307,7 +336,6 @@ export default function AdminOrders() {
                   <div>
                     <h2 className="text-2xl font-black text-gray-900 flex items-center gap-3">
                       طلب #{selectedOrder.order_number}
-                      {/* Interactive Status Tag in Title */}
                       <span className={`px-2.5 py-1 rounded-lg text-xs font-black flex items-center gap-1 border ${STATUS_MAP[selectedOrder.status].color.replace('text', 'border')}`}>
                         {STATUS_MAP[selectedOrder.status].label}
                       </span>
@@ -334,6 +362,18 @@ export default function AdminOrders() {
                    <p className="text-gray-600 text-sm flex items-start gap-2">
                      📍 <span className="leading-relaxed">{selectedOrder.customer_address || "العنوان غير متوفر"}</span>
                    </p>
+                   {selectedOrder.admin_notes?.includes("pdf_url:") && (
+                     <div className="mt-4 pt-4 border-t border-gray-100">
+                        <a 
+                          href={selectedOrder.admin_notes.split("pdf_url:")[1].split("\n")[0]} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="flex items-center justify-center gap-2 w-full py-2 bg-primary/10 text-primary rounded-xl font-black text-xs hover:bg-primary/20 transition-all"
+                        >
+                          <Eye size={14} /> عرض وصل الطلب (PDF)
+                        </a>
+                     </div>
+                   )}
                 </div>
 
                 {/* Items Section */}
@@ -362,8 +402,18 @@ export default function AdminOrders() {
                         </div>
                       ))
                     ) : (
-                      <div className="flex justify-between items-center bg-gray-50 p-4 rounded-xl border border-gray-100">
-                        <p className="font-bold text-gray-800">حزمة مطبوعات مخصصة مبسطة</p>
+                      <div className="flex flex-col bg-white border border-gray-100 p-4 rounded-xl shadow-sm">
+                        <div className="flex justify-between items-start mb-2">
+                           <div className="flex gap-3">
+                              <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary shrink-0">
+                                <Package size={18} />
+                              </div>
+                              <p className="font-bold text-gray-800 text-sm">طلب مخصص (Simple Order)</p>
+                           </div>
+                           <span className="font-black text-gray-900 bg-gray-50 px-3 py-1 rounded-lg">
+                             ×{selectedOrder.quantity || 1}
+                           </span>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -372,6 +422,42 @@ export default function AdminOrders() {
                      <span className="font-black text-2xl text-primary">{selectedOrder.total_price.toLocaleString()} د.ج</span>
                   </div>
                 </div>
+
+                {/* Specifications Section */}
+                {(selectedOrder.size || selectedOrder.color || selectedOrder.metadata) && (
+                  <div className="mb-8">
+                    <p className="text-[10px] uppercase font-black tracking-widest text-gray-400 mb-3">المواصفات المختارة</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {selectedOrder.size && (
+                        <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                          <p className="text-[10px] text-gray-400 font-bold mb-1">المقاس</p>
+                          <p className="font-black text-gray-900">{selectedOrder.size}</p>
+                        </div>
+                      )}
+                      {selectedOrder.color && (
+                        <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                          <p className="text-[10px] text-gray-400 font-bold mb-1">اللون</p>
+                          <p className="font-black text-gray-900">{selectedOrder.color}</p>
+                        </div>
+                      )}
+                      {selectedOrder.metadata?.num_colors && (
+                        <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                          <p className="text-[10px] text-gray-400 font-bold mb-1">ألوان الطباعة</p>
+                          <p className="font-black text-gray-900">
+                            {selectedOrder.metadata.num_colors} ألوان 
+                            {selectedOrder.metadata.is_double_sided ? " (جهتين)" : " (جهة واحدة)"}
+                          </p>
+                        </div>
+                      )}
+                      {selectedOrder.metadata?.custom_variants && Object.entries(selectedOrder.metadata.custom_variants).map(([label, value]) => (
+                        <div key={label} className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                          <p className="text-[10px] text-gray-400 font-bold mb-1">{label}</p>
+                          <p className="font-black text-primary">{value}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Controls Section */}
                 <div className="mt-auto pt-6 border-t border-gray-100 space-y-6">
@@ -393,7 +479,6 @@ export default function AdminOrders() {
                        ))}
                      </div>
                    </div>
-
 
                     {/* Admin Confirmation Panel */}
                     {(selectedOrder.status === 'new' || selectedOrder.status === 'confirmed') && (

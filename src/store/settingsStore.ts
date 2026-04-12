@@ -29,10 +29,10 @@ interface SettingsState {
 
 export const useSettingsStore = create<SettingsState>((set) => ({
   branding: {
-    storeName: "SacShop",
-    logo: "",
+    storeName: "Service Serigraphie",
+    logo: "/brand/logo-horizontal-1.png",
     primaryColor: "#00AEEF",
-    secondaryColor: "#f4f4f4",
+    secondaryColor: "#e6007e",
     whatsappNumber: "213",
   },
   discounts: {

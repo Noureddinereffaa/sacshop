@@ -15,11 +15,11 @@ export default function Footer() {
         <div className="space-y-6">
           <Link href="/" className="flex items-center gap-2">
             {branding.logo ? (
-              <div className="relative w-10 h-10 overflow-hidden rounded-xl">
-                <Image src={branding.logo} alt={branding.storeName} fill className="object-contain" />
+              <div className="relative w-12 h-12 overflow-hidden hover:scale-105 transition-transform duration-300">
+                <Image src="/brand/logo-mark.png" alt={branding.storeName} fill className="object-contain" />
               </div>
             ) : (
-              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-xl">
+              <div className="w-12 h-12 bg-secondary rounded-xl flex items-center justify-center text-white font-bold text-2xl">
                 {branding.storeName.charAt(0)}
               </div>
             )}

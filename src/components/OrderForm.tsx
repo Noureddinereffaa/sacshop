@@ -20,6 +20,7 @@ interface OrderFormProps {
   discountAmount?: number;
   numColors?: number;
   isDoubleSided?: boolean;
+  customVariantSelections?: Record<string, string>;
   onAddToCart?: () => void;
 }
 
@@ -38,6 +39,7 @@ export default function OrderForm({
   discountAmount = 0, 
   numColors,
   isDoubleSided,
+  customVariantSelections = {},
   onAddToCart 
 }: OrderFormProps) {
   const [step, setStep] = useState<Step>("info");
@@ -122,7 +124,11 @@ export default function OrderForm({
       delivery_type: "home",
       cart_items: isCartOrder ? cartItems : [],
       admin_notes: formData.notes.trim() || null,
-      metadata: !isCartOrder ? { num_colors: numColors, is_double_sided: isDoubleSided } : null
+      metadata: !isCartOrder ? { 
+        num_colors: numColors, 
+        is_double_sided: isDoubleSided,
+        custom_variants: customVariantSelections
+      } : null
     });
     if (error) throw new Error(error.message);
 
@@ -144,6 +150,7 @@ export default function OrderForm({
         cartItems: isCartOrder ? cartItems : undefined,
         numColors,
         isDoubleSided,
+        customVariantSelections,
       });
 
       // Also save PDF URL in order record (avoiding extra select to bypass RLS issues)
@@ -171,17 +178,23 @@ export default function OrderForm({
       ].join("\n");
     } else {
       // Fallback: full text message if PDF failed
+      const variantText = Object.entries(customVariantSelections)
+        .filter(([_, val]) => val)
+        .map(([key, val]) => `🔹 ${key}: ${val}`)
+        .join("\n");
+
       waMessage = [
         `🛒 *طلب جديد من Service Serigraphie*`,
         `👤 الاسم: ${formData.name.trim()}`,
         `📞 الهاتف: ${formData.phone.trim()}`,
         `📦 المنتج: ${productName}`,
+        variantText ? `✨ الخيارات:\n${variantText}` : '',
         `🎨 الطباعة: ${numColors} ألوان ${isDoubleSided ? '(جهتين)' : ''}`,
         `💰 المجموع: ${productPrice.toLocaleString()} د.ج`,
         ``,
         `⚠️ (الوصل متاح في حسابك الشخصي)`,
         `🔖 رقم الطلب: #${shortId}`,
-      ].join("\n");
+      ].filter(Boolean).join("\n");
     }
 
     // ── Marketing tracking ────────────────────────────────────────────────────

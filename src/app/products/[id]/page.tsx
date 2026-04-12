@@ -50,6 +50,7 @@ export default function ProductDetailPage() {
   const [numColors, setNumColors] = useState<number>(1);
   const [isDoubleSided, setIsDoubleSided] = useState<boolean>(false);
   const [showToast, setShowToast] = useState(false);
+  const [customVariantSelections, setCustomVariantSelections] = useState<Record<string, string>>({});
 
   // Combine all possible images into one gallery - Memoized for stability
   const allImages = useMemo(() => {
@@ -181,6 +182,26 @@ export default function ProductDetailPage() {
     }
   }, [selectedSize, selectedColor, product, allImages]);
 
+  // Handle color availability mapping logic
+  const availableColors = useMemo(() => {
+    if (!product) return [];
+    if (!product.size_color_availability || Object.keys(product.size_color_availability).length === 0) {
+      return product.colors || [];
+    }
+    const colorNames = product.size_color_availability[selectedSize];
+    if (!colorNames) return product.colors || []; // Fallback to all if size not mapped
+    return (product.colors || []).filter(c => colorNames.includes(c.name));
+  }, [product, selectedSize]);
+
+  // Auto-reset or switch color if it becomes unavailable for the new size
+  useEffect(() => {
+    if (!selectedSize || availableColors.length === 0) return;
+    const isStillAvailable = availableColors.find(c => c.name === selectedColor);
+    if (!isStillAvailable && selectedColor !== "") {
+      setSelectedColor(availableColors[0]?.name || "");
+    }
+  }, [availableColors, selectedColor, selectedSize]);
+
   if (isLoading) {
     return (
       <main className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -284,10 +305,12 @@ export default function ProductDetailPage() {
     : 0;
 
   const handleAddToCart = () => {
+    const customVarLabel = Object.entries(customVariantSelections)
+      .map(([k, v]) => `${k}: ${v}`).join(" / ");
     addItem({
-      id: `${product.id}-${selectedSize}-${selectedColor}-${numColors}-${isDoubleSided ? '2sided' : '1sided'}`,
+      id: `${product.id}-${selectedSize}-${selectedColor}-${numColors}-${isDoubleSided ? '2sided' : '1sided'}-${customVarLabel}`,
       productId: product.id,
-      name: `${product.name} ${isDoubleSided ? '(طباعة جهتين)' : ''}`,
+      name: `${product.name} ${isDoubleSided ? '(طباعة جهتين)' : ''}${customVarLabel ? ` — ${customVarLabel}` : ''}`,
       price: effectivePrice / quantity,
       quantity: quantity,
       image_url: allImages[selectedImage] || product.image_url,
@@ -490,7 +513,7 @@ export default function ProductDetailPage() {
                     {selectedColor && <span className="text-primary font-bold">({selectedColor})</span>}
                   </label>
                   <div className="flex gap-3 flex-wrap">
-                    {product.colors.map(color => (
+                    {availableColors.map(color => (
                       <button
                         key={color.name}
                         onClick={() => setSelectedColor(color.name === selectedColor ? "" : color.name)}
@@ -602,7 +625,43 @@ export default function ProductDetailPage() {
                     </div>
                  </div>
               </div>
+              )}
 
+              {/* Custom Variant Groups */}
+              {product.custom_variants && product.custom_variants.length > 0 && (
+                <div className="space-y-4 pt-4 border-t border-gray-100">
+                  {product.custom_variants.map((group, gIdx) => (
+                    <div key={`cv-${gIdx}`} className="space-y-2">
+                      <label className="text-sm font-black text-gray-700 flex items-center gap-2">
+                        {group.label}
+                        {group.required && <span className="text-[10px] text-red-500 font-bold">(إجباري)</span>}
+                        {customVariantSelections[group.label] && (
+                          <span className="text-primary font-bold text-xs">({customVariantSelections[group.label]})</span>
+                        )}
+                      </label>
+                      <div className="flex gap-2 flex-wrap">
+                        {group.options.map(opt => (
+                          <button
+                            type="button"
+                            key={opt}
+                            onClick={() => setCustomVariantSelections(prev => ({
+                              ...prev,
+                              [group.label]: prev[group.label] === opt ? "" : opt
+                            }))}
+                            className={`px-5 py-2.5 rounded-xl font-bold border-2 transition-all text-sm ${
+                              customVariantSelections[group.label] === opt
+                                ? "border-primary bg-primary/10 text-primary shadow-sm"
+                                : "border-gray-200 text-gray-600 hover:border-gray-300 bg-white"
+                            }`}
+                          >
+                            {opt}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Trust Badges */}
               <div className="grid grid-cols-2 gap-3 pt-2">
@@ -641,6 +700,7 @@ export default function ProductDetailPage() {
                 isDoubleSided={isDoubleSided}
                 appliedOfferId={appliedVipOffer?.id}
                 discountAmount={savingAmount}
+                customVariantSelections={customVariantSelections}
                 onAddToCart={handleAddToCart}
               />
             </div>

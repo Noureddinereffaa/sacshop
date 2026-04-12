@@ -495,56 +495,6 @@ export default function ProductDetailPage() {
                   </motion.div>
                 )}
 
-                {/* Returning Customer & Rank Info */}
-                {customerStatus === 'vip' && (
-                  <motion.div 
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="bg-white border-2 border-primary/20 rounded-[2rem] p-6 shadow-xl shadow-primary/5 space-y-4 relative overflow-hidden group"
-                  >
-                    {/* Decorative background logo icon */}
-                    <div className="absolute -bottom-6 -left-6 opacity-[0.03] group-hover:scale-110 transition-transform pointer-events-none">
-                       <Crown size={120} />
-                    </div>
-
-                    <div className="flex items-center justify-between relative z-10">
-                      <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center text-white shadow-lg shadow-primary/20 transition-transform group-hover:rotate-6">
-                          <Crown size={28} />
-                        </div>
-                        <div>
-                          <h4 className="font-black text-gray-900 text-lg">
-                            مرحباً بعودتك، {localCustomer?.name || "بك"}! ✨
-                          </h4>
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                             <div className="flex text-yellow-400 gap-0.5">
-                                {[...Array(5)].map((_, i) => (
-                                  <Star 
-                                    key={i} 
-                                    size={14} 
-                                    fill={i < (localCustomer?.star_level || 1) ? "currentColor" : "none"} 
-                                    className={i < (localCustomer?.star_level || 1) ? "" : "text-gray-200"} 
-                                  />
-                                ))}
-                             </div>
-                             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-50 px-2 py-0.5 rounded-full">
-                               زبون مميز VIP
-                             </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-left">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter mb-0.5">توفيرك حالياً</p>
-                        <p className="text-2xl font-black text-primary">-{savingAmount.toLocaleString()} د.ج</p>
-                      </div>
-                    </div>
-
-                    <div className="bg-primary/5 rounded-2xl p-3 flex items-center gap-2 text-[10px] font-bold text-primary border border-primary/10 relative z-10">
-                       <Sparkles size={14} />
-                       <span>بما أنك زبون سابق، تم تطبيق عروض الـ VIP الحصرية تلقائياً على هذا المنتج.</span>
-                    </div>
-                  </motion.div>
-                )}
               </div>
 
               {/* Sizes */}
@@ -771,6 +721,58 @@ export default function ProductDetailPage() {
                 customVariantSelections={customVariantSelections}
                 onAddToCart={handleAddToCart}
               />
+
+              {/* Returning Customer & Rank Info (Bottom Position + Responsive) */}
+              {customerStatus === 'vip' && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-white border-2 border-primary/20 rounded-[2.5rem] p-5 sm:p-7 shadow-xl shadow-primary/5 space-y-5 relative overflow-hidden group"
+                >
+                  {/* Decorative background logo icon */}
+                  <div className="absolute -bottom-8 -left-8 opacity-[0.04] group-hover:scale-110 transition-transform pointer-events-none">
+                     <Crown size={140} />
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 relative z-10">
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center text-white shadow-lg shadow-primary/20 transition-transform group-hover:rotate-6 shrink-0">
+                        <Crown size={28} />
+                      </div>
+                      <div>
+                        <h4 className="font-black text-gray-900 text-lg leading-tight">
+                          مرحباً بعودتك، {localCustomer?.name || "بك"}! ✨
+                        </h4>
+                        <div className="flex items-center gap-2 mt-1">
+                           <div className="flex text-yellow-400 gap-0.5">
+                              {[...Array(5)].map((_, i) => (
+                                <Star 
+                                  key={i} 
+                                  size={14} 
+                                  fill={i < (localCustomer?.star_level || 1) ? "currentColor" : "none"} 
+                                  className={i < (localCustomer?.star_level || 1) ? "" : "text-gray-200"} 
+                                />
+                              ))}
+                           </div>
+                           <span className="text-[10px] font-black text-primary uppercase tracking-widest bg-primary/5 px-3 py-1 rounded-full border border-primary/10">
+                             VIP MEMBER
+                           </span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="w-full sm:w-auto flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center bg-gray-50 sm:bg-transparent p-3 sm:p-0 rounded-2xl sm:rounded-none">
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter mb-0 sm:mb-1">توفيرك الحالي</p>
+                      <p className="text-2xl font-black text-primary">-{savingAmount.toLocaleString()} د.ج</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-primary/[0.03] rounded-2xl p-4 flex items-start gap-3 text-xs font-bold text-primary/80 border border-primary/10 relative z-10 leading-relaxed">
+                     <Sparkles size={16} className="shrink-0 mt-0.5 text-primary" />
+                     <span>بما أنك زبون مميز، استمتع بأسعارك الخاصة المطبقة تلقائياً على سلتك فوراً.</span>
+                  </div>
+                </motion.div>
+              )}
             </div>
           </div>
         </div>

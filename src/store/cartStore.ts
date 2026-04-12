@@ -10,6 +10,9 @@ export interface CartItem {
   image_url?: string;
   size?: string;
   color?: string;
+  num_colors?: number;
+  is_double_sided?: boolean;
+  custom_variant_selections?: Record<string, string>;
 }
 
 interface CartStore {
@@ -59,7 +62,13 @@ export const useCartStore = create<CartStore>()(
       addItem: (item) => set((state) => {
         // Find if this exact configuration exists
         const existing = state.items.find(
-          (i) => i.productId === item.productId && i.size === item.size && i.color === item.color
+          (i) => 
+            i.productId === item.productId && 
+            i.size === item.size && 
+            i.color === item.color &&
+            i.num_colors === item.num_colors &&
+            i.is_double_sided === item.is_double_sided &&
+            JSON.stringify(i.custom_variant_selections) === JSON.stringify(item.custom_variant_selections)
         );
 
         if (existing) {

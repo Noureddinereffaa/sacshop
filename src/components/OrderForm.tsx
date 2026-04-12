@@ -10,7 +10,7 @@ import {
   Gift, Package 
 } from "lucide-react";
 import Link from "next/link";
-import { CartItem } from "@/types";
+import { CartItem, Product } from "@/types";
 import { generateAndUploadOrderPDF } from "@/utils/generateOrderPDF";
 import { useCartStore } from "@/store/cartStore";
 
@@ -23,6 +23,7 @@ interface OrderFormProps {
   appliedOfferId?: string;
   cartItems?: CartItem[];
   quantity?: number;
+  product?: Product;
   discountAmount?: number;
   numColors?: number;
   isDoubleSided?: boolean;
@@ -46,6 +47,7 @@ export default function OrderForm({
   numColors,
   isDoubleSided,
   customVariantSelections = {},
+  product,
   onAddToCart 
 }: OrderFormProps) {
   const [step, setStep] = useState<Step>("info");
@@ -97,9 +99,42 @@ export default function OrderForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productName]);
 
+  const validateSelections = () => {
+    if (!product) return true;
+    
+    // Check Size
+    if (product.sizes && product.sizes.length > 0 && !selectedSize) {
+      alert("يرجى اختيار المقاس المطلوب أولاً");
+      return false;
+    }
+    
+    // Check Color
+    if (product.colors && product.colors.length > 0 && !selectedColor) {
+      alert("يرجى اختيار اللون المطلوب أولاً");
+      return false;
+    }
+    
+    // Check Custom Variants
+    if (product.custom_variants && product.custom_variants.length > 0) {
+      for (const group of product.custom_variants) {
+        if (group.required && !customVariantSelections[group.label]) {
+          alert(`يرجى اختيار ${group.label} أولاً`);
+          return false;
+        }
+      }
+    }
+    
+    return true;
+  };
+
   // ─── STEP 1: Validate form and check if user exists ────────────────────────
   const handleInfoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLoading || isPdfGenerating || step === "success") return;
+    
+    // Validate selections before showing details form
+    if (!validateSelections()) return;
+
     if (!formData.name.trim() || !formData.phone.trim()) return;
     setIsLoading(true);
 
@@ -182,33 +217,44 @@ export default function OrderForm({
     let waMessage: string;
     if (pdfUrl) {
       waMessage = [
-        `🛒 *طلب جديد من Service Serigraphie*`,
+        `✅ *طلب جديد من Service Serigraphie*`,
         `👤 الاسم: ${formData.name.trim()}`,
-        `📞 الهاتف: ${formData.phone.trim()}`,
+        `📱 الهاتف: ${formData.phone.trim()}`,
         ``,
         `📄 *وصل الطلب الرسمي (PDF):*`,
         pdfUrl,
         ``,
-        `🔖 رقم الطلب: #${shortId}`,
+        `🏷️ رقم الطلب: #${shortId}`,
       ].join("\n");
     } else {
-      // Fallback: full text message if PDF failed
-      const variantText = Object.entries(customVariantSelections)
+      const cartItemsSummary = isCartOrder ? cartItems.map((item, idx) => {
+        const itemVariants = [
+          item.size ? `📐 ${item.size}` : '',
+          item.color ? `🎨 ${item.color}` : '',
+          item.num_colors ? `✨ ${item.num_colors} ألوان ${item.is_double_sided ? '(جهتين)' : '(جهة)'}` : '',
+          item.custom_variant_selections ? Object.entries(item.custom_variant_selections).filter(([_, v]) => v).map(([k, v]) => `▫️ ${k}: ${v}`).join(", ") : ''
+        ].filter(Boolean).join(" | ");
+        
+        return `${idx + 1}. *${item.name}* (x${item.quantity})\n   ${itemVariants}`;
+      }).join("\n\n") : "";
+
+      const variantText = !isCartOrder ? Object.entries(customVariantSelections)
         .filter(([_, val]) => val)
-        .map(([key, val]) => `🔹 ${key}: ${val}`)
-        .join("\n");
+        .map(([key, val]) => `▫️ ${key}: ${val}`)
+        .join("\n") : "";
 
       waMessage = [
-        `🛒 *طلب جديد من Service Serigraphie*`,
+        `✅ *طلب جديد من Service Serigraphie*`,
         `👤 الاسم: ${formData.name.trim()}`,
-        `📞 الهاتف: ${formData.phone.trim()}`,
-        `📦 المنتج: ${productName}`,
-        variantText ? `✨ الخيارات:\n${variantText}` : '',
-        `🎨 الطباعة: ${numColors} ألوان ${isDoubleSided ? '(جهتين)' : ''}`,
-        `💰 المجموع: ${productPrice.toLocaleString()} د.ج`,
+        `📱 الهاتف: ${formData.phone.trim()}`,
+        ``,
+        isCartOrder ? `🛒 *محتويات السلة:*` : `📦 المنتج: ${productName}`,
+        isCartOrder ? cartItemsSummary : `${variantText ? `✨ الخيارات:\n${variantText}\n` : ''}🎨 الطباعة: ${numColors} ألوان ${isDoubleSided ? '(جهتين)' : ''}`,
+        ``,
+        `💰 المجموع الإجمالي: ${productPrice.toLocaleString()} د.ج`,
         ``,
         `⚠️ (الوصل متاح في حسابك الشخصي)`,
-        `🔖 رقم الطلب: #${shortId}`,
+        `🏷️ رقم الطلب: #${shortId}`,
       ].filter(Boolean).join("\n");
     }
 
@@ -375,7 +421,11 @@ export default function OrderForm({
             {onAddToCart && (
               <button
                 type="button"
-                onClick={onAddToCart}
+                onClick={() => {
+                  if (validateSelections()) {
+                    onAddToCart();
+                  }
+                }}
                 className="w-full bg-white border-2 border-primary text-primary py-3.5 rounded-xl font-bold text-base hover:bg-primary/5 active:scale-95 transition-all flex items-center justify-center gap-2"
                 style={{ WebkitTapHighlightColor: "transparent" }}
               >

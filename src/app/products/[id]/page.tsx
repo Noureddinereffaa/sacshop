@@ -306,16 +306,21 @@ export default function ProductDetailPage() {
 
   const handleAddToCart = () => {
     const customVarLabel = Object.entries(customVariantSelections)
+      .filter(([_, v]) => v) // only include if value is set
       .map(([k, v]) => `${k}: ${v}`).join(" / ");
+      
     addItem({
-      id: `${product.id}-${selectedSize}-${selectedColor}-${numColors}-${isDoubleSided ? '2sided' : '1sided'}-${customVarLabel}`,
+      id: `${product.id}-${selectedSize}-${selectedColor}-${numColors}-${isDoubleSided ? '2sided' : '1sided'}-${JSON.stringify(customVariantSelections)}`,
       productId: product.id,
-      name: `${product.name} ${isDoubleSided ? '(طباعة جهتين)' : ''}${customVarLabel ? ` — ${customVarLabel}` : ''}`,
+      name: `${product.name}`,
       price: effectivePrice / quantity,
       quantity: quantity,
       image_url: allImages[selectedImage] || product.image_url,
       size: selectedSize || undefined,
-      color: selectedColor || undefined
+      color: selectedColor || undefined,
+      num_colors: numColors,
+      is_double_sided: isDoubleSided,
+      custom_variant_selections: customVariantSelections
     });
     // Open drawer
     useCartStore.getState().setIsOpen(true);
@@ -690,6 +695,7 @@ export default function ProductDetailPage() {
             {/* Add to Cart & Order Actions */}
             <div className="space-y-4">
               <OrderForm
+                product={product}
                 productId={product.id}
                 productName={product.name}
                 productPrice={effectivePrice}

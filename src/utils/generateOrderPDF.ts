@@ -66,8 +66,10 @@ export async function generateAndUploadOrderPDF(data: OrderPDFData): Promise<str
       if (item.size) details.push(`المقاس: ${item.size}`);
       if (item.color) details.push(`اللون: ${item.color}`);
       if (item.num_colors) details.push(`الطباعة: ${item.num_colors} ألوان ${item.is_double_sided ? "(جهتين)" : "(جهة واحدة)"}`);
-      if (item.custom_variants) {
-        Object.entries(item.custom_variants).forEach(([k, v]) => {
+      
+      const customVars = item.custom_variant_selections || item.custom_variants;
+      if (customVars) {
+        Object.entries(customVars).forEach(([k, v]) => {
           if (v) details.push(`${k}: ${v}`);
         });
       }

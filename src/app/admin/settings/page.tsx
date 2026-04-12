@@ -219,8 +219,19 @@ export default function AdminSettings() {
                                  placeholder="اسم الخدمة"
                                  value={item.label}
                                  onChange={(e) => {
+                                   const newLabel = e.target.value;
                                    const nav = [...settings.navigation];
-                                   nav[idx].label = e.target.value;
+                                   
+                                   // Auto-update href only if it followed the previous label pattern
+                                   const prevLabel = nav[idx].label;
+                                   const expectedPrevHref = `/products?category=${encodeURIComponent(prevLabel)}`;
+                                   
+                                   nav[idx].label = newLabel;
+                                   
+                                   if (nav[idx].href === expectedPrevHref || nav[idx].href === "/products") {
+                                      nav[idx].href = `/products?category=${encodeURIComponent(newLabel)}`;
+                                   }
+                                   
                                    setSettings({ ...settings, navigation: nav });
                                  }}
                                  className="w-full bg-white border-none rounded-lg py-2 px-3 font-bold text-gray-900 shadow-sm"

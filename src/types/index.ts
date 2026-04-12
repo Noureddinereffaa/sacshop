@@ -1,11 +1,15 @@
 export interface CartItem {
-  id: string; // product_id
+  id: string; // unique configuration ID
+  productId: string;
   name: string;
   price: number;
   image_url?: string;
   size?: string;
   color?: string;
   quantity: number;
+  num_colors?: number;
+  is_double_sided?: boolean;
+  custom_variant_selections?: Record<string, string>;
 }
 
 export interface CustomerData {

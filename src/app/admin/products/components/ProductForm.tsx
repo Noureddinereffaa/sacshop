@@ -57,9 +57,11 @@ export default function ProductForm({ initialData }: ProductFormProps) {
   useEffect(() => {
     async function fetchCategories() {
       if (!supabase) return;
-      const { data } = await supabase.from("settings").select("value").eq("key", "branding").single();
-      if (data && data.value && data.value.navigation) {
-        const nav: { label: string }[] = data.value.navigation;
+      // Fetch specifically from the 'navigation' key in settings
+      const { data } = await supabase.from("settings").select("value").eq("key", "navigation").single();
+      
+      if (data && Array.isArray(data.value)) {
+        const nav: { label: string }[] = data.value;
         setDynamicCategories(nav.map(item => item.label));
       } else {
         // Fallback or handle missing navigation

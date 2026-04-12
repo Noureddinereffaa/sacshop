@@ -135,14 +135,30 @@ export default function CartDrawer() {
                           </div>
                           
                           {/* Variants line */}
-                          <div className="flex gap-2 mt-1 text-xs text-gray-500 font-medium">
-                            {item.size && <span className="bg-gray-100 px-2 rounded-md">{item.size}</span>}
-                            {item.color && (
-                               <div className="flex items-center gap-1 bg-gray-100 px-2 rounded-md">
-                                 <span className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color === 'أسود' ? '#000' : item.color === 'أبيض' ? '#fff' : item.color }}></span>
-                                 {item.color}
+                          <div className="flex flex-col gap-1 mt-2">
+                             <div className="flex flex-wrap gap-2 text-[10px] text-gray-500 font-bold">
+                                {item.size && <span className="bg-gray-100 px-2 py-0.5 rounded-md">📏 {item.size}</span>}
+                                {item.color && (
+                                   <div className="flex items-center gap-1 bg-gray-100 px-2 py-0.5 rounded-md">
+                                     <span className="w-2 h-2 rounded-full border border-gray-300" style={{ backgroundColor: item.color === 'أسود' ? '#000' : item.color === 'أبيض' ? '#fff' : item.color }}></span>
+                                     {item.color}
+                                   </div>
+                                )}
+                                {item.num_colors && (
+                                  <span className="bg-primary/5 text-primary px-2 py-0.5 rounded-md">🎨 {item.num_colors} ألوان {item.is_double_sided ? '(جهتين)' : '(جهة)'}</span>
+                                )}
+                             </div>
+                             {item.custom_variant_selections && Object.keys(item.custom_variant_selections).length > 0 && (
+                               <div className="flex flex-wrap gap-1 mt-1">
+                                 {Object.entries(item.custom_variant_selections).map(([label, value]) => (
+                                   value && (
+                                     <span key={label} className="text-[10px] font-bold text-gray-400 bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100">
+                                       {label}: {value}
+                                     </span>
+                                   )
+                                 ))}
                                </div>
-                            )}
+                             )}
                           </div>
                         </div>
 

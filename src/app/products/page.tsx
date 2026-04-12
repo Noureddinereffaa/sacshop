@@ -34,7 +34,7 @@ function ProductsList() {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("الكل");
   
-  const { items, getDiscountInfo } = useCartStore();
+  const { items, getDiscountInfo, customerStatus, appliedVipOffer } = useCartStore();
   const { isEligible, percentage } = getDiscountInfo();
   const { navigation } = useSettingsStore();
 
@@ -100,7 +100,7 @@ function ProductsList() {
 
       <div className="container mx-auto px-4 py-12">
         {/* UPSell Banner B2B logic */}
-        {mounted && items.length > 0 && (
+        {mounted && items.length > 0 && (isEligible || customerStatus !== 'vip') && (
           <div className={`mb-10 p-6 rounded-3xl border-2 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl transition-all ${
             isEligible 
               ? "bg-green-50 border-green-200 text-green-800" 
@@ -115,13 +115,15 @@ function ProductsList() {
                <div>
                  <h3 className="text-xl font-black mb-1">
                    {isEligible 
-                     ? "مبروك! الخصم مُفعّل في سلتك 👏" 
+                     ? (customerStatus === 'vip' 
+                        ? `خصم حصري: ${appliedVipOffer?.title} 👏`
+                        : "مبروك! الخصم الترحيبي مُفعّل في سلتك 👏")
                      : `خصم ${percentage}% بانتظارك!`}
                  </h3>
                  <p className={`font-bold text-sm ${isEligible ? "text-green-700/80" : "text-gray-500"}`}>
                    {isEligible 
                      ? "يمكنك الاستمرار في التسوق أو إتمام طلبك الآن بالأسعار المخفضة." 
-                     : "لقد أضفت منتجاً، أضف منتجاً آخر لسلّتك الآن للحصول على خصم مباشر على التكلفة الإجمالية!"}
+                     : `لقد أضفت منتجاً، أضف منتجاً آخر لسلّتك الآن للحصول على خصم ${percentage}% المباشر!`}
                  </p>
                </div>
              </div>

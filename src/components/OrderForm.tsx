@@ -57,6 +57,12 @@ export default function OrderForm({
   const router = useRouter();
   const successRef = useRef<HTMLDivElement>(null);
 
+  const [formError, setFormError] = useState<string | null>(null);
+  const showError = (msg: string) => {
+    setFormError(msg);
+    setTimeout(() => setFormError(null), 4000);
+  };
+
   // Auto-scroll to success card when order is completed
   useEffect(() => {
     if (step === "success" && successRef.current) {
@@ -104,13 +110,13 @@ export default function OrderForm({
     
     // Check Size
     if (product.sizes && product.sizes.length > 0 && !selectedSize) {
-      alert("يرجى اختيار المقاس المطلوب أولاً");
+      showError("يرجى اختيار المقاس المطلوب أولاً");
       return false;
     }
     
     // Check Color
     if (product.colors && product.colors.length > 0 && !selectedColor) {
-      alert("يرجى اختيار اللون المطلوب أولاً");
+      showError("يرجى اختيار اللون المطلوب أولاً");
       return false;
     }
     
@@ -118,7 +124,7 @@ export default function OrderForm({
     if (product.custom_variants && product.custom_variants.length > 0) {
       for (const group of product.custom_variants) {
         if (group.required && !customVariantSelections[group.label]) {
-          alert(`يرجى اختيار ${group.label} أولاً`);
+          showError(`يرجى اختيار ${group.label} أولاً`);
           return false;
         }
       }
@@ -135,7 +141,14 @@ export default function OrderForm({
     // Validate selections before showing details form
     if (!validateSelections()) return;
 
-    if (!formData.name.trim() || !formData.phone.trim()) return;
+    if (!formData.name.trim()) {
+      showError("👤 يرجى إدخال اسمك الكريم لإتمام الطلب.");
+      return;
+    }
+    if (!formData.phone.trim() || formData.phone.trim().length < 9) {
+      showError("📞 يرجى التأكد من إدخال رقم هاتف صحيح لنتمكن من التواصل معك.");
+      return;
+    }
     setIsLoading(true);
 
     try {
@@ -277,9 +290,7 @@ export default function OrderForm({
     sessionStorage.setItem("sacshop_phone", formData.phone.trim());
     sessionStorage.setItem("sacshop_name", formData.name.trim());
 
-    if (isCartOrder) {
-      useCartStore.getState().clearCart();
-    }
+    // Cart will be cleared when they manually navigate via the success buttons
   };
 
   // ─── SUCCESS SCREEN ─────────────────────────────────────────────────────────
@@ -312,6 +323,9 @@ export default function OrderForm({
             <button
               onClick={() => {
                 window.open(pendingWaLink, "_blank");
+                if (cartItems && cartItems.length > 0) {
+                  useCartStore.getState().clearCart();
+                }
                 router.push("/account");
               }}
               className="group flex flex-col items-center justify-center gap-2 w-full bg-[#25D366] text-white rounded-[2rem] py-8 px-6 font-black shadow-xl shadow-green-200 active:scale-95 transition-all hover:bg-[#20bd5b]"
@@ -324,14 +338,19 @@ export default function OrderForm({
               <p className="text-xs opacity-80 font-bold">(سيتم فتح واتساب في نافذة جديدة)</p>
             </button>
           )}
-          {/* Optional Direct Download if account exists or after creation */}
-          <Link 
-            href="/account"
-            className="flex items-center justify-center gap-2 text-sm font-black text-gray-500 hover:text-primary transition-colors py-4 bg-gray-50 rounded-2xl border border-dashed border-gray-200"
+          <button 
+            type="button"
+            onClick={() => {
+              if (cartItems && cartItems.length > 0) {
+                useCartStore.getState().clearCart();
+              }
+              router.push("/account");
+            }}
+            className="flex items-center justify-center gap-2 text-sm font-black text-gray-500 hover:text-primary transition-colors py-4 bg-gray-50 rounded-2xl border border-dashed border-gray-200 w-full"
           >
             <Package size={16} />
             عرض طلباتي في لوحة التحكم
-          </Link>
+          </button>
         </div>
         <p className="text-xs text-gray-400">
           رقم الطلب: #{pendingOrderId.split("-")[0].toUpperCase()}
@@ -356,6 +375,21 @@ export default function OrderForm({
           </div>
         </div>
 
+        <AnimatePresence>
+          {formError && (
+            <motion.div
+              initial={{ opacity: 0, y: -10, height: 0 }}
+              animate={{ opacity: 1, y: 0, height: "auto" }}
+              exit={{ opacity: 0, y: -10, height: 0 }}
+              className="mb-6 overflow-hidden"
+            >
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-2xl text-sm font-bold flex items-center justify-between">
+                <span>{formError}</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <form onSubmit={handleInfoSubmit} className="space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -363,7 +397,6 @@ export default function OrderForm({
               <div className="relative">
                 <User className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                 <input
-                  required
                   type="text"
                   placeholder="الاسم..."
                   className="w-full bg-gray-50 border-none rounded-2xl py-4 pr-12 pl-4 focus:ring-2 focus:ring-primary/20 outline-none font-medium text-base"
@@ -378,7 +411,6 @@ export default function OrderForm({
               <div className="relative">
                 <Phone className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                 <input
-                  required
                   type="tel"
                   inputMode="tel"
                   placeholder="05 / 06 / 07 ..."
@@ -422,8 +454,40 @@ export default function OrderForm({
             {onAddToCart && (
               <button
                 type="button"
-                onClick={() => {
+                onClick={async () => {
+                  if (!formData.phone || formData.phone.trim().length < 9) {
+                    showError("📞 عذراً! يرجى إدخال رقم هاتفك أولاً لنتمكن من حفظ سلتك وتأمين أي خصومات خاصة بك كزبون لدينا.");
+                    return;
+                  }
                   if (validateSelections()) {
+                    const phoneToSave = formData.phone.trim();
+                    if (typeof window !== "undefined") {
+                      sessionStorage.setItem("sacshop_phone", phoneToSave);
+                      localStorage.setItem("sacshop_guest_phone", phoneToSave);
+                    }
+                    
+                    try {
+                      // Check user instantly to set VIP status for the basket
+                      const res = await fetch("/api/customer", {
+                        method: "POST",
+                        body: JSON.stringify({ phone: phoneToSave }),
+                      });
+                      const data = await res.json();
+                      const { setCustomerStatus, setAppliedVipOffer } = useCartStore.getState();
+                      
+                      if (data.customer) {
+                        const status = (data.customer.total_orders || 0) === 0 ? 'new' : 'vip';
+                        setCustomerStatus(status);
+                        if (status === 'vip' && data.vipOffers?.length > 0) {
+                          setAppliedVipOffer(data.vipOffers[0]);
+                        }
+                      } else {
+                        setCustomerStatus('new');
+                      }
+                    } catch (err) {
+                      console.log("Error checking user:", err);
+                    }
+
                     onAddToCart();
                   }
                 }}

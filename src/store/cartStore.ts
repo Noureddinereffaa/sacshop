@@ -114,7 +114,7 @@ export const useCartStore = create<CartStore>()(
         let discountAmount = 0;
         let discountType: 'welcome' | 'vip' | 'none' = 'none';
         let label = "";
-        let percentage = 0;
+        let percentage = state.discountConfig.percentage;
 
         // 1. VIP Offer Take Precedence if set (Returning Customers)
         if (state.customerStatus === 'vip' && state.appliedVipOffer) {

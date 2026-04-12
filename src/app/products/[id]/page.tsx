@@ -305,6 +305,24 @@ export default function ProductDetailPage() {
     : 0;
 
   const handleAddToCart = () => {
+    // Strict Validation
+    if (product.sizes?.length > 0 && !selectedSize) {
+      alert("يرجى اختيار المقاس");
+      return;
+    }
+    if (product.colors?.length > 0 && !selectedColor) {
+      alert("يرجى اختيار اللون");
+      return;
+    }
+    if (product.custom_variants) {
+      for (const group of product.custom_variants) {
+        if (group.required && !customVariantSelections[group.label]) {
+          alert(`يرجى اختيار ${group.label}`);
+          return;
+        }
+      }
+    }
+
     const customVarLabel = Object.entries(customVariantSelections)
       .filter(([_, v]) => v) // only include if value is set
       .map(([k, v]) => `${k}: ${v}`).join(" / ");
@@ -322,6 +340,14 @@ export default function ProductDetailPage() {
       is_double_sided: isDoubleSided,
       custom_variant_selections: customVariantSelections
     });
+
+    window.trackMarketingEvent?.("AddToCart", { 
+      content_name: product.name, 
+      value: effectivePrice, 
+      currency: "DZD",
+      content_ids: [product.id]
+    });
+
     // Open drawer
     useCartStore.getState().setIsOpen(true);
     router.push('/products');

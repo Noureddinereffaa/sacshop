@@ -19,7 +19,7 @@ export default function Header() {
     setMounted(true);
   }, []);
 
-  const totalItems = items.reduce((acc, item) => acc + item.quantity, 0);
+  const totalItems = items.length;
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm">

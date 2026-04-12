@@ -1,9 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
-import { Phone, User, Loader2, Edit3, MessageCircle, ShoppingCart, Lock, Eye, EyeOff, CheckCircle2, Gift } from "lucide-react";
+import { 
+  Phone, User, Loader2, Edit3, MessageCircle, 
+  ShoppingCart, Lock, Eye, EyeOff, CheckCircle2, 
+  Gift, Package 
+} from "lucide-react";
+import Link from "next/link";
 import { CartItem } from "@/types";
 import { generateAndUploadOrderPDF } from "@/utils/generateOrderPDF";
 import { useCartStore } from "@/store/cartStore";
@@ -45,6 +51,16 @@ export default function OrderForm({
   const [step, setStep] = useState<Step>("info");
   const [isLoading, setIsLoading] = useState(false);
   const [isPdfGenerating, setIsPdfGenerating] = useState(false);
+
+  const router = useRouter();
+  const successRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to success card when order is completed
+  useEffect(() => {
+    if (step === "success" && successRef.current) {
+      successRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [step]);
   const [pendingWaLink, setPendingWaLink] = useState<string>("");
   const [pendingOrderId, setPendingOrderId] = useState<string>("");
   const [whatsappNumber, setWhatsappNumber] = useState<string>("213000000000");
@@ -112,6 +128,7 @@ export default function OrderForm({
       id: orderId,
       customer_name: formData.name.trim(),
       customer_phone: formData.phone.trim(),
+      customer_address: "يُحدد عبر واتساب",
       product_id: isCartOrder ? null : productId,
       quantity: isCartOrder ? null : quantity,
       size: isCartOrder ? null : selectedSize,
@@ -214,22 +231,16 @@ export default function OrderForm({
     sessionStorage.setItem("sacshop_phone", formData.phone.trim());
     sessionStorage.setItem("sacshop_name", formData.name.trim());
 
-    // ── Open WhatsApp in New Tab (might be blocked by popup blockers) ──
-    const waWindow = window.open(waLink, "_blank");
-
-    // ── Redirect Current Tab to Account Page ──
-    setTimeout(() => {
-      if (isCartOrder) {
-        useCartStore.getState().clearCart();
-      }
-      window.location.href = "/account";
-    }, 1500); // 1.5s delay to let user see success state before redirect
+    if (isCartOrder) {
+      useCartStore.getState().clearCart();
+    }
   };
 
   // ─── SUCCESS SCREEN ─────────────────────────────────────────────────────────
   if (step === "success") {
     return (
       <motion.div
+        ref={successRef}
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         className="bg-white p-8 rounded-3xl border-2 border-[#25D366]/40 shadow-xl text-center space-y-5"
@@ -251,24 +262,29 @@ export default function OrderForm({
         </div>
         <div className="flex flex-col gap-3">
           {pendingWaLink && (
-            <a
-              href={pendingWaLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-3 w-full bg-[#25D366] text-white rounded-2xl py-5 font-black text-lg shadow-lg active:scale-95 transition-transform"
+            <button
+              onClick={() => {
+                window.open(pendingWaLink, "_blank");
+                router.push("/account");
+              }}
+              className="group flex flex-col items-center justify-center gap-2 w-full bg-[#25D366] text-white rounded-[2rem] py-8 px-6 font-black shadow-xl shadow-green-200 active:scale-95 transition-all hover:bg-[#20bd5b]"
               style={{ WebkitTapHighlightColor: "transparent" }}
             >
-              <MessageCircle size={24} />
-              فتح واتساب والتأكيد الآن
-            </a>
+              <div className="flex items-center gap-3 text-2xl">
+                <MessageCircle size={32} className="animate-bounce" />
+                تأكيد الطلب عبر واتساب
+              </div>
+              <p className="text-xs opacity-80 font-bold">(سيتم فتح واتساب في نافذة جديدة)</p>
+            </button>
           )}
           {/* Optional Direct Download if account exists or after creation */}
-          <button 
-            onClick={() => window.location.href = "/account"}
-            className="text-xs font-bold text-gray-400 hover:text-primary underline"
+          <Link 
+            href="/account"
+            className="flex items-center justify-center gap-2 text-sm font-black text-gray-500 hover:text-primary transition-colors py-4 bg-gray-50 rounded-2xl border border-dashed border-gray-200"
           >
-            عرض سجل طلباتي وتحميل الوصل من حسابي
-          </button>
+            <Package size={16} />
+            عرض طلباتي في لوحة التحكم
+          </Link>
         </div>
         <p className="text-xs text-gray-400">
           رقم الطلب: #{pendingOrderId.split("-")[0].toUpperCase()}

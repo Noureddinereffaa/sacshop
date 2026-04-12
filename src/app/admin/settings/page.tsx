@@ -127,26 +127,44 @@ export default function AdminSettings() {
                        </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                       <div className="space-y-3">
-                          <label className="text-sm font-black text-gray-700 block mr-2">لون الخلفية (مستطيل العروض)</label>
-                          <div className="flex gap-4 items-center">
-                             <input 
-                               type="color" 
-                               value={settings.promobar?.bgColor || "#00AEEF"}
-                               onChange={(e) => setSettings({ ...settings, promobar: { ...settings.promobar, bgColor: e.target.value } })}
-                               className="w-12 h-12 rounded-lg cursor-pointer border-none p-0 bg-transparent"
-                             />
-                             <input 
-                               type="text" 
-                               value={settings.promobar?.bgColor || "#00AEEF"}
-                               dir="ltr"
-                               className="flex-1 bg-gray-50 border-none rounded-xl py-3 px-4 font-bold text-gray-600"
-                               readOnly
-                             />
-                          </div>
-                       </div>
-                    </div>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
+                        <div className="space-y-3">
+                           <label className="text-sm font-black text-gray-700 block mr-2">لون الخلفية (مستطيل العروض)</label>
+                           <div className="flex gap-4 items-center">
+                              <input 
+                                type="color" 
+                                value={settings.promobar?.bgColor || "#00AEEF"}
+                                onChange={(e) => setSettings({ ...settings, promobar: { ...settings.promobar, bgColor: e.target.value } })}
+                                className="w-12 h-12 rounded-lg cursor-pointer border-none p-0 bg-transparent"
+                              />
+                              <input 
+                                type="text" 
+                                value={settings.promobar?.bgColor || "#00AEEF"}
+                                dir="ltr"
+                                className="flex-1 bg-gray-50 border-none rounded-xl py-3 px-4 font-bold text-gray-600"
+                                readOnly
+                              />
+                           </div>
+                        </div>
+
+                        <div className="space-y-3">
+                           <label className="text-sm font-black text-gray-700 block mr-2">موقع شريط العروض</label>
+                           <div className="bg-gray-50 p-1.5 rounded-2xl flex gap-1">
+                              <button 
+                                onClick={() => setSettings({ ...settings, promobar: { ...settings.promobar, position: 'top' } })}
+                                className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all ${settings.promobar?.position === 'top' || !settings.promobar?.position ? "bg-white text-primary shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
+                              >
+                                فوق الهيدر
+                              </button>
+                              <button 
+                                onClick={() => setSettings({ ...settings, promobar: { ...settings.promobar, position: 'bottom' } })}
+                                className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all ${settings.promobar?.position === 'bottom' ? "bg-white text-primary shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
+                              >
+                                تحت الهيدر
+                              </button>
+                           </div>
+                        </div>
+                     </div>
 
                     <div className="space-y-4">
                        <div className="flex justify-between items-center">

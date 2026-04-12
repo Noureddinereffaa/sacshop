@@ -19,6 +19,7 @@ interface CartStore {
   items: CartItem[];
   isOpen: boolean;
   customerStatus: 'new' | 'vip' | 'guest';
+  customer: any | null;
   appliedVipOffer: any | null;
   addItem: (item: CartItem) => void;
   removeItem: (id: string) => void;
@@ -26,7 +27,7 @@ interface CartStore {
   clearCart: () => void;
   toggleCart: () => void;
   setIsOpen: (isOpen: boolean) => void;
-  setCustomerStatus: (status: 'new' | 'vip' | 'guest') => void;
+  setCustomerStatus: (status: 'new' | 'vip' | 'guest', customer?: any) => void;
   setAppliedVipOffer: (offer: any | null) => void;
   getCartTotal: () => number;
   getDiscountInfo: () => {
@@ -53,11 +54,12 @@ export const useCartStore = create<CartStore>()(
       items: [],
       isOpen: false,
       customerStatus: 'guest',
+      customer: null,
       appliedVipOffer: null,
       discountConfig: { enabled: true, percentage: 10, minItems: 2 },
       
       setDiscountConfig: (config) => set({ discountConfig: config }),
-      setCustomerStatus: (status) => set({ customerStatus: status }),
+      setCustomerStatus: (status, customer = null) => set({ customerStatus: status, customer }),
       setAppliedVipOffer: (offer) => set({ appliedVipOffer: offer }),
       
       addItem: (item) => set((state) => {

@@ -98,6 +98,55 @@ export default function OrderForm({
     fetchSettings();
   }, []);
 
+  // ─── Debounced Customer Check ────────────────────────────────────────────────
+  useEffect(() => {
+    const phone = formData.phone.trim();
+    // Algerian numbers (9-10 digits without code) or full number
+    if (phone.length < 9) {
+      // If cleared, reset to guest
+      if (phone === "" && typeof window !== "undefined") {
+        const { setCustomerStatus } = useCartStore.getState();
+        setCustomerStatus('guest');
+      }
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch("/api/customer", {
+          method: "POST",
+          body: JSON.stringify({ phone }),
+        });
+        const data = await res.json();
+        
+        const { setCustomerStatus, setAppliedVipOffer, setDiscountConfig } = useCartStore.getState();
+        
+        if (data.customer) {
+          const status = (data.customer.total_orders || 0) === 0 ? 'new' : 'vip';
+          setCustomerStatus(status, data.customer);
+          
+          if (data.discountConfig) {
+            setDiscountConfig({
+              enabled: data.discountConfig.newCustomerDiscountEnabled,
+              percentage: data.discountConfig.newCustomerDiscountPercent,
+              minItems: data.discountConfig.newCustomerMinItems,
+            });
+          }
+          
+          if (status === 'vip' && data.vipOffers?.length > 0) {
+            setAppliedVipOffer(data.vipOffers[0]);
+          } else if (status === 'new') {
+            setAppliedVipOffer(null);
+          }
+        }
+      } catch (err) {
+        console.log("Error auto-checking user:", err);
+      }
+    }, 1000); // 1s debounce
+
+    return () => clearTimeout(timer);
+  }, [formData.phone]);
+
   // Track ViewContent
   useEffect(() => {
     try {
@@ -461,11 +510,20 @@ export default function OrderForm({
                         body: JSON.stringify({ phone: phoneToSave }),
                       });
                       const data = await res.json();
-                      const { setCustomerStatus, setAppliedVipOffer } = useCartStore.getState();
+                      const { setCustomerStatus, setAppliedVipOffer, setDiscountConfig } = useCartStore.getState();
                       
                       if (data.customer) {
                         const status = (data.customer.total_orders || 0) === 0 ? 'new' : 'vip';
-                        setCustomerStatus(status);
+                        setCustomerStatus(status, data.customer);
+                        
+                        if (data.discountConfig) {
+                          setDiscountConfig({
+                            enabled: data.discountConfig.newCustomerDiscountEnabled,
+                            percentage: data.discountConfig.newCustomerDiscountPercent,
+                            minItems: data.discountConfig.newCustomerMinItems,
+                          });
+                        }
+                        
                         if (status === 'vip' && data.vipOffers?.length > 0) {
                           setAppliedVipOffer(data.vipOffers[0]);
                         }

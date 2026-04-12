@@ -7,7 +7,7 @@ import { useCartStore } from "@/store/cartStore";
 
 export default function SettingsProvider({ children }: { children: React.ReactNode }) {
   const { setSettings } = useSettingsStore();
-  const { setDiscountConfig } = useCartStore();
+  const { setDiscountConfig, setCustomerStatus, setAppliedVipOffer } = useCartStore();
 
   useEffect(() => {
     if (!supabase) return;
@@ -64,6 +64,25 @@ export default function SettingsProvider({ children }: { children: React.ReactNo
           return result ? `${parseInt(result[1], 16)} ${parseInt(result[2], 16)} ${parseInt(result[3], 16)}` : "16 163 127";
         };
         root.style.setProperty("--color-primary-rgb", hexToRgb(branding.primaryColor));
+
+        // 4. Initial identity check if phone exists
+        const phone = sessionStorage.getItem("sacshop_phone");
+        if (phone) {
+          try {
+            const res = await fetch("/api/customer", {
+              method: "POST",
+              body: JSON.stringify({ phone }),
+            });
+            const data = await res.json();
+            if (data.customer) {
+              const status = (data.customer.total_orders || 0) === 0 ? 'new' : 'vip';
+              setCustomerStatus(status, data.customer);
+              if (status === 'vip' && data.vipOffers?.length > 0) {
+                setAppliedVipOffer(data.vipOffers[0]);
+              }
+            }
+          } catch (e) { console.error("Identity check failed:", e); }
+        }
 
       } catch (error) {
         console.error("Failed to load settings:", error);

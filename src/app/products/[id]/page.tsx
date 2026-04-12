@@ -62,17 +62,23 @@ export default function ProductDetailPage() {
       ...variantExtraImages
     ])).filter(Boolean);
   }, [product]);
-  const [customer, setCustomer] = useState<any>(null);
-  
   const { 
     addItem, 
     customerStatus, 
     setCustomerStatus, 
+    customer,
     appliedVipOffer, 
     setAppliedVipOffer,
     discountConfig,
     setDiscountConfig
   } = useCartStore();
+  
+  const [localCustomer, setLocalCustomer] = useState<any>(null);
+
+  // Sync with store
+  useEffect(() => {
+    if (customer) setLocalCustomer(customer);
+  }, [customer]);
   
   const router = useRouter();
 
@@ -120,24 +126,24 @@ export default function ProductDetailPage() {
             body: JSON.stringify({ phone }),
           });
           const data = await res.json();
-          if (data.customer) {
-            setCustomer(data.customer);
-            const status = (data.customer.total_orders || 0) === 0 ? 'new' : 'vip';
-            setCustomerStatus(status);
-            
-            if (data.discountConfig) {
-              setDiscountConfig({
-                enabled: data.discountConfig.newCustomerDiscountEnabled,
-                percentage: data.discountConfig.newCustomerDiscountPercent,
-                minItems: data.discountConfig.newCustomerMinItems,
-              });
+            if (data.customer) {
+              const status = (data.customer.total_orders || 0) === 0 ? 'new' : 'vip';
+              setCustomerStatus(status, data.customer);
+              setLocalCustomer(data.customer);
+              
+              if (data.discountConfig) {
+                setDiscountConfig({
+                  enabled: data.discountConfig.newCustomerDiscountEnabled,
+                  percentage: data.discountConfig.newCustomerDiscountPercent,
+                  minItems: data.discountConfig.newCustomerMinItems,
+                });
+              }
+              
+              if (status === 'vip' && data.vipOffers && data.vipOffers.length > 0) {
+                // Only auto-set if none exists
+                if (!appliedVipOffer) setAppliedVipOffer(data.vipOffers[0]);
+              }
             }
-            
-            if (status === 'vip' && data.vipOffers && data.vipOffers.length > 0) {
-              // Only auto-set if none exists
-              if (!appliedVipOffer) setAppliedVipOffer(data.vipOffers[0]);
-            }
-          }
         } catch (err) { console.error("VIP fetch error:", err); }
       }
     }
@@ -470,29 +476,8 @@ export default function ProductDetailPage() {
                   </div>
                 </div>
 
-                {/* VIP Benefit Info */}
-                {hasVipDiscount && (
-                  <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 flex items-center justify-between group">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                        <Tag size={20} />
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-black text-primary/60 uppercase tracking-tighter">رتبتك الحالية</p>
-                        <p className="text-sm font-black text-primary">
-                          {"⭐".repeat(customer?.star_level || 1)} زبون مميز
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-left">
-                      <p className="text-[10px] font-black text-gray-400 uppercase">مقدار التوفير</p>
-                      <p className="text-lg font-black text-primary">-{savingAmount.toLocaleString()} د.ج</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Welcome Upsell Alert */}
-                {(!customer || customerStatus === 'new') && (
+                {/* Welcome Upsell Alert (Only for New/Guest) */}
+                {customerStatus !== 'vip' && (
                   <motion.div 
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -510,21 +495,53 @@ export default function ProductDetailPage() {
                   </motion.div>
                 )}
 
-                {/* Returning Customer Offer */}
-                {customer && customerStatus === 'vip' && (
+                {/* Returning Customer & Rank Info */}
+                {customerStatus === 'vip' && (
                   <motion.div 
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="bg-gradient-to-r from-primary/10 to-transparent border border-primary/20 rounded-2xl p-4 flex items-center gap-3 shadow-sm"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="bg-white border-2 border-primary/20 rounded-[2rem] p-6 shadow-xl shadow-primary/5 space-y-4 relative overflow-hidden group"
                   >
-                    <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-primary/20">
-                      <Sparkles size={20} />
+                    {/* Decorative background logo icon */}
+                    <div className="absolute -bottom-6 -left-6 opacity-[0.03] group-hover:scale-110 transition-transform pointer-events-none">
+                       <Crown size={120} />
                     </div>
-                    <div>
-                      <p className="text-sm font-black text-primary">مرحباً بعودتك، {customer.name}! ✨</p>
-                      <p className="text-[10px] font-bold text-primary/70 leading-tight mt-0.5">
-                        بما أنك زبون سابق، استمتع بأسعارك الخاصة وعروض الـ VIP الحصرية المطبقة تلقائياً.
-                      </p>
+
+                    <div className="flex items-center justify-between relative z-10">
+                      <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center text-white shadow-lg shadow-primary/20 transition-transform group-hover:rotate-6">
+                          <Crown size={28} />
+                        </div>
+                        <div>
+                          <h4 className="font-black text-gray-900 text-lg">
+                            مرحباً بعودتك، {localCustomer?.name || "بك"}! ✨
+                          </h4>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                             <div className="flex text-yellow-400 gap-0.5">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star 
+                                    key={i} 
+                                    size={14} 
+                                    fill={i < (localCustomer?.star_level || 1) ? "currentColor" : "none"} 
+                                    className={i < (localCustomer?.star_level || 1) ? "" : "text-gray-200"} 
+                                  />
+                                ))}
+                             </div>
+                             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-50 px-2 py-0.5 rounded-full">
+                               زبون مميز VIP
+                             </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-left">
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter mb-0.5">توفيرك حالياً</p>
+                        <p className="text-2xl font-black text-primary">-{savingAmount.toLocaleString()} د.ج</p>
+                      </div>
+                    </div>
+
+                    <div className="bg-primary/5 rounded-2xl p-3 flex items-center gap-2 text-[10px] font-bold text-primary border border-primary/10 relative z-10">
+                       <Sparkles size={14} />
+                       <span>بما أنك زبون سابق، تم تطبيق عروض الـ VIP الحصرية تلقائياً على هذا المنتج.</span>
                     </div>
                   </motion.div>
                 )}
@@ -774,7 +791,7 @@ export default function ProductDetailPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {(allProducts.length > 0 ? allProducts : [])
-              .filter(p => p.id !== product.id)
+              .filter(p => p.id !== product?.id)
               .sort(() => 0.5 - Math.random())
               .slice(0, 4)
               .map(p => (

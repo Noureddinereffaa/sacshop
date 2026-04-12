@@ -19,8 +19,7 @@ import dynamic from "next/dynamic";
 import WhatsAppButton from "@/components/WhatsAppButton";
 
 const QuickAddModal = dynamic(() => import("@/components/QuickAddModal"));
-import Header from "@/components/Header";
-import PromoStrip from "@/components/PromoStrip";
+import GlobalNavigation from "@/components/GlobalNavigation";
 import Footer from "@/components/Footer";
 
 export default function RootLayout({
@@ -33,10 +32,7 @@ export default function RootLayout({
       <body className={`${tajawal.variable} font-sans`}>
         <SettingsProvider>
           <MarketingPixels />
-          <div className="sticky top-0 z-[100] w-full">
-            <PromoStrip />
-            <Header />
-          </div>
+          <GlobalNavigation />
           {children}
           <Footer />
           <QuickAddModal />

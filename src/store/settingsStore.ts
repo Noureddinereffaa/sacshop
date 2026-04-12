@@ -28,7 +28,12 @@ interface SettingsState {
   branding: Branding;
   discounts: Discounts;
   navigation: NavigationItem[];
-  promobar: any;
+  promobar: {
+    enabled: boolean;
+    bgColor: string;
+    position: 'top' | 'bottom';
+    buttons: any[];
+  };
   marketing: any;
   isLoaded: boolean;
   setSettings: (branding: Branding, discounts: Discounts, navigation: NavigationItem[], promobar?: any, marketing?: any) => void;
@@ -53,9 +58,9 @@ export const useSettingsStore = create<SettingsState>((set) => ({
     cartMinItems: 2
   },
   navigation: [],
-  promobar: { enabled: true, bgColor: "#00AEEF", buttons: [] },
+  promobar: { enabled: true, bgColor: "#00AEEF", position: 'top', buttons: [] },
   marketing: {},
   isLoaded: false,
   setSettings: (branding, discounts, navigation, promobar, marketing) => 
-    set({ branding, discounts, navigation, promobar: promobar || { enabled: true, bgColor: "#00AEEF", buttons: [] }, marketing: marketing || {}, isLoaded: true }),
+    set({ branding, discounts, navigation, promobar: promobar || { enabled: true, bgColor: "#00AEEF", position: 'top', buttons: [] }, marketing: marketing || {}, isLoaded: true }),
 }));

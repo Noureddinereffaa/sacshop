@@ -58,6 +58,7 @@ export default function OrderForm({
   const successRef = useRef<HTMLDivElement>(null);
 
   const [formError, setFormError] = useState<string | null>(null);
+  const { items } = useCartStore();
   const showError = (msg: string) => {
     setFormError(msg);
     setTimeout(() => setFormError(null), 4000);
@@ -110,13 +111,13 @@ export default function OrderForm({
     
     // Check Size
     if (product.sizes && product.sizes.length > 0 && !selectedSize) {
-      showError("يرجى اختيار المقاس المطلوب أولاً");
+      showError("📐 يرجى تحديد مقاس المنتج أولاً ليتم تخصيص السعر وحساب خيارات الطباعة بدقة.");
       return false;
     }
     
     // Check Color
     if (product.colors && product.colors.length > 0 && !selectedColor) {
-      showError("يرجى اختيار اللون المطلوب أولاً");
+      showError("🎨 يرجى اختيار اللون المطلوب لضمان توفر المنتج ومعالجة طلبك بشكل صحيح.");
       return false;
     }
     
@@ -124,7 +125,7 @@ export default function OrderForm({
     if (product.custom_variants && product.custom_variants.length > 0) {
       for (const group of product.custom_variants) {
         if (group.required && !customVariantSelections[group.label]) {
-          showError(`يرجى اختيار ${group.label} أولاً`);
+          showError(`✨ يرجى إكمال خيار (${group.label}) فهو ضروري لتخصيص طلبك بشكل احترافي.`);
           return false;
         }
       }
@@ -375,20 +376,7 @@ export default function OrderForm({
           </div>
         </div>
 
-        <AnimatePresence>
-          {formError && (
-            <motion.div
-              initial={{ opacity: 0, y: -10, height: 0 }}
-              animate={{ opacity: 1, y: 0, height: "auto" }}
-              exit={{ opacity: 0, y: -10, height: 0 }}
-              className="mb-6 overflow-hidden"
-            >
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-2xl text-sm font-bold flex items-center justify-between">
-                <span>{formError}</span>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+
 
         <form onSubmit={handleInfoSubmit} className="space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -518,7 +506,47 @@ export default function OrderForm({
               </>
             )}
             </button>
+            
+            {/* View Cart Button (Appears when items added) */}
+            <AnimatePresence>
+              {items.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  className="overflow-hidden"
+                >
+                  <Link href="/checkout" className="block mt-2">
+                    <button
+                      type="button"
+                      className="w-full bg-gray-100 text-gray-700 py-3.5 rounded-xl font-black text-sm hover:bg-gray-200 transition-all flex items-center justify-center gap-2 border border-gray-200"
+                    >
+                      <ShoppingCart size={18} />
+                      إنهاء الطلبات المضافة في السلة ({items.length})
+                    </button>
+                  </Link>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
+
+          <AnimatePresence>
+            {formError && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="mt-4 p-4 bg-red-50 border border-red-100 rounded-2xl flex items-start gap-3 shadow-sm"
+              >
+                <div className="w-8 h-8 bg-red-500 text-white rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-red-500/20 animate-pulse">
+                   <Lock size={16} />
+                </div>
+                <div>
+                   <p className="text-red-600 font-black text-sm mb-0.5">خطأ في الطلب!</p>
+                   <p className="text-red-500/80 text-xs font-bold leading-relaxed">{formError}</p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </form>
       </div>
     </div>

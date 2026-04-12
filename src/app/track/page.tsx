@@ -1,7 +1,6 @@
 "use client";
 
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+
 import { useState } from "react";
 import { 
   Phone, Package, Crown, Calendar, Loader2, 
@@ -79,8 +78,7 @@ export default function CustomerPortalPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 flex flex-col">
-      <Header />
+    <main className="min-h-screen bg-gray-50 flex flex-col pt-12">
 
       <div className="flex-grow container mx-auto px-4 py-12 md:py-20 max-w-4xl text-right" dir="rtl">
 
@@ -361,7 +359,6 @@ export default function CustomerPortalPage() {
           </div>
         )}
       </div>
-      <Footer />
     </main>
   );
 }

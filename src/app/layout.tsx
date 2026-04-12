@@ -16,8 +16,12 @@ export const metadata: Metadata = {
 
 import SettingsProvider from "@/components/SettingsProvider";
 import dynamic from "next/dynamic";
+import WhatsAppButton from "@/components/WhatsAppButton";
 
 const QuickAddModal = dynamic(() => import("@/components/QuickAddModal"));
+import Header from "@/components/Header";
+import PromoStrip from "@/components/PromoStrip";
+import Footer from "@/components/Footer";
 
 export default function RootLayout({
   children,
@@ -29,8 +33,14 @@ export default function RootLayout({
       <body className={`${tajawal.variable} font-sans`}>
         <SettingsProvider>
           <MarketingPixels />
+          <div className="sticky top-0 z-[100] w-full">
+            <PromoStrip />
+            <Header />
+          </div>
           {children}
+          <Footer />
           <QuickAddModal />
+          <WhatsAppButton />
         </SettingsProvider>
       </body>
     </html>

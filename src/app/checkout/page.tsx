@@ -86,8 +86,7 @@ export default function CheckoutPage() {
 
   if (items.length === 0) {
     return (
-      <main className="min-h-screen bg-gray-50 flex flex-col">
-        <Header />
+      <main className="min-h-screen bg-transparent flex flex-col pt-8">
         <div className="flex-1 flex flex-col items-center justify-center p-4">
           <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
              <ShoppingBag size={48} className="text-gray-300" />
@@ -100,7 +99,6 @@ export default function CheckoutPage() {
             </button>
           </Link>
         </div>
-        <Footer />
       </main>
     );
   }
@@ -108,8 +106,7 @@ export default function CheckoutPage() {
   const { isEligible, discountType, subtotal, discountAmount, finalTotal, label } = getDiscountInfo();
 
   return (
-    <main className="min-h-screen bg-gray-50 flex flex-col">
-      <Header />
+    <main className="min-h-screen bg-transparent flex flex-col pt-8">
       
       <div className="container mx-auto px-4 py-8 md:py-12 flex-1">
         <div className="flex items-center gap-2 mb-8">

@@ -1,10 +1,8 @@
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+
 
 export default function PrivacyPolicy() {
   return (
-    <main className="min-h-screen bg-white">
-      <Header />
+    <main className="min-h-screen bg-transparent pt-12">
       <div className="container mx-auto px-4 py-24 max-w-4xl text-right">
         <h1 className="text-4xl font-black text-gray-900 mb-12">سياسة الخصوصية</h1>
         
@@ -41,7 +39,6 @@ export default function PrivacyPolicy() {
           </section>
         </div>
       </div>
-      <Footer />
     </main>
   );
 }

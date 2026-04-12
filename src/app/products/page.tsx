@@ -2,17 +2,13 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { supabase } from "@/lib/supabase";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import WhatsAppButton from "@/components/WhatsAppButton";
+import { useSearchParams } from "next/navigation";
+import { Product } from "@/types";
 import ProductCard from "@/components/ProductCard";
-import { Search, Filter, Loader2, Gift, ArrowLeft, CheckCircle2, ShoppingBag } from "lucide-react";
+import { Search, Filter, Loader2, Gift, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
 import { useSettingsStore } from "@/store/settingsStore";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-
-import { Product } from "@/types";
 
 // Fallback static products when Supabase not connected
 const STATIC_PRODUCTS: Product[] = [
@@ -199,8 +195,7 @@ function ProductsList() {
 
 export default function ProductsPage() {
   return (
-    <main className="min-h-screen bg-gray-50/50">
-      <Header />
+    <main className="min-h-screen bg-gray-50/50 pt-8">
       <Suspense fallback={
         <div className="flex items-center justify-center py-32">
           <Loader2 className="animate-spin text-primary" size={40} />
@@ -208,8 +203,6 @@ export default function ProductsPage() {
       }>
         <ProductsList />
       </Suspense>
-      <Footer />
-      <WhatsAppButton />
     </main>
   );
 }

@@ -1,11 +1,8 @@
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import { Mail, Phone, MapPin, Clock } from "lucide-react";
 
 export default function ContactPage() {
   return (
-    <main className="min-h-screen bg-white">
-      <Header />
+    <main className="min-h-screen bg-transparent pt-12">
       <div className="container mx-auto px-4 py-24 max-w-5xl">
         <div className="text-center mb-16">
           <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-4">اتصل بنا</h1>
@@ -81,7 +78,6 @@ export default function ContactPage() {
           </div>
         </div>
       </div>
-      <Footer />
     </main>
   );
 }

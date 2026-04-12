@@ -4,7 +4,6 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { CheckCircle2, Eye, EyeOff, Lock, Loader2, ShieldCheck, Star } from "lucide-react";
-import Header from "@/components/Header";
 
 // ── Inner component that uses useSearchParams ─────────────────────────────────
 function SetPasswordContent() {
@@ -66,8 +65,7 @@ function SetPasswordContent() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-primary/5 flex flex-col">
-      <Header />
+    <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-primary/5 flex flex-col pt-12">
 
       <div className="flex-grow flex items-center justify-center px-4 py-16">
         <div className="w-full max-w-lg">

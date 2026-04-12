@@ -1,8 +1,7 @@
 "use client";
 
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import WhatsAppButton from "@/components/WhatsAppButton";
+
+
 import { motion } from "framer-motion";
 import { Tag, Crown, Gift, ArrowLeft, ShoppingBag, Percent, Star, Zap, Clock, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
@@ -13,8 +12,7 @@ export default function OffersPage() {
   const { percentage, minItems } = getDiscountInfo();
 
   return (
-    <main className="min-h-screen bg-gray-50/50">
-      <Header />
+    <main className="min-h-screen bg-gray-50/50 pt-12">
       
       {/* Hero Section */}
       <section className="bg-white border-b border-gray-100 py-20 overflow-hidden relative">
@@ -164,8 +162,6 @@ export default function OffersPage() {
 
       </div>
 
-      <Footer />
-      <WhatsAppButton />
     </main>
   );
 }

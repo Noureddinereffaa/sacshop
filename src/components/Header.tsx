@@ -22,26 +22,26 @@ export default function Header() {
   const totalItems = items.length;
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm">
-      <div className="container mx-auto px-4 h-24 flex items-center justify-between gap-4">
+    <header className="w-full bg-white/80 backdrop-blur-sm border-b border-gray-100">
+      <div className="container mx-auto px-4 h-12 md:h-14 flex items-center justify-between gap-4">
         {/* Mobile Menu Toggle */}
         <button 
-          className="lg:hidden w-11 h-11 hover:bg-gray-100 rounded-full transition-colors flex items-center justify-center"
+          className="lg:hidden w-8 h-8 hover:bg-gray-100 rounded-full transition-colors flex items-center justify-center"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
         >
-          {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          {isMenuOpen ? <X size={18} /> : <Menu size={18} />}
         </button>
 
         {/* Logo - Increased Size */}
         <Link href="/" className="flex items-center gap-2 sm:gap-3 group">
           {branding.logo ? (
-            <div className="relative w-32 h-10 sm:w-48 sm:h-14 overflow-hidden flex-shrink-0 hover:scale-[1.02] transition-transform">
+            <div className="relative w-24 h-6 sm:w-32 sm:h-8 overflow-hidden flex-shrink-0 hover:scale-[1.02] transition-transform">
               <Image 
                 src={branding.logo} 
                 alt={branding.storeName} 
                 fill 
                 priority
-                sizes="(max-width: 640px) 128px, 192px"
+                sizes="(max-width: 640px) 96px, 128px"
                 className="object-contain object-right" 
               />
             </div>
@@ -105,11 +105,11 @@ export default function Header() {
             {/* Cart Button - Direct Redirect */}
             <Link 
               href="/checkout"
-              className="relative w-11 h-11 bg-primary text-white hover:bg-primary/90 shadow-lg shadow-primary/20 rounded-full transition-all flex items-center justify-center hover:scale-110 active:scale-95"
+              className="relative w-8 h-8 bg-primary text-white hover:bg-primary/90 shadow-lg shadow-primary/20 rounded-full transition-all flex items-center justify-center hover:scale-110 active:scale-95"
             >
-              <ShoppingCart size={20} />
+              <ShoppingCart size={14} />
               {mounted && totalItems > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-white text-primary text-[10px] font-black flex items-center justify-center rounded-full shadow-md">
+                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-white text-primary text-[8px] font-black flex items-center justify-center rounded-full shadow-md">
                   {totalItems}
                 </span>
               )}
@@ -124,7 +124,7 @@ export default function Header() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="lg:hidden absolute top-full left-0 w-full bg-white border-b border-gray-100 shadow-2xl py-8 px-6 flex flex-col gap-6 text-right"
+            className="lg:hidden absolute top-full left-0 w-full bg-white border-b border-gray-100 shadow-2xl py-8 px-6 flex flex-col gap-6 text-right z-[80]"
           >
             {navigation && navigation.map((item, idx) => (
               <Link key={idx} href={item.href} onClick={() => setIsMenuOpen(false)} className="py-2 text-lg font-bold border-b border-gray-50 text-gray-800">

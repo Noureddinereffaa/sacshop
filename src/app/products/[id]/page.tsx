@@ -4,16 +4,15 @@ import { useEffect, useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import OrderForm from "@/components/OrderForm";
-import WhatsAppButton from "@/components/WhatsAppButton";
+
 import { useCartStore } from "@/store/cartStore";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import Image from "next/image";
 import Link from "next/link";
 import {
   Star, ShieldCheck, Truck, RefreshCcw, ChevronRight,
-  CheckCircle2, Package, Zap, Crown, Tag, Gift
+  CheckCircle2, Package, Zap, Crown, Tag, Gift, Sparkles, ShoppingBag, ArrowLeft, Search
 } from "lucide-react";
+import ProductCard from "@/components/ProductCard";
 import { motion } from "framer-motion";
 import { Product } from "@/types";
 
@@ -46,10 +45,11 @@ export default function ProductDetailPage() {
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
-  const [quantity, setQuantity] = useState<number>(200); // Default to minimum B2B quantity
+  const [quantity, setQuantity] = useState<number>(200); 
   const [numColors, setNumColors] = useState<number>(1);
   const [isDoubleSided, setIsDoubleSided] = useState<boolean>(false);
   const [showToast, setShowToast] = useState(false);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [customVariantSelections, setCustomVariantSelections] = useState<Record<string, string>>({});
 
   // Combine all possible images into one gallery - Memoized for stability
@@ -142,6 +142,16 @@ export default function ProductDetailPage() {
       }
     }
     fetchProduct();
+
+    async function fetchAllProducts() {
+      if (!supabase) {
+        setAllProducts([]);
+        return;
+      }
+      const { data } = await supabase.from("products").select("*").eq("is_published", true);
+      if (data) setAllProducts(data);
+    }
+    fetchAllProducts();
   }, [id, setCustomerStatus, setDiscountConfig, setAppliedVipOffer]);
 
   // Image Switching Logic
@@ -305,24 +315,7 @@ export default function ProductDetailPage() {
     : 0;
 
   const handleAddToCart = () => {
-    // Strict Validation
-    if (product.sizes?.length > 0 && !selectedSize) {
-      alert("يرجى اختيار المقاس");
-      return;
-    }
-    if (product.colors?.length > 0 && !selectedColor) {
-      alert("يرجى اختيار اللون");
-      return;
-    }
-    if (product.custom_variants) {
-      for (const group of product.custom_variants) {
-        if (group.required && !customVariantSelections[group.label]) {
-          alert(`يرجى اختيار ${group.label}`);
-          return;
-        }
-      }
-    }
-
+    // The OrderForm component handles validation before calling this function
     const customVarLabel = Object.entries(customVariantSelections)
       .filter(([_, v]) => v) // only include if value is set
       .map(([k, v]) => `${k}: ${v}`).join(" / ");
@@ -348,14 +341,16 @@ export default function ProductDetailPage() {
       content_ids: [product.id]
     });
 
-    // Open drawer
-    useCartStore.getState().setIsOpen(true);
-    router.push('/products');
+    // Show success message and stay on page
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+    // useCartStore.getState().setIsOpen(true);
+    // router.push('/products');
   };
 
   return (
-    <main className="min-h-screen bg-gray-50/50">
-      <Header />
+    <main className="min-h-screen bg-transparent">
+      <div className="pt-8">
       
 
 
@@ -497,18 +492,41 @@ export default function ProductDetailPage() {
                 )}
 
                 {/* Welcome Upsell Alert */}
-                {customerStatus === 'new' && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 flex items-center gap-3">
-                    <div className="w-10 h-10 bg-yellow-400 rounded-xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-yellow-400/20">
+                {(!customer || customerStatus === 'new') && (
+                  <motion.div 
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-2xl p-4 flex items-center gap-3 shadow-sm"
+                  >
+                    <div className="w-10 h-10 bg-yellow-400 rounded-xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-yellow-400/20 animate-bounce">
                       <Gift size={20} />
                     </div>
                     <div>
-                      <p className="text-sm font-black text-yellow-800">جرب هدايا الترحيب! 🎁</p>
+                      <p className="text-sm font-black text-yellow-800">هدية ترحيبية للزبائن الجدد! 🎁</p>
                       <p className="text-[10px] font-bold text-yellow-700/70 leading-tight mt-0.5">
-                        أضف {discountConfig.minItems} منتجات أو أكثر وستحصل على خصم {discountConfig.percentage}% فوري على السلة كاملة!
+                        أهلاً بك في أول طلب لك! أضف {discountConfig.minItems} قطع أو أكثر واحصل على تخفيض {discountConfig.percentage}% فوري.
                       </p>
                     </div>
-                  </div>
+                  </motion.div>
+                )}
+
+                {/* Returning Customer Offer */}
+                {customer && customerStatus === 'vip' && (
+                  <motion.div 
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="bg-gradient-to-r from-primary/10 to-transparent border border-primary/20 rounded-2xl p-4 flex items-center gap-3 shadow-sm"
+                  >
+                    <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-primary/20">
+                      <Sparkles size={20} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-black text-primary">مرحباً بعودتك، {customer.name}! ✨</p>
+                      <p className="text-[10px] font-bold text-primary/70 leading-tight mt-0.5">
+                        بما أنك زبون سابق، استمتع بأسعارك الخاصة وعروض الـ VIP الحصرية المطبقة تلقائياً.
+                      </p>
+                    </div>
+                  </motion.div>
                 )}
               </div>
 
@@ -741,8 +759,39 @@ export default function ProductDetailPage() {
         </div>
       </div>
 
-      <Footer />
-      <WhatsAppButton />
+      {/* Discover More Section */}
+      <section className="bg-white py-16 border-t border-gray-100">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-12">
+            <div className="text-right">
+              <h2 className="text-3xl font-black text-gray-950 mb-2">اكتشف المزيد من خدماتنا</h2>
+              <p className="text-gray-500 font-bold">كل ما تحتاجه لعلامتك التجارية في مكان واحد</p>
+            </div>
+            <Link href="/products" className="group flex items-center gap-2 text-primary font-black hover:gap-4 transition-all">
+              عرض المتجر الكامل <ArrowLeft size={20} />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {(allProducts.length > 0 ? allProducts : [])
+              .filter(p => p.id !== product.id)
+              .sort(() => 0.5 - Math.random())
+              .slice(0, 4)
+              .map(p => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+          </div>
+          
+          <div className="mt-12 text-center">
+             <Link href="/products">
+                <button className="bg-gray-100 text-gray-700 px-10 py-4 rounded-2xl font-black hover:bg-primary hover:text-white transition-all shadow-sm">
+                   الذهاب لجميع المنتجات
+                </button>
+             </Link>
+          </div>
+        </div>
+      </section>
+    </div>
     </main>
   );
 }

@@ -1,13 +1,10 @@
-import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import Partners from "@/components/Partners";
-import Footer from "@/components/Footer";
-import WhatsAppButton from "@/components/WhatsAppButton";
+
 import { ArrowRight, ShoppingBag, Truck, ShieldCheck, Zap } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import ProductCard from "@/components/ProductCard";
 import Link from "next/link";
-import PromoStrip from "@/components/PromoStrip";
 
 // Use ISR: Cache the page and regenerate every 60 seconds to slash TTFB server delay.
 export const revalidate = 60; 
@@ -35,10 +32,6 @@ export default async function Home() {
   }
   return (
     <main className="min-h-screen">
-      <Header />
-      <PromoStrip />
-
-
       <Hero />
       <Partners />
 
@@ -106,8 +99,6 @@ export default async function Home() {
         </div>
       </section>
 
-      <Footer />
-      <WhatsAppButton />
     </main>
   );
 }

@@ -9,8 +9,6 @@ import {
   Loader2, MessageCircle, Phone, Lock, Eye, EyeOff, Check,
   Truck, Clock, ShieldCheck, UserCircle, ArrowRight
 } from "lucide-react";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import Link from "next/link";
 
 interface CustomerData {
@@ -91,8 +89,11 @@ function LoginForm({ onSuccess }: { onSuccess: (phone: string, name: string) => 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError("");
     try {
+      const dzPhoneRegex = /^(05|06|07)[0-9]{8}$/;
+      if (!dzPhoneRegex.test(phone.trim())) {
+         throw new Error("يرجى إدخال رقم هاتف جزائري صحيح يبدأ بـ 05 أو 06 أو 07");
+      }
       // We verify by fetching customer with phone — if found, we consider it valid.
       // In a full-auth flow, you'd verify password with Supabase signInWithPassword.
       const res = await fetch("/api/customer", {
@@ -813,8 +814,7 @@ function AccountContent() {
 // ─── Page wrapper ──────────────────────────────────────────────────────────────
 export default function AccountPage() {
   return (
-    <main className="min-h-screen bg-gray-50/50 flex flex-col">
-      <Header />
+    <main className="min-h-screen bg-gray-50/50 flex flex-col pt-8">
       <Suspense fallback={
         <div className="flex-grow flex items-center justify-center">
           <Loader2 className="animate-spin text-primary" size={40} />
@@ -822,7 +822,6 @@ export default function AccountPage() {
       }>
         <AccountContent />
       </Suspense>
-      <Footer />
     </main>
   );
 }

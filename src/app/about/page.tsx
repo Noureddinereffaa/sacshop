@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { CheckCircle2, Truck, ShieldCheck, HeadphonesIcon, Award, ArrowLeft } from "lucide-react";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import WhatsAppButton from "@/components/WhatsAppButton";
+
 
 export const metadata = {
   title: "من نحن | Service Serigraphie",
@@ -11,8 +9,8 @@ export const metadata = {
 
 export default function AboutPage() {
   return (
-    <main className="min-h-screen">
-      <Header />
+    <main className="min-h-screen bg-transparent">
+      <div className="pt-8">
       {/* Hero */}
       <section className="bg-gradient-to-bl from-primary/5 via-white to-teal-50/30 py-24 text-right">
         <div className="container mx-auto px-4 max-w-4xl">
@@ -111,8 +109,7 @@ export default function AboutPage() {
           </Link>
         </div>
       </section>
-      <Footer />
-      <WhatsAppButton />
+    </div>
     </main>
   );
 }

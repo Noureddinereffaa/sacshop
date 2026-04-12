@@ -4,8 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Phone, Lock, User, Eye, EyeOff, Loader2, ShieldCheck, ArrowRight } from "lucide-react";
 import Link from "next/link";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
@@ -22,8 +20,9 @@ export default function RegisterPage() {
     setError("");
 
     try {
-      if (phone.length < 9) {
-         throw new Error("رقم الهاتف غير صحيح");
+      const dzPhoneRegex = /^(05|06|07)[0-9]{8}$/;
+      if (!dzPhoneRegex.test(phone.trim())) {
+         throw new Error("يرجى إدخال رقم هاتف جزائري صحيح (05/06/07XXXXXXXX)");
       }
       
       const res = await fetch("/api/register-manual", {
@@ -47,8 +46,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 flex flex-col">
-      <Header />
+    <main className="min-h-screen bg-transparent pt-12">
       
       <div className="flex-1 flex flex-col items-center justify-center p-4">
         <div className="w-full max-w-md bg-white rounded-[2.5rem] p-8 md:p-10 shadow-2xl relative overflow-hidden">
@@ -120,7 +118,6 @@ export default function RegisterPage() {
         </div>
       </div>
       
-      <Footer />
     </main>
   );
 }

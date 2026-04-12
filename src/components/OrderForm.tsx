@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Phone, User, Loader2, Edit3, MessageCircle, 
   ShoppingCart, Lock, Eye, EyeOff, CheckCircle2, 
-  Gift, Package 
+  Gift, Package, Crown, Sparkles
 } from "lucide-react";
 import Link from "next/link";
 import { CartItem, Product } from "@/types";
@@ -57,8 +57,9 @@ export default function OrderForm({
   const router = useRouter();
   const successRef = useRef<HTMLDivElement>(null);
 
+  const { customerStatus, customer, items } = useCartStore();
+
   const [formError, setFormError] = useState<string | null>(null);
-  const { items } = useCartStore();
   const showError = (msg: string) => {
     setFormError(msg);
     setTimeout(() => setFormError(null), 4000);
@@ -472,6 +473,36 @@ export default function OrderForm({
               />
             </div>
           </div>
+
+          {/* ── VIP Greeting (Relocated under notes) ── */}
+          <AnimatePresence>
+            {customerStatus === 'vip' && customer && (
+              <motion.div
+                initial={{ opacity: 0, y: -10, height: 0 }}
+                animate={{ opacity: 1, y: 0, height: 'auto' }}
+                exit={{ opacity: 0, y: -10, height: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 flex items-center gap-4 relative overflow-hidden group">
+                   {/* Background Decorative Icon */}
+                   <Crown size={60} className="absolute -bottom-4 -right-4 opacity-[0.03] rotate-12 group-hover:scale-110 transition-transform" />
+                   
+                   <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-primary/20">
+                      <Sparkles size={18} />
+                   </div>
+                   
+                   <div className="relative z-10">
+                      <p className="text-sm font-black text-gray-900 leading-tight">
+                        مرحباً بعودتك، {customer.name}! ✨
+                      </p>
+                      <p className="text-[10px] font-bold text-primary leading-tight mt-0.5">
+                        نسعد برؤيتك مجدداً؛ لقد قمنا بتفعيل رتبة الـ VIP الخاصة بك وتطبيق أسعارك الحصرية تلقائياً.
+                      </p>
+                   </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Pricing Summary */}
           <div className="bg-[#25D366]/5 p-4 rounded-2xl border border-[#25D366]/15">

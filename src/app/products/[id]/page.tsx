@@ -740,8 +740,8 @@ export default function ProductDetailPage() {
                         <Crown size={28} />
                       </div>
                       <div>
-                        <h4 className="font-black text-gray-900 text-lg leading-tight">
-                          مرحباً بعودتك، {localCustomer?.name || "بك"}! ✨
+                        <h4 className="font-black text-gray-900 text-lg leading-tight uppercase tracking-widest">
+                           عضويتك المميزة مفعلة
                         </h4>
                         <div className="flex items-center gap-2 mt-1">
                            <div className="flex text-yellow-400 gap-0.5">

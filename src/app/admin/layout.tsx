@@ -87,7 +87,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="min-h-screen bg-gray-50 flex" dir="rtl">
       {/* Sidebar - Desktop */}
-      <aside className="hidden lg:flex w-72 bg-gray-950 text-white fixed right-0 top-0 h-full flex-col z-40 shadow-2xl">
+      <aside className="hidden lg:flex w-72 bg-gray-950 text-white relative min-h-screen flex-col z-40 shadow-2xl">
         {/* Logo */}
         <div className="p-8 border-b border-white/10">
           <Link href="/" className="flex items-center gap-3 group">
@@ -186,9 +186,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </AnimatePresence>
 
       {/* Main Content */}
-      <div className="flex-1 lg:mr-72 w-full max-w-full overflow-hidden">
+      <div className="flex-1 w-full max-w-full overflow-hidden">
         {/* Top Bar */}
-        <header className="bg-white border-b border-gray-100 h-16 flex items-center justify-between px-4 lg:px-8 sticky top-0 z-30 shadow-sm">
+        <header className="bg-white border-b border-gray-100 h-16 flex items-center justify-between px-4 lg:px-8 relative z-30 shadow-sm">
           <div className="flex items-center gap-3">
             <button 
               className="lg:hidden p-2 -mr-2 hover:bg-gray-100 rounded-full text-gray-700 transition"

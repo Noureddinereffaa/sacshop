@@ -35,8 +35,10 @@ interface SettingsState {
     buttons: any[];
   };
   marketing: any;
+  slider: any[];
+  partners: any[];
   isLoaded: boolean;
-  setSettings: (branding: Branding, discounts: Discounts, navigation: NavigationItem[], promobar?: any, marketing?: any) => void;
+  setSettings: (branding: Branding, discounts: Discounts, navigation: NavigationItem[], promobar?: any, marketing?: any, slider?: any[], partners?: any[]) => void;
 }
 
 export const useSettingsStore = create<SettingsState>((set) => ({
@@ -60,7 +62,18 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   navigation: [],
   promobar: { enabled: true, bgColor: "#00AEEF", position: 'top', buttons: [] },
   marketing: {},
+  slider: [],
+  partners: [],
   isLoaded: false,
-  setSettings: (branding, discounts, navigation, promobar, marketing) => 
-    set({ branding, discounts, navigation, promobar: promobar || { enabled: true, bgColor: "#00AEEF", position: 'top', buttons: [] }, marketing: marketing || {}, isLoaded: true }),
+  setSettings: (branding, discounts, navigation, promobar, marketing, slider, partners) => 
+    set({ 
+      branding, 
+      discounts, 
+      navigation, 
+      promobar: promobar || { enabled: true, bgColor: "#00AEEF", position: 'top', buttons: [] }, 
+      marketing: marketing || {},
+      slider: slider || [],
+      partners: partners || [],
+      isLoaded: true 
+    }),
 }));

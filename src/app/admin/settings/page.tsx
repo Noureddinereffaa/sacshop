@@ -14,13 +14,15 @@ import {
   BarChart2,
   Trash2,
   Crown,
-  Zap
+  Zap,
+  Image as ImageIcon,
+  Users
 } from "lucide-react";
 import Link from "next/link";
 import ImageUploader from "@/components/ImageUploader";
 
 export default function AdminSettings() {
-  const [activeTab, setActiveTab] = useState<"branding" | "offers" | "marketing" | "email" | "navigation" | "promobar">("branding");
+  const [activeTab, setActiveTab] = useState<"branding" | "offers" | "marketing" | "email" | "navigation" | "promobar" | "slider" | "partners">("branding");
   const [settings, setSettings] = useState<Record<string, any>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -93,6 +95,8 @@ export default function AdminSettings() {
             {[
                { id: "branding", name: "الهوية والتواصل", icon: Palette },
                { id: "navigation", name: "قائمة الخدمات", icon: Globe },
+               { id: "slider", name: "سلايدر الرئيسية", icon: ImageIcon },
+               { id: "partners", name: "شركاء النجاح", icon: Users },
                { id: "promobar", name: "شريط العروض", icon: Zap },
                { id: "offers", name: "العروض والخصومات", icon: Tag },
                { id: "marketing", name: "بيكسلات التتبع", icon: BarChart2 },
@@ -112,7 +116,194 @@ export default function AdminSettings() {
          {/* Tab Content */}
          <div className="lg:col-span-3">
             <div className="bg-white rounded-[2.5rem] border border-gray-100 p-10 shadow-xl space-y-8">
-               {activeTab === "promobar" && (
+                {activeTab === "slider" && (
+                  <div className="space-y-8 animate-in fade-in duration-500 text-right">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="font-bold text-gray-800 text-xl">إدارة سلايدر الصفحة الرئيسية</h3>
+                      <button 
+                         onClick={() => {
+                           const sld = settings.slider || [];
+                           setSettings({ ...settings, slider: [...sld, { id: Date.now(), title: "عنوان السلايدر الجديد", subtitle: "وصف الخدمة هنا", buttonText: "تصفح المنتجات", image: "", link: "/products" }] });
+                         }}
+                         className="bg-primary/10 text-primary px-5 py-3 rounded-xl font-black hover:bg-primary/20 transition-all flex items-center gap-2"
+                      >
+                         <span>+ إضافة شريحة جديدة</span>
+                      </button>
+                    </div>
+
+                    <div className="space-y-6">
+                      {(settings.slider || []).map((slide: any, idx: number) => (
+                        <div key={slide.id || idx} className="bg-gray-50 border border-gray-100 rounded-[2rem] p-8 space-y-6 relative overflow-hidden">
+                           <button 
+                             onClick={() => {
+                               const sld = settings.slider.filter((_: any, i: number) => i !== idx);
+                               setSettings({ ...settings, slider: sld });
+                             }}
+                             className="absolute top-6 left-6 text-red-400 hover:text-red-600 p-2 bg-white rounded-xl shadow-sm transition-all"
+                           >
+                              <Trash2 size={18} />
+                           </button>
+
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                              <div className="space-y-4">
+                                <div className="space-y-2">
+                                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">الصورة (المقاس المثالي 2000x800)</label>
+                                  <ImageUploader 
+                                    value={slide.image}
+                                    onChange={(url) => {
+                                      const sld = [...settings.slider];
+                                      sld[idx].image = url;
+                                      setSettings({ ...settings, slider: sld });
+                                    }}
+                                    placeholder="رفع صورة السلايدر..."
+                                    label=""
+                                  />
+                                </div>
+                              </div>
+                              <div className="space-y-4">
+                                 <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">العنوان الرئيسي</label>
+                                    <input 
+                                       type="text"
+                                       value={slide.title}
+                                       onChange={(e) => {
+                                         const sld = [...settings.slider];
+                                         sld[idx].title = e.target.value;
+                                         setSettings({ ...settings, slider: sld });
+                                       }}
+                                       className="w-full bg-white border border-gray-100 rounded-xl py-3 px-4 font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 outline-none uppercase"
+                                    />
+                                 </div>
+                                 <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">الوصف الفرعي</label>
+                                    <input 
+                                       type="text"
+                                       value={slide.subtitle}
+                                       onChange={(e) => {
+                                         const sld = [...settings.slider];
+                                         sld[idx].subtitle = e.target.value;
+                                         setSettings({ ...settings, slider: sld });
+                                       }}
+                                       className="w-full bg-white border border-gray-100 rounded-xl py-3 px-4 font-medium text-gray-600 focus:ring-2 focus:ring-primary/20 outline-none"
+                                    />
+                                 </div>
+                                 <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                       <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">نص الزر</label>
+                                       <input 
+                                          type="text"
+                                          value={slide.buttonText}
+                                          onChange={(e) => {
+                                            const sld = [...settings.slider];
+                                            sld[idx].buttonText = e.target.value;
+                                            setSettings({ ...settings, slider: sld });
+                                          }}
+                                          className="w-full bg-white border border-gray-100 rounded-xl py-3 px-4 font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 outline-none"
+                                       />
+                                    </div>
+                                    <div className="space-y-2">
+                                       <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">الرابط</label>
+                                       <input 
+                                          type="text"
+                                          value={slide.link}
+                                          dir="ltr"
+                                          onChange={(e) => {
+                                            const sld = [...settings.slider];
+                                            sld[idx].link = e.target.value;
+                                            setSettings({ ...settings, slider: sld });
+                                          }}
+                                          className="w-full bg-white border border-gray-100 rounded-xl py-3 px-4 font-mono text-xs focus:ring-2 focus:ring-primary/20 outline-none"
+                                       />
+                                    </div>
+                                 </div>
+                              </div>
+                           </div>
+                        </div>
+                      ))}
+
+                      {(settings.slider || []).length === 0 && (
+                        <div className="text-center py-20 bg-gray-50 rounded-[2rem] border border-dashed border-gray-200">
+                           <ImageIcon size={48} className="text-gray-200 mx-auto mb-4" />
+                           <p className="text-gray-400 font-bold">لم تقم بإضافة أي شرائح سلايدر بعد.</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === "partners" && (
+                  <div className="space-y-8 animate-in fade-in duration-500 text-right">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="font-bold text-gray-800 text-xl">إدارة شركاء النجاح</h3>
+                      <button 
+                         onClick={() => {
+                           const prt = settings.partners || [];
+                           setSettings({ ...settings, partners: [...prt, { name: "اسم الشركة", logo: "" }] });
+                         }}
+                         className="bg-primary/10 text-primary px-5 py-3 rounded-xl font-black hover:bg-primary/20 transition-all flex items-center gap-2"
+                      >
+                         <span>+ إضافة شريك جديد</span>
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                       {(settings.partners || []).map((partner: any, idx: number) => (
+                         <div key={idx} className="bg-gray-50 p-6 rounded-[2rem] border border-gray-100 space-y-4 group relative">
+                            <button 
+                               onClick={() => {
+                                 const prt = settings.partners.filter((_: any, i: number) => i !== idx);
+                                 setSettings({ ...settings, partners: prt });
+                               }}
+                               className="absolute -top-2 -right-2 bg-white text-red-300 hover:text-red-500 p-2 rounded-xl shadow-lg border border-gray-50 opacity-0 group-hover:opacity-100 transition-all z-10"
+                            >
+                               <Trash2 size={16} />
+                            </button>
+                            
+                            <div className="bg-white rounded-2xl h-32 flex items-center justify-center p-4 shadow-sm border border-gray-50">
+                               {partner.logo ? (
+                                 <img src={partner.logo} alt={partner.name} className="max-h-full max-w-full object-contain" />
+                               ) : (
+                                 <Users size={32} className="text-gray-100" />
+                               )}
+                            </div>
+
+                            <div className="space-y-3">
+                               <input 
+                                 type="text"
+                                 value={partner.name}
+                                 onChange={(e) => {
+                                   const prt = [...settings.partners];
+                                   prt[idx].name = e.target.value;
+                                   setSettings({ ...settings, partners: prt });
+                                 }}
+                                 placeholder="اسم الشريك..."
+                                 className="w-full bg-white border border-gray-100 rounded-xl py-2 px-3 text-center font-bold text-gray-900 text-sm focus:ring-2 focus:ring-primary/10 outline-none"
+                               />
+                               <ImageUploader 
+                                 value={partner.logo}
+                                 onChange={(url) => {
+                                   const prt = [...settings.partners];
+                                   prt[idx].logo = url;
+                                   setSettings({ ...settings, partners: prt });
+                                 }}
+                                 label=""
+                                 placeholder="رفع شعار الشريك..."
+                               />
+                            </div>
+                         </div>
+                       ))}
+                    </div>
+
+                    {(settings.partners || []).length === 0 && (
+                        <div className="text-center py-20 bg-gray-50 rounded-[2rem] border border-dashed border-gray-200 col-span-full">
+                           <Users size={48} className="text-gray-200 mx-auto mb-4" />
+                           <p className="text-gray-400 font-bold">لم تقم بإضافة أي شركاء نجاح بعد.</p>
+                        </div>
+                    )}
+                  </div>
+                )}
+
+                {activeTab === "promobar" && (
                  <div className="space-y-8 animate-in fade-in duration-500 text-right">
                     <div className="flex items-center justify-between mb-4">
                        <h3 className="font-bold text-gray-800">إعدادات شريط العروض العلوي</h3>

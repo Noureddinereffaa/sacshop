@@ -5,28 +5,32 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-
-const slides = [
-  {
-    id: 1,
-    title: "أكياس ورقية فخمة لعلامتك التجارية",
-    subtitle: "جودة عالية وتصاميم مخصصة تعكس رقي منتجاتك",
-    buttonText: "تصفح المنتجات",
-    image: "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&q=80&w=2000",
-    color: "bg-primary"
-  },
-  {
-    id: 2,
-    title: "حلول تعبئة ذكية وصديقة للبيئة",
-    subtitle: "نقدم لك أفضل خامات الأكياس القماشية في الجزائر",
-    buttonText: "اطلب الآن",
-    image: "https://images.unsplash.com/photo-1598257006458-087169a1f08d?auto=format&fit=crop&q=80&w=2000",
-    color: "bg-teal-700"
-  }
-];
+import { useSettingsStore } from "@/store/settingsStore";
 
 export default function Hero() {
+  const { slider } = useSettingsStore();
   const [current, setCurrent] = useState(0);
+
+  const defaultSlides = [
+    {
+      id: 1,
+      title: "أكياس ورقية فخمة لعلامتك التجارية",
+      subtitle: "جودة عالية وتصاميم مخصصة تعكس رقي منتجاتك",
+      buttonText: "تصفح المنتجات",
+      image: "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&q=80&w=2000",
+      link: "/products"
+    },
+    {
+      id: 2,
+      title: "حلول تعبئة ذكية وصديقة للبيئة",
+      subtitle: "نقدم لك أفضل خامات الأكياس القماشية في الجزائر",
+      buttonText: "اطلب الآن",
+      image: "https://images.unsplash.com/photo-1598257006458-087169a1f08d?auto=format&fit=crop&q=80&w=2000",
+      link: "/products"
+    }
+  ];
+
+  const slides = slider && slider.length > 0 ? slider : defaultSlides;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -78,7 +82,7 @@ export default function Hero() {
             >
               {slides[current].subtitle}
             </motion.p>
-            <Link href="/products">
+            <Link href={slides[current].link || "/products"}>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}

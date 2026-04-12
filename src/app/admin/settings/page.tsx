@@ -247,85 +247,236 @@ export default function AdminSettings() {
                )}
 
                {activeTab === "branding" && (
-                 <div className="space-y-8 animate-in fade-in duration-500">
-                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        <div className="space-y-3">
-                           <label className="text-sm font-black text-gray-700 block mr-2">اسم المتجر</label>
+                 <div className="space-y-10 animate-in fade-in duration-500">
+                   
+                   {/* ── Section 1: Store Identity ── */}
+                   <div className="space-y-4">
+                     <div className="flex items-center gap-3 pb-3 border-b border-gray-100">
+                       <div className="w-8 h-8 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
+                         <Palette size={16} />
+                       </div>
+                       <h3 className="font-black text-gray-800">هوية المتجر</h3>
+                     </div>
+                     <div className="space-y-3">
+                       <label className="text-sm font-black text-gray-700 block">اسم المتجر</label>
+                       <input 
+                         type="text" 
+                         value={settings.branding?.storeName || ""}
+                         onChange={(e) => setSettings({ ...settings, branding: { ...settings.branding, storeName: e.target.value } })}
+                         className="w-full bg-gray-50 border-none rounded-2xl py-4 px-5 font-bold text-gray-900 text-lg focus:ring-2 focus:ring-primary/20 outline-none"
+                         placeholder="اسم المتجر..."
+                       />
+                     </div>
+                   </div>
+
+                   {/* ── Section 2: Color Palette ── */}
+                   <div className="space-y-4">
+                     <div className="flex items-center gap-3 pb-3 border-b border-gray-100">
+                       <div className="w-8 h-8 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600">
+                         <span className="text-sm font-black">🎨</span>
+                       </div>
+                       <h3 className="font-black text-gray-800">لوحة الألوان</h3>
+                     </div>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                       <div className="bg-gray-50 p-5 rounded-2xl space-y-3">
+                         <label className="text-sm font-black text-gray-700 block">اللون الأساسي (Primary)</label>
+                         <div className="flex gap-4 items-center">
+                           <div className="relative">
+                             <input 
+                               type="color" 
+                               value={settings.branding?.primaryColor || "#00AEEF"}
+                               onChange={(e) => setSettings({ ...settings, branding: { ...settings.branding, primaryColor: e.target.value } })}
+                               className="w-14 h-14 rounded-xl cursor-pointer border-none p-0 bg-transparent"
+                             />
+                           </div>
+                           <div className="flex-1">
+                             <input 
+                               type="text" 
+                               value={settings.branding?.primaryColor || "#00AEEF"}
+                               dir="ltr"
+                               onChange={(e) => setSettings({ ...settings, branding: { ...settings.branding, primaryColor: e.target.value } })}
+                               className="w-full bg-white border-none rounded-xl py-3 px-4 font-black text-gray-700 text-sm"
+                             />
+                             <p className="text-[10px] text-gray-400 font-bold mt-1 mr-1">يؤثر على الأزرار والروابط وعناصر التمييز</p>
+                           </div>
+                         </div>
+                         <div className="h-2 rounded-full" style={{ background: settings.branding?.primaryColor || "#00AEEF" }} />
+                       </div>
+                       <div className="bg-gray-50 p-5 rounded-2xl space-y-3">
+                         <label className="text-sm font-black text-gray-700 block">اللون الثانوي (Secondary)</label>
+                         <div className="flex gap-4 items-center">
+                           <div className="relative">
+                             <input 
+                               type="color" 
+                               value={settings.branding?.secondaryColor || "#e6007e"}
+                               onChange={(e) => setSettings({ ...settings, branding: { ...settings.branding, secondaryColor: e.target.value } })}
+                               className="w-14 h-14 rounded-xl cursor-pointer border-none p-0 bg-transparent"
+                             />
+                           </div>
+                           <div className="flex-1">
+                             <input 
+                               type="text" 
+                               value={settings.branding?.secondaryColor || "#e6007e"}
+                               dir="ltr"
+                               onChange={(e) => setSettings({ ...settings, branding: { ...settings.branding, secondaryColor: e.target.value } })}
+                               className="w-full bg-white border-none rounded-xl py-3 px-4 font-black text-gray-700 text-sm"
+                             />
+                             <p className="text-[10px] text-gray-400 font-bold mt-1 mr-1">يؤثر على العناصر التمييزية والشارات</p>
+                           </div>
+                         </div>
+                         <div className="h-2 rounded-full" style={{ background: settings.branding?.secondaryColor || "#e6007e" }} />
+                       </div>
+                     </div>
+                   </div>
+
+                   {/* ── Section 3: Logos ── */}
+                   <div className="space-y-4">
+                     <div className="flex items-center gap-3 pb-3 border-b border-gray-100">
+                       <div className="w-8 h-8 bg-orange-100 rounded-xl flex items-center justify-center">
+                         <span className="text-sm">🖼️</span>
+                       </div>
+                       <h3 className="font-black text-gray-800">الشعارات (Logos)</h3>
+                     </div>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                       <div className="space-y-3">
+                         <label className="text-sm font-black text-gray-700 flex items-center justify-between">
+                           شعار الهيدر (الشريط العلوي)
+                           <span className="text-[10px] text-gray-400 font-bold bg-gray-100 px-2 py-1 rounded-md">خلفية فاتحة</span>
+                         </label>
+                         <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 min-h-[60px] flex items-center justify-center">
+                           {settings.branding?.logo ? (
+                             <img src={settings.branding.logo} alt="header logo" className="max-h-12 object-contain" />
+                           ) : (
+                             <span className="text-gray-300 text-xs font-bold">لا يوجد شعار</span>
+                           )}
+                         </div>
+                         <div className="bg-gray-50 rounded-3xl border border-gray-100 overflow-hidden">
+                           <ImageUploader 
+                             value={settings.branding?.logo || ""} 
+                             onChange={(url) => setSettings({ ...settings, branding: { ...settings.branding, logo: url } })}
+                             label=""
+                             placeholder="رفع شعار الهيدر..."
+                           />
+                         </div>
+                       </div>
+                       <div className="space-y-3">
+                         <label className="text-sm font-black text-gray-700 flex items-center justify-between">
+                           شعار الفوتر (الشريط السفلي)
+                           <span className="text-[10px] text-gray-400 font-bold bg-gray-800 text-gray-300 px-2 py-1 rounded-md">خلفية داكنة</span>
+                         </label>
+                         <div className="bg-gray-900 p-4 rounded-2xl border border-gray-800 min-h-[60px] flex items-center justify-center">
+                           {settings.branding?.footerLogo ? (
+                             <img src={settings.branding.footerLogo} alt="footer logo" className="max-h-12 object-contain" />
+                           ) : (
+                             <span className="text-gray-600 text-xs font-bold">لا يوجد شعار (سيستخدم الهيدر تلقائياً)</span>
+                           )}
+                         </div>
+                         <div className="bg-gray-50 rounded-3xl border border-gray-100 overflow-hidden">
+                           <ImageUploader 
+                             value={settings.branding?.footerLogo || ""} 
+                             onChange={(url) => setSettings({ ...settings, branding: { ...settings.branding, footerLogo: url } })}
+                             label=""
+                             placeholder="رفع شعار الفوتر..."
+                           />
+                         </div>
+                       </div>
+                     </div>
+                   </div>
+
+                   {/* ── Section 4: Contact & Communication ── */}
+                   <div className="space-y-4">
+                     <div className="flex items-center gap-3 pb-3 border-b border-gray-100">
+                       <div className="w-8 h-8 bg-green-100 rounded-xl flex items-center justify-center text-green-600">
+                         <MessageSquare size={16} />
+                       </div>
+                       <h3 className="font-black text-gray-800">معلومات التواصل</h3>
+                     </div>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                       <div className="space-y-2">
+                         <label className="text-sm font-black text-gray-700 flex items-center gap-2">
+                           <span className="text-green-500">📱</span> رقم الواتساب الرئيسي
+                         </label>
+                         <div className="relative">
                            <input 
                              type="text" 
-                             value={settings.branding?.storeName || "Service Serigraphie"}
-                             onChange={(e) => setSettings({ ...settings, branding: { ...settings.branding, storeName: e.target.value } })}
-                             className="w-full bg-gray-50 border-none rounded-xl py-3 px-4 font-bold text-gray-900"
+                             dir="ltr"
+                             value={settings.branding?.whatsappNumber || "213"}
+                             onChange={(e) => setSettings({ ...settings, branding: { ...settings.branding, whatsappNumber: e.target.value } })}
+                             className="w-full bg-gray-50 border-none rounded-2xl py-4 pr-4 pl-4 font-black text-gray-900 focus:ring-2 focus:ring-green-200 outline-none"
+                             placeholder="2135XXXXXXXX"
                            />
-                        </div>
-                        <div className="space-y-3">
-                           <label className="text-sm font-black text-gray-700 block mr-2">لون أساسي (Primary)</label>
-                           <div className="flex gap-4 items-center">
-                              <input 
-                                type="color" 
-                                value={settings.branding?.primaryColor || "#00AEEF"}
-                                onChange={(e) => setSettings({ ...settings, branding: { ...settings.branding, primaryColor: e.target.value } })}
-                                className="w-12 h-12 rounded-lg cursor-pointer border-none p-0 bg-transparent"
-                              />
-                              <input 
-                                type="text" 
-                                value={settings.branding?.primaryColor || "#00AEEF"}
-                                dir="ltr"
-                                className="flex-1 bg-gray-50 border-none rounded-xl py-3 px-4 font-bold text-gray-600"
-                                readOnly
-                              />
-                           </div>
-                        </div>
-                        <div className="space-y-3">
-                           <label className="text-sm font-black text-gray-700 block mr-2">لون ثانوي (Secondary)</label>
-                           <div className="flex gap-4 items-center">
-                              <input 
-                                type="color" 
-                                value={settings.branding?.secondaryColor || "#e6007e"}
-                                onChange={(e) => setSettings({ ...settings, branding: { ...settings.branding, secondaryColor: e.target.value } })}
-                                className="w-12 h-12 rounded-lg cursor-pointer border-none p-0 bg-transparent"
-                              />
-                              <input 
-                                type="text" 
-                                value={settings.branding?.secondaryColor || "#e6007e"}
-                                dir="ltr"
-                                className="flex-1 bg-gray-50 border-none rounded-xl py-3 px-4 font-bold text-gray-600"
-                                readOnly
-                              />
-                           </div>
-                        </div>
-                     </div>
-
-                     <div className="space-y-3">
-                        <label className="text-sm font-black text-gray-700 flex items-center justify-between mr-2">
-                           رفع شعار المتجر (Logo)
-                           <span className="text-[10px] text-gray-400 font-bold bg-gray-50 px-2 py-1 rounded-md">يُفضّل عرضي (Horizontal)</span>
-                        </label>
-                        <div className="bg-gray-50 p-4 rounded-3xl border border-gray-100">
-                           <ImageUploader 
-                              value={settings.branding?.logo || ""} 
-                              onChange={(url) => setSettings({ ...settings, branding: { ...settings.branding, logo: url } })}
-                              label=""
-                              placeholder="اسحب أو ارفع اللوجو هنا..."
-                           />
-                        </div>
-                     </div>
-
-
-                    <div className="space-y-3">
-                       <label className="text-sm font-black text-gray-700 block mr-2">رقم الواتساب للاستفسارات واستقبال الطلبات</label>
-                       <div className="relative">
-                          <MessageSquare className="absolute right-4 top-1/2 -translate-y-1/2 text-green-500" size={18} />
-                          <input 
-                            type="text" 
-                            dir="ltr"
-                            value={settings.branding?.whatsappNumber || "213"}
-                            onChange={(e) => setSettings({ ...settings, branding: { ...settings.branding, whatsappNumber: e.target.value } })}
-                            className="w-full bg-gray-50 border-none rounded-xl py-3 pr-12 pl-4 font-black"
-                          />
+                         </div>
+                         <p className="text-[10px] text-gray-400 font-bold px-1">الصيغة الدولية بدون + (مثال: 213557123456)</p>
+                         <div className="bg-green-50 border border-green-100 rounded-xl p-3 text-xs text-green-700 font-bold">
+                           ✅ يُستخدم في: زر الواتساب العائم + تأكيدات الطلبات + الفوتر
+                         </div>
                        </div>
-                       <p className="text-[10px] text-gray-400 font-bold mr-2 uppercase tracking-tighter">أدخل الرقم بالصيغة الدولية (مثال: 2135XXXXXXXX)</p>
-                    </div>
+                       <div className="space-y-2">
+                         <label className="text-sm font-black text-gray-700 flex items-center gap-2">
+                           <span>📧</span> البريد الإلكتروني
+                         </label>
+                         <input 
+                           type="email" 
+                           dir="ltr"
+                           value={settings.branding?.contactEmail || ""}
+                           onChange={(e) => setSettings({ ...settings, branding: { ...settings.branding, contactEmail: e.target.value } })}
+                           className="w-full bg-gray-50 border-none rounded-2xl py-4 px-4 font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 outline-none"
+                           placeholder="support@yourstore.dz"
+                         />
+                       </div>
+                       <div className="space-y-2 md:col-span-2">
+                         <label className="text-sm font-black text-gray-700 flex items-center gap-2">
+                           <span>📍</span> العنوان / الولاية
+                         </label>
+                         <input 
+                           type="text"
+                           value={settings.branding?.address || ""}
+                           onChange={(e) => setSettings({ ...settings, branding: { ...settings.branding, address: e.target.value } })}
+                           className="w-full bg-gray-50 border-none rounded-2xl py-4 px-4 font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 outline-none"
+                           placeholder="مثال: الجزائر العاصمة، حيدرة"
+                         />
+                       </div>
+                     </div>
+                   </div>
+
+                   {/* ── Section 5: Social Media ── */}
+                   <div className="space-y-4">
+                     <div className="flex items-center gap-3 pb-3 border-b border-gray-100">
+                       <div className="w-8 h-8 bg-blue-100 rounded-xl flex items-center justify-center">
+                         <span className="text-sm">🌐</span>
+                       </div>
+                       <h3 className="font-black text-gray-800">روابط التواصل الاجتماعي</h3>
+                     </div>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                       <div className="space-y-2">
+                         <label className="text-sm font-black text-gray-700 flex items-center gap-2">
+                           <span className="text-blue-600">📘</span> رابط Facebook
+                         </label>
+                         <input 
+                           type="url" 
+                           dir="ltr"
+                           value={settings.branding?.facebookUrl || ""}
+                           onChange={(e) => setSettings({ ...settings, branding: { ...settings.branding, facebookUrl: e.target.value } })}
+                           className="w-full bg-gray-50 border-none rounded-2xl py-4 px-4 font-bold text-gray-900 focus:ring-2 focus:ring-blue-200 outline-none text-sm"
+                           placeholder="https://facebook.com/yourpage"
+                         />
+                       </div>
+                       <div className="space-y-2">
+                         <label className="text-sm font-black text-gray-700 flex items-center gap-2">
+                           <span className="text-pink-600">📸</span> رابط Instagram
+                         </label>
+                         <input 
+                           type="url" 
+                           dir="ltr"
+                           value={settings.branding?.instagramUrl || ""}
+                           onChange={(e) => setSettings({ ...settings, branding: { ...settings.branding, instagramUrl: e.target.value } })}
+                           className="w-full bg-gray-50 border-none rounded-2xl py-4 px-4 font-bold text-gray-900 focus:ring-2 focus:ring-pink-200 outline-none text-sm"
+                           placeholder="https://instagram.com/yourpage"
+                         />
+                       </div>
+                     </div>
+                   </div>
+
                  </div>
                )}
 

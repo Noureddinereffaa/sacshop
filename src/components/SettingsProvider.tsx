@@ -23,9 +23,14 @@ export default function SettingsProvider({ children }: { children: React.ReactNo
         const branding = {
           storeName: settingsMap.branding?.storeName || "SacShop",
           logo: settingsMap.branding?.logo || "",
+          footerLogo: settingsMap.branding?.footerLogo || settingsMap.branding?.logo || "",
           primaryColor: settingsMap.branding?.primaryColor || "#00AEEF",
           secondaryColor: settingsMap.branding?.secondaryColor || "#e6007e",
           whatsappNumber: settingsMap.branding?.whatsappNumber || "213",
+          contactEmail: settingsMap.branding?.contactEmail || "",
+          address: settingsMap.branding?.address || "الجزائر العاصمة",
+          facebookUrl: settingsMap.branding?.facebookUrl || "#",
+          instagramUrl: settingsMap.branding?.instagramUrl || "#",
         };
 
         const discounts = {

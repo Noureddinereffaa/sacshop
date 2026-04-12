@@ -83,6 +83,7 @@ function parseOrderNotes(notes?: string) {
 // ─── Login sub-form (for returning visitors coming directly to /account) ───────
 function LoginForm({ onSuccess }: { onSuccess: (phone: string, name: string) => void }) {
   const [phone, setPhone] = useState("");
+  const [name, setName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -90,6 +91,7 @@ function LoginForm({ onSuccess }: { onSuccess: (phone: string, name: string) => 
     e.preventDefault();
     setIsLoading(true);
     try {
+      if (!name.trim()) throw new Error("يرجى إدخال الاسم الكامل");
       const dzPhoneRegex = /^(05|06|07)[0-9]{8}$/;
       if (!dzPhoneRegex.test(phone.trim())) {
          throw new Error("يرجى إدخال رقم هاتف جزائري صحيح يبدأ بـ 05 أو 06 أو 07");
@@ -99,7 +101,7 @@ function LoginForm({ onSuccess }: { onSuccess: (phone: string, name: string) => 
       const res = await fetch("/api/customer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: phone.trim() }),
+        body: JSON.stringify({ phone: phone.trim(), name: name.trim() }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error("لم يتم العثور على حساب بهذا الرقم.");
@@ -125,6 +127,16 @@ function LoginForm({ onSuccess }: { onSuccess: (phone: string, name: string) => 
       </div>
       {error && <div className="bg-red-50 text-red-600 p-3 rounded-xl mb-5 font-bold text-sm">{error}</div>}
       <form onSubmit={handleSubmit} className="space-y-4 text-right" dir="rtl">
+        <div className="space-y-2">
+          <label className="text-sm font-black text-gray-700">الاسم الكامل</label>
+          <div className="relative">
+            <UserCircle className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={17} />
+            <input required type="text" placeholder="مثال: محمد العمري"
+              value={name} onChange={e => setName(e.target.value)}
+              className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl py-4 pr-12 pl-4 font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" />
+          </div>
+        </div>
+
         <div className="space-y-2">
           <label className="text-sm font-black text-gray-700">رقم الهاتف</label>
           <div className="relative">

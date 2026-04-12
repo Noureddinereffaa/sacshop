@@ -31,7 +31,7 @@ function calculateStarLevel(totalOrders: number): number {
 
 export async function POST(request: Request) {
   try {
-    const { phone } = await request.json();
+    const { phone, name } = await request.json();
 
     if (!phone) {
       return NextResponse.json({ error: "Phone number is required" }, { status: 400 });
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
          .from('customers')
          .insert({
            phone: phone,
-           name: "زبون جديد", // Default name
+           name: name || "زبون جديد", // Use provided name or default
            total_orders: 0,
            total_spent: 0
          })

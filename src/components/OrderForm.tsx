@@ -116,7 +116,7 @@ export default function OrderForm({
       try {
         const res = await fetch("/api/customer", {
           method: "POST",
-          body: JSON.stringify({ phone }),
+          body: JSON.stringify({ phone, name: formData.name.trim() }),
         });
         const data = await res.json();
         
@@ -538,7 +538,10 @@ export default function OrderForm({
                       // Check user instantly to set VIP status for the basket
                       const res = await fetch("/api/customer", {
                         method: "POST",
-                        body: JSON.stringify({ phone: phoneToSave }),
+                        body: JSON.stringify({ 
+                          phone: phoneToSave, 
+                          name: formData.name.trim() 
+                        }),
                       });
                       const data = await res.json();
                       const { setCustomerStatus, setAppliedVipOffer, setDiscountConfig } = useCartStore.getState();

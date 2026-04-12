@@ -55,7 +55,7 @@ export default function ProductDetailPage() {
   // Combine all possible images into one gallery - Memoized for stability
   const allImages = useMemo(() => {
     if (!product) return [];
-    const variantExtraImages = product.variant_images?.map(vi => vi.image_url) || [];
+    const variantExtraImages = product.variant_images?.map((vi: { image_url: string }) => vi.image_url) || [];
     return Array.from(new Set([
       product.image_url, 
       ...(product.gallery || []), 
@@ -152,7 +152,7 @@ export default function ProductDetailPage() {
     const trimmedColor = selectedColor?.trim();
 
     // 1. Try exact match (Both size and color)
-    let match = product.variant_images.find(vi => 
+    let match = product.variant_images.find((vi: any) => 
       vi.size?.trim() === trimmedSize && 
       vi.color?.trim() === trimmedColor &&
       vi.size && vi.color
@@ -160,7 +160,7 @@ export default function ProductDetailPage() {
 
     // 2. Fallback to Color match
     if (!match && trimmedColor) {
-      match = product.variant_images.find(vi => 
+      match = product.variant_images.find((vi: any) => 
         (!vi.size || vi.size.trim() === "") && 
         vi.color?.trim() === trimmedColor
       );
@@ -168,7 +168,7 @@ export default function ProductDetailPage() {
 
     // 3. Fallback to Size match
     if (!match && trimmedSize) {
-      match = product.variant_images.find(vi => 
+      match = product.variant_images.find((vi: any) => 
         (!vi.color || vi.color.trim() === "") && 
         vi.size?.trim() === trimmedSize
       );
@@ -190,13 +190,13 @@ export default function ProductDetailPage() {
     }
     const colorNames = product.size_color_availability[selectedSize];
     if (!colorNames) return product.colors || []; // Fallback to all if size not mapped
-    return (product.colors || []).filter(c => colorNames.includes(c.name));
+    return (product.colors || []).filter((c: any) => colorNames.includes(c.name));
   }, [product, selectedSize]);
 
   // Auto-reset or switch color if it becomes unavailable for the new size
   useEffect(() => {
     if (!selectedSize || availableColors.length === 0) return;
-    const isStillAvailable = availableColors.find(c => c.name === selectedColor);
+    const isStillAvailable = availableColors.find((c: any) => c.name === selectedColor);
     if (!isStillAvailable && selectedColor !== "") {
       setSelectedColor(availableColors[0]?.name || "");
     }
@@ -513,7 +513,7 @@ export default function ProductDetailPage() {
                     {selectedColor && <span className="text-primary font-bold">({selectedColor})</span>}
                   </label>
                   <div className="flex gap-3 flex-wrap">
-                    {availableColors.map(color => (
+                    {availableColors.map((color: any) => (
                       <button
                         key={color.name}
                         onClick={() => setSelectedColor(color.name === selectedColor ? "" : color.name)}
@@ -630,9 +630,9 @@ export default function ProductDetailPage() {
               {/* Custom Variant Groups */}
               {product.custom_variants && product.custom_variants.length > 0 && (
                 <div className="space-y-4 pt-4 border-t border-gray-100">
-                  {product.custom_variants.map((group, gIdx) => (
+                  {product.custom_variants.map((group: any, gIdx: number) => (
                     <div key={`cv-${gIdx}`} className="space-y-2">
-                      <label className="text-sm font-black text-gray-700 flex items-center gap-2">
+                       <label className="text-sm font-black text-gray-700 flex items-center gap-2">
                         {group.label}
                         {group.required && <span className="text-[10px] text-red-500 font-bold">(إجباري)</span>}
                         {customVariantSelections[group.label] && (
@@ -640,7 +640,7 @@ export default function ProductDetailPage() {
                         )}
                       </label>
                       <div className="flex gap-2 flex-wrap">
-                        {group.options.map(opt => (
+                        {group.options.map((opt: string) => (
                           <button
                             type="button"
                             key={opt}
@@ -666,9 +666,9 @@ export default function ProductDetailPage() {
               {/* Trust Badges */}
               <div className="grid grid-cols-2 gap-3 pt-2">
                 {[
-                  { icon: Truck, text: "توصيل 58 ولاية" },
+                  { icon: Star, text: "تصميم مخصص" },
                   { icon: RefreshCcw, text: "ضمان الاستبدال" },
-                  { icon: ShieldCheck, text: "دفع آمن عند الاستلام" },
+                  { icon: ShieldCheck, text: "منتج أصلي 100%" },
                   { icon: CheckCircle2, text: "جودة مضمونة 100%" },
                 ].map(badge => (
                   <div key={badge.text} className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl">

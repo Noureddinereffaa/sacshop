@@ -112,7 +112,6 @@ export default function OrderForm({
       id: orderId,
       customer_name: formData.name.trim(),
       customer_phone: formData.phone.trim(),
-      customer_address: "يُحدد عبر واتساب",
       product_id: isCartOrder ? null : productId,
       quantity: isCartOrder ? null : quantity,
       size: isCartOrder ? null : selectedSize,
@@ -121,7 +120,6 @@ export default function OrderForm({
       total_price: productPrice,
       applied_offer_id: appliedOfferId || null,
       status: "new",
-      delivery_type: "home",
       cart_items: isCartOrder ? cartItems : [],
       admin_notes: formData.notes.trim() || null,
       metadata: !isCartOrder ? { 

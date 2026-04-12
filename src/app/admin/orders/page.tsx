@@ -25,7 +25,6 @@ interface Order {
   customer_name: string;
   customer_phone: string;
   customer_email?: string;
-  customer_address: string;
   product_id?: string;
   quantity?: number;
   size?: string;
@@ -358,9 +357,6 @@ export default function AdminOrders() {
                    </div>
                    <p className="text-gray-600 text-sm font-medium flex items-center gap-2 mb-2" dir="ltr">
                      <PhoneCall size={14} className="text-gray-400" /> {selectedOrder.customer_phone}
-                   </p>
-                   <p className="text-gray-600 text-sm flex items-start gap-2">
-                     📍 <span className="leading-relaxed">{selectedOrder.customer_address || "العنوان غير متوفر"}</span>
                    </p>
                    {selectedOrder.admin_notes?.includes("pdf_url:") && (
                      <div className="mt-4 pt-4 border-t border-gray-100">

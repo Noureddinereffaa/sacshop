@@ -16,7 +16,6 @@ export interface CustomerData {
   total_orders: number;
   total_spent: number;
   is_vip: boolean;
-  wilaya_id?: number | null;
   address?: string;
 }
 
@@ -29,7 +28,6 @@ export interface OrderItem {
   product_price: number;
   total_price: number;
   status: string;
-  delivery_type: string;
   quantity: number;
   size?: string | null;
   color?: string | null;

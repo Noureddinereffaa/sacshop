@@ -9,7 +9,6 @@ interface Customer {
   id: string;
   name: string;
   phone: string;
-  wilaya_id: number;
   is_vip: boolean;
   total_orders: number;
   total_spent: number;
@@ -124,9 +123,6 @@ export default function AdminCustomersPage() {
                           <p className="font-bold text-gray-900 flex items-center gap-1.5">
                             {customer.name}
                             {customer.is_vip && <Crown size={14} className="text-yellow-500" />}
-                          </p>
-                          <p className="text-xs text-gray-400 flex items-center gap-1">
-                            <MapPin size={10} /> ولاية رقم {customer.wilaya_id}
                           </p>
                         </div>
                       </div>

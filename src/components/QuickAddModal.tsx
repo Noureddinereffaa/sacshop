@@ -117,6 +117,13 @@ export default function QuickAddModal() {
       custom_variant_selections: customVariantSelections
     });
 
+    window.trackMarketingEvent?.("AddToCart", { 
+      content_name: product.name, 
+      value: unitPrice * quantity, 
+      currency: "DZD",
+      content_ids: [product.id]
+    });
+
     useCartStore.getState().setIsOpen(true);
     close();
     router.push('/products');
@@ -151,7 +158,7 @@ export default function QuickAddModal() {
               <div className="md:w-2/5 bg-gray-50 p-6 flex flex-col items-center justify-center relative">
                 <button onClick={close} className="absolute top-4 right-4 md:hidden p-2 bg-white rounded-full shadow-md text-gray-500"><X size={20}/></button>
                 <div className="w-full aspect-square relative rounded-3xl overflow-hidden shadow-lg border border-white">
-                  <Image src={product.image_url} alt={product.name} fill className="object-cover" />
+                  <Image src={product.image_url} alt={product.name} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
                 </div>
                 <div className="mt-4 text-center">
                   <h3 className="font-black text-gray-900 line-clamp-1">{product.name}</h3>

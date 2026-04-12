@@ -36,7 +36,14 @@ export default function Header() {
         <Link href="/" className="flex items-center gap-2 sm:gap-3 group">
           {branding.logo ? (
             <div className="relative w-32 h-10 sm:w-48 sm:h-14 overflow-hidden flex-shrink-0 hover:scale-[1.02] transition-transform">
-              <Image src={branding.logo} alt={branding.storeName} fill className="object-contain object-right" />
+              <Image 
+                src={branding.logo} 
+                alt={branding.storeName} 
+                fill 
+                priority
+                sizes="(max-width: 640px) 128px, 192px"
+                className="object-contain object-right" 
+              />
             </div>
           ) : (
             <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-lg sm:text-2xl">

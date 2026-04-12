@@ -15,7 +15,9 @@ export const metadata: Metadata = {
 };
 
 import SettingsProvider from "@/components/SettingsProvider";
-import QuickAddModal from "@/components/QuickAddModal";
+import dynamic from "next/dynamic";
+
+const QuickAddModal = dynamic(() => import("@/components/QuickAddModal"));
 
 export default function RootLayout({
   children,

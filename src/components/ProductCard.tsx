@@ -40,6 +40,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           src={image || "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&q=80&w=800"}
           alt={name}
           fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
           className="object-cover transition-transform duration-700 group-hover:scale-110"
         />
         {/* Hover Overlay */}

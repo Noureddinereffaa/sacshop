@@ -9,8 +9,8 @@ import ProductCard from "@/components/ProductCard";
 import Link from "next/link";
 import PromoStrip from "@/components/PromoStrip";
 
-
-export const revalidate = 0; // Ensure dynamic rendering for settings changes
+// Use ISR: Cache the page and regenerate every 60 seconds to slash TTFB server delay.
+export const revalidate = 60; 
 
 export default async function Home() {
   const { data: rawProducts } = supabase 

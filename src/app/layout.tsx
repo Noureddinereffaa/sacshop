@@ -17,8 +17,8 @@ export const metadata: Metadata = {
   viewport: "width=device-width, initial-scale=1",
   themeColor: "#FF3366",
   icons: {
-    icon: "/favicon.png",
-    apple: "/favicon.png",
+    icon: "/favicon.png?v=2",
+    apple: "/favicon.png?v=2",
   },
   openGraph: {
     title: "Service Serigraphie | خدمات الطباعة والتغليف الاحترافية",

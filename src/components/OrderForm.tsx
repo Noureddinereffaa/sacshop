@@ -246,6 +246,28 @@ export default function OrderForm({
     });
     if (error) throw new Error(error.message);
 
+    // ── Increment Offer Usage Count ───────────────────────────────────────────
+    if (appliedOfferId) {
+      // We use a simple update to increment. In high-concurrency, an RPC is better,
+      // but for this scale, we'll fetch and increment or just use the current known state.
+      try {
+        const { data: offerData } = await supabase
+          .from("vip_offers")
+          .select("uses_count")
+          .eq("id", appliedOfferId)
+          .single();
+        
+        if (offerData) {
+          await supabase
+            .from("vip_offers")
+            .update({ uses_count: (offerData.uses_count || 0) + 1 })
+            .eq("id", appliedOfferId);
+        }
+      } catch (err) {
+        console.error("Error incrementing offer usage:", err);
+      }
+    }
+
     // ── Generate PDF and upload to Supabase Storage ───────────────────────────
     setIsPdfGenerating(true);
     let pdfUrl: string | null = null;

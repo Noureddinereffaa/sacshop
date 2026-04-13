@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { Search, Loader2, Users, Crown, ShoppingBag, MapPin } from "lucide-react";
-import { motion } from "framer-motion";
+import { Search, Loader2, Users, Crown, ShoppingBag, MapPin, Trash2, CheckCircle, AlertTriangle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Customer {
   id: string;
@@ -20,6 +20,14 @@ export default function AdminCustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isDeletingBulk, setIsDeletingBulk] = useState(false);
+  const [toast, setToast] = useState<{message: string, type: 'success'|'error'} | null>(null);
+
+  const showToast = (message: string, type: 'success'|'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   useEffect(() => {
     async function fetchCustomers() {
@@ -39,6 +47,53 @@ export default function AdminCustomersPage() {
     c.name.toLowerCase().includes(search.toLowerCase()) || 
     c.phone.includes(search)
   );
+
+  async function fetchCustomers() {
+    if (!supabase) { setIsLoading(false); return; }
+    const { data } = await supabase
+      .from("customers")
+      .select("*")
+      .order("last_order_at", { ascending: false });
+    
+    setCustomers(data || []);
+  }
+
+  const deleteBulkCustomers = async () => {
+    if (!selectedIds.length) return;
+    if (!confirm(`هل أنت متأكد أنك تريد حذف ${selectedIds.length} زبائن نهائياً؟ سيتم حذف بياناتهم فقط، ولن تتأثر الطلبات المرتبطة بهم.`)) return;
+    
+    setIsDeletingBulk(true);
+    if (!supabase) return;
+    
+    const { error } = await supabase
+      .from("customers")
+      .delete()
+      .in("id", selectedIds);
+    
+    if (!error) {
+      showToast(`تم حذف ${selectedIds.length} زبائن بنجاح`, 'success');
+      setSelectedIds([]);
+      fetchCustomers();
+    } else {
+      showToast('حدث خطأ أثناء الحذف الجماعي', 'error');
+    }
+    setIsDeletingBulk(false);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === filtered.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filtered.map(c => c.id));
+    }
+  };
+
+  const toggleSelectCustomer = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
 
   return (
     <div className="space-y-8">
@@ -74,16 +129,29 @@ export default function AdminCustomersPage() {
         ))}
       </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-        <input
-          type="text"
-          placeholder="ابحث بالاسم أو رقم الهاتف..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="w-full bg-white border border-gray-200 rounded-xl py-3 pr-12 pl-4 focus:ring-2 focus:ring-primary/20 outline-none font-medium text-sm"
-        />
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div className="relative flex-1 w-full">
+          <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <input
+            type="text"
+            placeholder="ابحث بالاسم أو رقم الهاتف..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full bg-white border border-gray-200 rounded-xl py-3 pr-12 pl-4 focus:ring-2 focus:ring-primary/20 outline-none font-medium text-sm"
+          />
+        </div>
+        {selectedIds.length > 0 && (
+          <motion.button 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            onClick={deleteBulkCustomers}
+            disabled={isDeletingBulk}
+            className="bg-red-50 text-red-600 px-6 py-3 rounded-xl text-sm font-black flex items-center gap-2 border border-red-100 hover:bg-red-100 transition-all disabled:opacity-50 whitespace-nowrap w-full md:w-auto justify-center"
+          >
+            <Trash2 size={18} />
+            حذف المحدد ({selectedIds.length})
+          </motion.button>
+        )}
       </div>
 
       {/* Table */}
@@ -102,16 +170,32 @@ export default function AdminCustomersPage() {
             <table className="w-full text-right text-sm">
               <thead>
                 <tr className="bg-gray-50 text-gray-500 text-xs font-black uppercase tracking-widest border-b border-gray-100">
-                  <th className="px-6 py-5">الزبون</th>
-                  <th className="px-6 py-5">رقم الهاتف</th>
-                  <th className="px-6 py-5">المشتريات</th>
-                  <th className="px-6 py-5">الإنفاق الإجمالي</th>
-                  <th className="px-6 py-5">تاريخ آخر طلب</th>
+                  <th className="px-6 py-5 w-10">
+                    <input 
+                      type="checkbox" 
+                      className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                      checked={selectedIds.length === filtered.length && filtered.length > 0}
+                      onChange={toggleSelectAll}
+                    />
+                  </th>
+                  <th className="px-6 py-5 text-right">الزبون</th>
+                  <th className="px-6 py-5 text-right">رقم الهاتف</th>
+                  <th className="px-6 py-5 text-right">المشتريات</th>
+                  <th className="px-6 py-5 text-right">الإنفاق الإجمالي</th>
+                  <th className="px-6 py-5 text-right">تاريخ آخر طلب</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {filtered.map(customer => (
-                  <tr key={customer.id} className="hover:bg-gray-50/50 transition-colors">
+                  <tr key={customer.id} className={`hover:bg-gray-50/50 transition-colors group cursor-pointer ${selectedIds.includes(customer.id) ? 'bg-primary/5' : ''}`} onClick={(e) => toggleSelectCustomer(customer.id, e as any)}>
+                    <td className="px-6 py-4">
+                      <input 
+                        type="checkbox" 
+                        className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                        checked={selectedIds.includes(customer.id)}
+                        onChange={(e) => e.stopPropagation()} 
+                      />
+                    </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black ${
@@ -155,6 +239,32 @@ export default function AdminCustomersPage() {
           </div>
         )}
       </div>
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className={`fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 font-bold text-sm border-2 ${
+              toast.type === 'success' 
+              ? 'bg-white border-green-200 text-gray-800' 
+              : 'bg-red-50 border-red-200 text-red-800'
+            }`}
+          >
+            {toast.type === 'success' ? (
+              <div className="w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
+                <CheckCircle size={16} />
+              </div>
+            ) : (
+              <div className="w-8 h-8 bg-red-100 text-red-600 rounded-full flex items-center justify-center">
+                <AlertTriangle size={16} />
+              </div>
+            )}
+            {toast.message}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

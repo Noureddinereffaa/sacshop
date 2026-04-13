@@ -53,6 +53,8 @@ export default function AdminOrders() {
   const [isConfirming, setIsConfirming] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isDeletingBulk, setIsDeletingBulk] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -62,6 +64,30 @@ export default function AdminOrders() {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
+
+  // Pre-fill confirmation data when an order is selected
+  useEffect(() => {
+    if (selectedOrder) {
+      // Extract Wilaya from admin_notes if it exists
+      let wilaya = '';
+      let cleanNotes = selectedOrder.admin_notes || '';
+      
+      const wilayaMatch = cleanNotes.match(/📍 الولاية:\s*(.*)/);
+      if (wilayaMatch) {
+        wilaya = wilayaMatch[1].trim();
+        cleanNotes = cleanNotes.replace(/📍 الولاية:.*\n?/, '').trim();
+      }
+
+      setConfirmData({
+        quantity: selectedOrder.quantity?.toString() || '',
+        finalPrice: selectedOrder.total_price?.toString() || '',
+        notes: cleanNotes,
+        wilaya: wilaya
+      });
+    } else {
+      setConfirmData({ quantity: '', finalPrice: '', notes: '', wilaya: '' });
+    }
+  }, [selectedOrder]);
 
   async function fetchOrders() {
     setIsLoading(true);
@@ -129,8 +155,46 @@ export default function AdminOrders() {
     if (!error) {
       showToast('تم حذف الطلب بنجاح', 'success');
       setSelectedOrder(null);
+      setSelectedIds(prev => prev.filter(orderId => orderId !== id));
       fetchOrders();
     }
+  };
+
+  const deleteBulkOrders = async () => {
+    if (!selectedIds.length) return;
+    if (!confirm(`هل أنت متأكد أنك تريد حذف ${selectedIds.length} طلبات نهائياً؟`)) return;
+    
+    setIsDeletingBulk(true);
+    if (!supabase) return;
+    
+    const { error } = await supabase
+      .from("orders")
+      .delete()
+      .in("id", selectedIds);
+    
+    if (!error) {
+      showToast(`تم حذف ${selectedIds.length} طلبات بنجاح`, 'success');
+      setSelectedIds([]);
+      fetchOrders();
+    } else {
+      showToast('حدث خطأ أثناء الحذف الجماعي', 'error');
+    }
+    setIsDeletingBulk(false);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === filteredOrders.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredOrders.map(o => o.id));
+    }
+  };
+
+  const toggleSelectOrder = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
   };
 
   const openWhatsApp = (phone: string, orderNumber: number) => {
@@ -161,35 +225,39 @@ export default function AdminOrders() {
     const { error } = await supabase.from('orders').update(updates).eq('id', selectedOrder.id);
 
     if (!error) {
-      // Update customer stats
-      const { data: existingCustomer } = await supabase
-        .from('customers')
-        .select('id, total_orders, total_spent')
-        .eq('phone', selectedOrder.customer_phone)
-        .maybeSingle();
+      if (selectedOrder.status === 'new') {
+        // Update customer stats only on first confirmation
+        const { data: existingCustomer } = await supabase
+          .from('customers')
+          .select('id, total_orders, total_spent')
+          .eq('phone', selectedOrder.customer_phone)
+          .maybeSingle();
 
-      if (existingCustomer) {
-        await supabase.from('customers').update({
-          total_orders: (existingCustomer.total_orders || 0) + 1,
-          total_spent: (existingCustomer.total_spent || 0) + finalPrice,
-          last_order_at: new Date().toISOString(),
-        }).eq('id', existingCustomer.id);
-      } else {
-        await supabase.from('customers').insert({
-          name: selectedOrder.customer_name,
-          phone: selectedOrder.customer_phone,
-          total_orders: 1,
-          total_spent: finalPrice,
-          last_order_at: new Date().toISOString(),
-        });
+        if (existingCustomer) {
+          await supabase.from('customers').update({
+            total_orders: (existingCustomer.total_orders || 0) + 1,
+            total_spent: (existingCustomer.total_spent || 0) + finalPrice,
+            last_order_at: new Date().toISOString(),
+          }).eq('id', existingCustomer.id);
+        } else {
+          await supabase.from('customers').insert({
+            name: selectedOrder.customer_name,
+            phone: selectedOrder.customer_phone,
+            total_orders: 1,
+            total_spent: finalPrice,
+            last_order_at: new Date().toISOString(),
+          });
+        }
       }
 
-      showToast(`✅ تم تأكيد الطلب #${selectedOrder.order_number} بنجاح!`);
+      showToast(selectedOrder.status === 'confirmed' 
+        ? `✅ تم تحديث تفاصيل الطلب #${selectedOrder.order_number}` 
+        : `✅ تم تأكيد الطلب #${selectedOrder.order_number} بنجاح!`);
+      
       setSelectedOrder({ ...selectedOrder, ...updates, status: 'confirmed' } as Order);
-      setConfirmData({ quantity: '', finalPrice: '', notes: '', wilaya: '' });
       fetchOrders();
     } else {
-      showToast('حدث خطأ أثناء تأكيد الطلب', 'error');
+      showToast('حدث خطأ أثناء معالجة الطلب', 'error');
     }
     setIsConfirming(false);
   };
@@ -229,15 +297,35 @@ export default function AdminOrders() {
                 className="w-full bg-gray-50 border-none rounded-xl py-3 pr-12 pl-4 focus:ring-2 focus:ring-primary/20 transition-all font-medium"
               />
            </div>
-           <p className="text-primary bg-primary/5 px-4 py-2 rounded-xl text-sm font-black flex items-center gap-2">
-              نتيجة: {filteredOrders.length} طلب
-           </p>
+            <div className="flex gap-4 items-center">
+              {selectedIds.length > 0 && (
+                <button 
+                  onClick={deleteBulkOrders}
+                  disabled={isDeletingBulk}
+                  className="bg-red-50 text-red-600 px-4 py-2 rounded-xl text-sm font-black flex items-center gap-2 border border-red-100 hover:bg-red-100 transition-all disabled:opacity-50"
+                >
+                  <Trash2 size={16} />
+                  حذف المحدد ({selectedIds.length})
+                </button>
+              )}
+              <p className="text-primary bg-primary/5 px-4 py-2 rounded-xl text-sm font-black flex items-center gap-2">
+                 نتيجة: {filteredOrders.length} طلب
+              </p>
+            </div>
         </div>
 
         <div className="overflow-x-hidden min-h-[400px]">
           <table className="w-full text-right block lg:table">
             <thead className="hidden lg:table-header-group">
               <tr className="bg-gray-50/50 text-gray-400 text-xs font-black uppercase tracking-widest border-b border-gray-100 block lg:table-row">
+                <th className="px-6 py-5 block lg:table-cell w-10">
+                   <input 
+                     type="checkbox" 
+                     className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                     checked={selectedIds.length === filteredOrders.length && filteredOrders.length > 0}
+                     onChange={toggleSelectAll}
+                   />
+                </th>
                 <th className="px-6 py-5 block lg:table-cell">الطلب</th>
                 <th className="px-6 py-5 block lg:table-cell">العميل</th>
                 <th className="px-6 py-5 block lg:table-cell">تاريخ الطلب</th>
@@ -260,7 +348,15 @@ export default function AdminOrders() {
                 const StatusIcon = st.icon;
 
                 return (
-                  <tr key={order.id} className="block lg:table-row hover:bg-primary/5 transition-colors cursor-pointer group bg-white lg:bg-transparent rounded-2xl mb-4 p-4 lg:p-0 shadow-sm border border-gray-100 lg:border-none lg:shadow-none lg:mb-0" onClick={() => setSelectedOrder(order)}>
+                  <tr key={order.id} className={`block lg:table-row hover:bg-primary/5 transition-colors cursor-pointer group rounded-2xl mb-4 p-4 lg:p-0 shadow-sm border border-gray-100 lg:border-none lg:shadow-none lg:mb-0 ${selectedIds.includes(order.id) ? 'bg-primary/5 lg:bg-primary/5' : 'bg-white lg:bg-transparent'}`} onClick={() => setSelectedOrder(order)}>
+                    <td className="px-4 py-2 lg:px-6 lg:py-5 block lg:table-cell border-b border-gray-50 lg:border-none" onClick={(e) => e.stopPropagation()}>
+                       <input 
+                         type="checkbox" 
+                         className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                         checked={selectedIds.includes(order.id)}
+                         onChange={(e) => toggleSelectOrder(order.id, e as any)}
+                       />
+                    </td>
                     <td className="px-4 py-2 lg:px-6 lg:py-5 font-black text-gray-900 block lg:table-cell flex items-center justify-between lg:justify-start border-b border-gray-50 lg:border-none">
                       <span className="lg:hidden text-xs text-gray-400 font-bold">الطلب</span>
                       <div className="bg-gray-100 w-10 h-10 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors text-sm lg:text-base">
@@ -531,7 +627,11 @@ export default function AdminOrders() {
                               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                             </svg>
                           ) : <CheckCircle size={20} />}
-                          {isConfirming ? 'جاري التأكيد...' : 'تأكيد الطلب وحفظ التفاصيل'}
+                          {isConfirming 
+                            ? 'جاري المعالجة...' 
+                            : selectedOrder.status === 'confirmed' 
+                              ? 'تحديث تفاصيل التأكيد' 
+                              : 'تأكيد الطلب وحفظ التفاصيل'}
                         </button>
                       </div>
                     )}

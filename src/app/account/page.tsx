@@ -62,7 +62,7 @@ function parseOrderNotes(notes?: string) {
   let pdfUrl = null;
 
   // Extract PDF URL if it exists (saved as pdf_url:URL)
-  const pdfMatch = notes.match(/pdf_url:(https:\/\/\S+)/);
+  const pdfMatch = notes.match(/pdf_url:(https?:\/\/\S+)/);
   if (pdfMatch) {
     pdfUrl = pdfMatch[1];
     displayNotes = displayNotes.replace(/pdf_url:https:\/\/\S+/, "");

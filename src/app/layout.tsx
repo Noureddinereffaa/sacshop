@@ -29,6 +29,17 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ar" dir="rtl">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if (location.protocol === 'http:' && location.hostname !== 'localhost' && !location.hostname.includes('127.0.0.1')) {
+                location.replace(location.href.replace('http:', 'https:'));
+              }
+            `,
+          }}
+        />
+      </head>
       <body className={`${tajawal.variable} font-sans`}>
         <SettingsProvider>
           <MarketingPixels />

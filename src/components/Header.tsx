@@ -133,6 +133,12 @@ export default function Header() {
             ))}
             <Link href="/" onClick={() => setIsMenuOpen(false)} className="py-2 text-lg font-bold border-b border-gray-50 text-gray-400">الرئيسية</Link>
             <Link href="/account" onClick={() => setIsMenuOpen(false)} className="py-2 text-lg font-bold border-b border-gray-50 text-primary">حسابي الشخصي</Link>
+            
+            {/* Legal Links for Compliance */}
+            <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-gray-100">
+              <Link href="/privacy" onClick={() => setIsMenuOpen(false)} className="text-sm font-bold text-gray-500 hover:text-primary transition-colors">سياسة الخصوصية</Link>
+              <Link href="/terms" onClick={() => setIsMenuOpen(false)} className="text-sm font-bold text-gray-500 hover:text-primary transition-colors">شروط الاستخدام</Link>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

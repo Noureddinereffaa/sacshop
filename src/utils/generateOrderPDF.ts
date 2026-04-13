@@ -128,10 +128,9 @@ export async function generateAndUploadOrderPDF(data: OrderPDFData): Promise<str
             <div style="font-size: 13px; color: #666; font-weight: 600;">أفضل خدمات الطباعة والتغليف في الجزائر</div>
           </div>
           <div style="text-align: left;">
-            <div style="font-size: 56px; font-weight: 900; color: #f5f5f5; margin-top: -20px; text-transform: uppercase;">وصل طلب</div>
-            <div style="background: ${branding.primaryColor}; color: white; padding: 12px 24px; border-radius: 12px; display: inline-block; margin-top: -15px; position: relative; z-index: 1; box-shadow: 0 8px 20px ${branding.primaryColor}30;">
-              <div style="font-size: 10px; opacity: 0.9; font-weight: 900; margin-bottom: 4px; uppercase; letter-spacing: 1px;">رقم الطلب الرسمي</div>
-              <div style="font-size: 24px; font-weight: 900; letter-spacing: 2px;">#${shortId}</div>
+            <div style="background: ${branding.primaryColor}; color: white; padding: 15px 30px; border-radius: 20px; display: inline-block; position: relative; z-index: 10; box-shadow: 0 10px 30px ${branding.primaryColor}40;">
+              <div style="font-size: 11px; opacity: 0.95; font-weight: 800; margin-bottom: 6px; white-space: nowrap;">رقم الطلب الرسمي</div>
+              <div style="font-size: 28px; font-weight: 900; letter-spacing: 1px; font-family: sans-serif;">#${shortId}</div>
             </div>
           </div>
         </div>

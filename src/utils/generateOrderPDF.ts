@@ -237,9 +237,20 @@ export async function generateAndUploadOrderPDF(data: OrderPDFData): Promise<str
       logging: false,
     });
 
-    const pdf = new jsPDF("p", "pt", "a4");
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+    const canvasWidth = canvas.width;
+    const canvasHeight = canvas.height;
+    
+    // Calculate PDF dimensions - Keep standard A4 width (595.28pt) but use dynamic height
+    const pdfWidth = 595.28;
+    const pdfHeight = (canvasHeight * pdfWidth) / canvasWidth;
+
+    // Create PDF with custom dimensions to avoid clipping
+    const pdf = new jsPDF({
+      orientation: "portrait",
+      unit: "pt",
+      format: [pdfWidth, pdfHeight]
+    });
+
     const imgData = canvas.toDataURL("image/jpeg", 0.95);
     pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
 

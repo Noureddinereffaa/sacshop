@@ -230,11 +230,21 @@ export async function generateAndUploadOrderPDF(data: OrderPDFData): Promise<str
 
     document.body.appendChild(container);
 
+    // Ensure all fonts are loaded before capturing to prevent text clipping/garbling
+    if (typeof document !== "undefined" && (document as any).fonts) {
+      await (document as any).fonts.ready;
+    }
+
+    // Wait a tiny bit more for any layout shifts
+    await new Promise(r => setTimeout(r, 100));
+
     const canvas = await html2canvas(container, {
       scale: 2,
       useCORS: true,
       backgroundColor: "#ffffff",
       logging: false,
+      width: 700,
+      windowWidth: 700,
     });
 
     const canvasWidth = canvas.width;

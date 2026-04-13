@@ -68,7 +68,7 @@ export default function SettingsProvider({ children }: { children: React.ReactNo
         root.style.setProperty("--color-primary-rgb", hexToRgb(branding.primaryColor));
 
         // 4. Initial identity check if phone exists
-        const phone = sessionStorage.getItem("sacshop_phone");
+        const phone = sessionStorage.getItem("servseri_phone");
         if (phone) {
           try {
             const res = await fetch("/api/customer", {

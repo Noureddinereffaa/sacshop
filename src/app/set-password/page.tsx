@@ -53,8 +53,8 @@ function SetPasswordContent() {
       if (!res.ok) throw new Error(data.error || "فشل إنشاء الحساب");
 
       // Save session data so account page can auto-load
-      sessionStorage.setItem("sacshop_phone", phone);
-      sessionStorage.setItem("sacshop_name", name);
+      sessionStorage.setItem("servseri_phone", phone);
+      sessionStorage.setItem("servseri_name", name);
 
       router.push(`/account?ref=${refId}&wa=${encodeURIComponent(waLink)}`);
     } catch (err: unknown) {

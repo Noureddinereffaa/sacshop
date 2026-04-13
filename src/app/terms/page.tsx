@@ -21,7 +21,7 @@ export default function TermsOfUse() {
               طبيعة الخدمة
             </h2>
             <p>
-              متجر SacShop يقدم خدمات تجارة إلكترونية متخصصة في التغليف والطباعة والمنتجات التجارية في الجزائر. جميع الطلبات تتم مباشرة عبر الموقع ويتم تأكيدها والتنسيق حول تفاصيلها الفنية والشحن عبر تطبيق واتساب.
+              متجر Service Serigraphie يقدم خدمات تجارة إلكترونية متخصصة في التغليف والطباعة والمنتجات التجارية في الجزائر. جميع الطلبات تتم مباشرة عبر الموقع ويتم تأكيدها والتنسيق حول تفاصيلها الفنية والشحن عبر تطبيق واتساب.
             </p>
           </section>
 
@@ -62,7 +62,7 @@ export default function TermsOfUse() {
 
           <div className="pt-10 border-t border-gray-100 text-center">
             <p className="text-gray-400 font-bold text-sm">نحن نعمل وفق القوانين المنظمة للتجارة الإلكترونية في الجزائر</p>
-            <p className="text-primary font-black mt-2">SacShop - شريكك الموثوق</p>
+            <p className="text-primary font-black mt-2">Service Serigraphie - شريكك الموثوق</p>
           </div>
         </div>
       </main>

@@ -29,7 +29,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const isAuth = localStorage.getItem("sacshop_admin_auth") === "true";
+      const isAuth = localStorage.getItem("servseri_admin_auth") === "true";
       setIsAuthenticated(isAuth);
       setIsChecking(false);
     }
@@ -44,7 +44,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     // Default fallback admin password
     const adminPass = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "sacshopadmin";
     if (password === adminPass) {
-      localStorage.setItem("sacshop_admin_auth", "true");
+      localStorage.setItem("servseri_admin_auth", "true");
       setIsAuthenticated(true);
     } else {
       setError("كلمة المرور غير صحيحة");

@@ -159,7 +159,7 @@ export const useCartStore = create<CartStore>()(
       }
     }),
     {
-      name: 'sacshop-cart',
+      name: 'servseri-cart',
     }
   )
 );

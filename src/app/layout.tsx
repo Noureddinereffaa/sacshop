@@ -10,8 +10,42 @@ const tajawal = Tajawal({
 });
 
 export const metadata: Metadata = {
-  title: "Service Serigraphie | أفضل خدمات الطباعة والتغليف في الجزائر",
-  description: "حلول احترافية للطباعة والتغليف. أكياس، ملصقات، ومطبوعات بجودة عالية وتوصيل سريع لجميع الولايات. اطلب الآن واستفد من عروض VIP.",
+  title: "Service Serigraphie | طباعة أكياس، ملصقات، وتغليف في الجزائر",
+  description: "Service Serigraphie - شريكك الأول في الجزائر للطباعة الاحترافية. نحن متخصصون في طباعة الأكياس الورقية والقماشية، الملصقات (Stickers)، وحلول التغليف المخصصة. جودة عالية وتوصيل لـ 58 ولاية.",
+  keywords: ["طباعة", "أكياس ورقية", "ملصقات", "تغليف", "سيريغرافي", "الجزائر", "أكياس قماشية", "Service Serigraphie", "printing algeria"],
+  authors: [{ name: "Service Serigraphie" }],
+  viewport: "width=device-width, initial-scale=1",
+  themeColor: "#FF3366",
+  icons: {
+    icon: "/favicon.png",
+    apple: "/favicon.png",
+  },
+  openGraph: {
+    title: "Service Serigraphie | خدمات الطباعة والتغليف الاحترافية",
+    description: "اطلب الآن أكياسك المخصصة، ملصقاتك، وحلول التغليف لعلامتك التجارية. جودة مضمونة وتوصيل سريع لكل الولايات.",
+    url: "https://www.facebook.com/search/top?q=service%20s%C3%A8rigraphie",
+    siteName: "Service Serigraphie",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Service Serigraphie Logo",
+      },
+    ],
+    locale: "ar_DZ",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Service Serigraphie | خدمات الطباعة في الجزائر",
+    description: "أفضل حلول الطباعة والتغليف لعلامتك التجارية في الجزائر.",
+    images: ["/og-image.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 import SettingsProvider from "@/components/SettingsProvider";

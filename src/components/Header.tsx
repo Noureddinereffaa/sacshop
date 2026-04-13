@@ -138,6 +138,8 @@ export default function Header() {
             <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-gray-100">
               <Link href="/privacy" onClick={() => setIsMenuOpen(false)} className="text-sm font-bold text-gray-500 hover:text-primary transition-colors">سياسة الخصوصية</Link>
               <Link href="/terms" onClick={() => setIsMenuOpen(false)} className="text-sm font-bold text-gray-500 hover:text-primary transition-colors">شروط الاستخدام</Link>
+              <Link href="/shipping" onClick={() => setIsMenuOpen(false)} className="text-sm font-bold text-gray-500 hover:text-primary transition-colors">سياسة الشحن والتوصيل</Link>
+              <Link href="/refund" onClick={() => setIsMenuOpen(false)} className="text-sm font-bold text-gray-500 hover:text-primary transition-colors">سياسة الاسترجاع والاستبدال</Link>
             </div>
           </motion.div>
         )}

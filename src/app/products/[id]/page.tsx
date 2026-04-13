@@ -118,7 +118,7 @@ export default function ProductDetailPage() {
       }
       
       // Check for logged-in user to fetch VIP status
-      const phone = sessionStorage.getItem("sacshop_phone");
+      const phone = sessionStorage.getItem("servseri_phone");
       if (phone) {
         try {
           const res = await fetch("/api/customer", {
@@ -217,6 +217,11 @@ export default function ProductDetailPage() {
       setSelectedColor(availableColors[0]?.name || "");
     }
   }, [availableColors, selectedColor, selectedSize]);
+
+  // Force scroll to top on mount to fix unwanted auto-scroll issue
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [id]);
 
   if (isLoading) {
     return (

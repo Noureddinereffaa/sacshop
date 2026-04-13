@@ -79,8 +79,8 @@ export default function OrderForm({
 
   // Auto-fill form if session exists
   useEffect(() => {
-    const storedPhone = sessionStorage.getItem("sacshop_phone");
-    const storedName = sessionStorage.getItem("sacshop_name");
+    const storedPhone = sessionStorage.getItem("servseri_phone");
+    const storedName = sessionStorage.getItem("servseri_name");
     if (storedPhone && storedName) {
       setFormData(prev => ({ ...prev, phone: storedPhone, name: storedName }));
     }
@@ -380,8 +380,8 @@ export default function OrderForm({
     setStep("success");
 
     // ── Save session for automatic login ──
-    sessionStorage.setItem("sacshop_phone", formData.phone.trim());
-    sessionStorage.setItem("sacshop_name", formData.name.trim());
+    sessionStorage.setItem("servseri_phone", formData.phone.trim());
+    sessionStorage.setItem("servseri_name", formData.name.trim());
 
     // Cart will be cleared when they manually navigate via the success buttons
   };
@@ -572,8 +572,8 @@ export default function OrderForm({
                   if (validateSelections()) {
                     const phoneToSave = formData.phone.trim();
                     if (typeof window !== "undefined") {
-                      sessionStorage.setItem("sacshop_phone", phoneToSave);
-                      localStorage.setItem("sacshop_guest_phone", phoneToSave);
+                      sessionStorage.setItem("servseri_phone", phoneToSave);
+                      localStorage.setItem("servseri_guest_phone", phoneToSave);
                     }
                     
                     try {

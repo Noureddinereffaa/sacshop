@@ -78,6 +78,8 @@ export default function Footer() {
           <ul className="space-y-3">
             <li><Link href="/terms" className="hover:text-primary transition-colors">شروط الاستخدام</Link></li>
             <li><Link href="/privacy" className="hover:text-primary transition-colors">سياسة الخصوصية</Link></li>
+            <li><Link href="/shipping" className="hover:text-primary transition-colors">سياسة الشحن والتوصيل</Link></li>
+            <li><Link href="/refund" className="hover:text-primary transition-colors">سياسة الاسترجاع والاستبدال</Link></li>
           </ul>
         </div>
 

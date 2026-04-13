@@ -35,7 +35,7 @@ export default function RegisterPage() {
       if (!res.ok) throw new Error(data.error || "خطأ في التسجيل");
 
       // Auto login after registration
-      sessionStorage.setItem("sacshop_phone", phone);
+      sessionStorage.setItem("servseri_phone", phone);
       router.push("/account");
 
     } catch (e: any) {

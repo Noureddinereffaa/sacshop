@@ -50,7 +50,7 @@ export default function CheckoutPage() {
   }, []);
 
   async function checkEligibility() {
-    const phone = sessionStorage.getItem("sacshop_phone");
+    const phone = sessionStorage.getItem("servseri_phone");
     if (!phone) {
       setCustomerStatus('guest'); // Fallback to guest if not logged in
       return;

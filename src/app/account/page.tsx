@@ -105,8 +105,8 @@ function LoginForm({ onSuccess }: { onSuccess: (phone: string, name: string) => 
       });
       const data = await res.json();
       if (!res.ok) throw new Error("لم يتم العثور على حساب بهذا الرقم.");
-      sessionStorage.setItem("sacshop_phone", phone.trim());
-      sessionStorage.setItem("sacshop_name", data.customer.name);
+      sessionStorage.setItem("servseri_phone", phone.trim());
+      sessionStorage.setItem("servseri_name", data.customer.name);
       onSuccess(phone.trim(), data.customer.name);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "خطأ في الدخول");
@@ -186,7 +186,7 @@ function AccountContent() {
 
   // Hydrate phone from sessionStorage after mount
   useEffect(() => {
-    const storedPhone = sessionStorage.getItem("sacshop_phone");
+    const storedPhone = sessionStorage.getItem("servseri_phone");
     setPhone(storedPhone);
     setIsReady(true);
   }, []);
@@ -212,8 +212,8 @@ function AccountContent() {
   }, [phone]);
 
   const logout = () => {
-    sessionStorage.removeItem("sacshop_phone");
-    sessionStorage.removeItem("sacshop_name");
+    sessionStorage.removeItem("servseri_phone");
+    sessionStorage.removeItem("servseri_name");
     router.push("/");
   };
 
@@ -240,8 +240,8 @@ function AccountContent() {
 
       if (res.ok) {
         setCustomer({ ...customerData, ...data } as any);
-        sessionStorage.setItem("sacshop_phone", data.phone as string);
-        sessionStorage.setItem("sacshop_name", data.name as string);
+        sessionStorage.setItem("servseri_phone", data.phone as string);
+        sessionStorage.setItem("servseri_name", data.name as string);
         alert("تم تحديث البيانات بنجاح ✅");
       } else {
         alert("فشل تحديث البيانات ❌");

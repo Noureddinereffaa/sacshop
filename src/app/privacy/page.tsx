@@ -10,7 +10,7 @@ export default function PrivacyPolicy() {
       <main className="max-w-4xl mx-auto px-6 py-20">
         <div className="mb-12 text-center">
           <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-4">سياسة الخصوصية</h1>
-          <p className="text-gray-500 font-medium text-lg">كيف نحمي بياناتك ونحترم خصوصيتك في متجر SacShop</p>
+          <p className="text-gray-500 font-medium text-lg">كيف نحمي بياناتك ونحترم خصوصيتك في متجر Service Serigraphie</p>
           <div className="w-20 h-2 bg-primary mx-auto mt-6 rounded-full"></div>
         </div>
 
@@ -62,7 +62,7 @@ export default function PrivacyPolicy() {
 
           <div className="pt-10 border-t border-gray-100 text-center">
             <p className="text-gray-400 font-bold text-sm">آخر تحديث: أبريل 2026</p>
-            <p className="text-primary font-black mt-2">متجر SacShop الجزائري</p>
+            <p className="text-primary font-black mt-2">متجر Service Serigraphie الجزائري</p>
           </div>
         </div>
       </main>

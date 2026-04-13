@@ -1,44 +1,73 @@
-
+import React from 'react';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 export default function PrivacyPolicy() {
   return (
-    <main className="min-h-screen bg-transparent pt-12">
-      <div className="container mx-auto px-4 py-24 max-w-4xl text-right">
-        <h1 className="text-4xl font-black text-gray-900 mb-12">سياسة الخصوصية</h1>
-        
-        <div className="space-y-8 text-gray-600 leading-relaxed text-lg">
-          <section>
-             <h2 className="text-2xl font-bold text-gray-900 mb-4">1. مقدمة</h2>
-             <p>نحن في Service Serigraphie نولي أهمية كبرى لخصوصية بياناتكم. توضح هذه السياسة كيفية جمع واستخدام وحماية معلوماتكم عند استخدام موقعنا.</p>
-          </section>
-
-          <section>
-             <h2 className="text-2xl font-bold text-gray-900 mb-4">2. المعلومات التي نجمعها</h2>
-             <p>نجمع المعلومات الضرورية فقط لإتمام عملية الطلب والتوصيل، والتي تشمل: الاسم الكامل، رقم الهاتف، العنوان، والبريد الإلكتروني.</p>
-          </section>
-
-          <section>
-             <h2 className="text-2xl font-bold text-gray-900 mb-4">3. استخدام المعلومات</h2>
-             <p>تستخدم معلوماتكم حصرياً للأغراض التالية:</p>
-             <ul className="list-disc pr-6 mt-4 space-y-2">
-                <li>تأكيد وشحن الطلبات.</li>
-                <li>توفير تحديثات حول حالة الطلب.</li>
-                <li>تحسين تجربة المستخدم على الموقع.</li>
-                <li>التواصل معكم في حال وجود استفسارات حول طلبكم.</li>
-             </ul>
-          </section>
-
-          <section>
-             <h2 className="text-2xl font-bold text-gray-900 mb-4">4. حماية البيانات</h2>
-             <p>نلتزم بحماية بياناتكم من الوصول غير المصرح به باستخدام بروتوكولات حماية متطورة. لا نقوم ببيع أو مشاركة بياناتكم مع أي أطراف ثالثة إلا لغرض التوصيل.</p>
-          </section>
-
-          <section>
-             <h2 className="text-2xl font-bold text-gray-900 mb-4">5. التوافق القانوني</h2>
-             <p>تخضع هذه السياسة للقوانين الجزائرية المتعلقة بالتجارة الإلكترونية وحماية المعطيات ذات الطابع الشخصي.</p>
-          </section>
+    <div className="min-h-screen bg-white font-arabic" dir="rtl">
+      <Header />
+      
+      <main className="max-w-4xl mx-auto px-6 py-20">
+        <div className="mb-12 text-center">
+          <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-4">سياسة الخصوصية</h1>
+          <p className="text-gray-500 font-medium text-lg">كيف نحمي بياناتك ونحترم خصوصيتك في متجر SacShop</p>
+          <div className="w-20 h-2 bg-primary mx-auto mt-6 rounded-full"></div>
         </div>
-      </div>
-    </main>
+
+        <div className="prose prose-lg max-w-none text-gray-700 space-y-10 leading-relaxed text-right">
+          <section className="bg-gray-50 p-8 rounded-[2rem] border border-gray-100">
+            <h2 className="text-2xl font-black text-gray-900 mb-4 flex items-center gap-3">
+              <span className="w-8 h-8 bg-primary/10 text-primary rounded-lg flex items-center justify-center text-sm">01</span>
+              جمع المعلومات
+            </h2>
+            <p>
+              نحن نقوم بجمع المعلومات التي تقدمها لنا مباشرة عند تقديم طلب عبر متجرنا، وتشمل: الاسم، رقم الهاتف، والعنوان. هذه البيانات ضرورية فقط لمعالجة طلبك والتواصل معك عبر واتساب لتأكيد الشحن.
+            </p>
+          </section>
+
+          <section className="p-8">
+            <h2 className="text-2xl font-black text-gray-900 mb-4 flex items-center gap-3">
+              <span className="w-8 h-8 bg-primary/10 text-primary rounded-lg flex items-center justify-center text-sm">02</span>
+              استخدام البيانات
+            </h2>
+            <p>
+              نستخدم معلوماتك في:
+            </p>
+            <ul className="list-disc list-inside space-y-2 mr-4">
+              <li>معالجة وتأكيد طلبات الشراء الخاصة بك.</li>
+              <li>التواصل السريع عبر واتساب للتنسيق حول موعد التسليم.</li>
+              <li>تحسين خدماتنا وتجربة التسوق الخاصة بك.</li>
+            </ul>
+          </section>
+
+          <section className="bg-gray-50 p-8 rounded-[2rem] border border-gray-100">
+            <h2 className="text-2xl font-black text-gray-900 mb-4 flex items-center gap-3">
+              <span className="w-8 h-8 bg-primary/10 text-primary rounded-lg flex items-center justify-center text-sm">03</span>
+              حماية البيانات
+            </h2>
+            <p>
+              نحن نلتزم بحماية بياناتك الشخصية من الوصول غير المصرح به. لا نقوم ببيع أو تأجير أو مشاركة بياناتك مع أي طرف ثالث لأغراض تسويقية. يتم تخزين بياناتك في بيئة مشفرة وآمنة تماماً.
+            </p>
+          </section>
+
+          <section className="p-8">
+            <h2 className="text-2xl font-black text-gray-900 mb-4 flex items-center gap-3">
+              <span className="w-8 h-8 bg-primary/10 text-primary rounded-lg flex items-center justify-center text-sm">04</span>
+              حقوقك
+            </h2>
+            <p>
+              لك الحق في أي وقت في طلب تعديل بياناتك أو حذفها نهائياً من سجلاتنا من خلال التواصل معنا عبر الواتساب الرسمي المسجل في الموقع.
+            </p>
+          </section>
+
+          <div className="pt-10 border-t border-gray-100 text-center">
+            <p className="text-gray-400 font-bold text-sm">آخر تحديث: أبريل 2026</p>
+            <p className="text-primary font-black mt-2">متجر SacShop الجزائري</p>
+          </div>
+        </div>
+      </main>
+
+      <Footer />
+    </div>
   );
 }

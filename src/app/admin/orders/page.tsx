@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { 
   Search, Filter, Eye, CheckCircle2, 
   XCircle, Trash2, AlertTriangle, PhoneCall,
-  Clock, Package, Truck, MessageCircle, X, ChevronDown, CheckCircle
+  Clock, Package, Truck, MessageCircle, X, ChevronDown, CheckCircle, History
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -44,6 +44,14 @@ interface Order {
   };
 }
 
+interface OrderHistory {
+  id: string;
+  order_id: string;
+  old_status: string;
+  new_status: string;
+  changed_at: string;
+}
+
 export default function AdminOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -55,6 +63,8 @@ export default function AdminOrders() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isDeletingBulk, setIsDeletingBulk] = useState(false);
+  const [orderHistory, setOrderHistory] = useState<OrderHistory[]>([]);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -103,6 +113,27 @@ export default function AdminOrders() {
     if (data) setOrders(data);
     setIsLoading(false);
   }
+
+  async function fetchHistory(orderId: string) {
+    setIsHistoryLoading(true);
+    if (!supabase) return;
+    const { data } = await supabase
+      .from("order_status_history")
+      .select("*")
+      .eq("order_id", orderId)
+      .order("changed_at", { ascending: false });
+    
+    if (data) setOrderHistory(data);
+    setIsHistoryLoading(false);
+  }
+
+  useEffect(() => {
+    if (selectedOrder) {
+      fetchHistory(selectedOrder.id);
+    } else {
+      setOrderHistory([]);
+    }
+  }, [selectedOrder]);
 
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {
@@ -635,6 +666,47 @@ export default function AdminOrders() {
                         </button>
                       </div>
                     )}
+
+                     
+                     {/* History Timeline Section */}
+                     <div className="bg-gray-50/50 rounded-2xl p-5 border border-gray-100 mb-6 shadow-sm">
+                        <div className="flex items-center gap-2 mb-6">
+                           <History className="text-gray-400" size={18} />
+                           <p className="text-sm font-black text-gray-700">سجل تحركات الطلب (History)</p>
+                        </div>
+                        
+                        <div className="space-y-6 relative mr-1 border-r-2 border-dashed border-gray-200 pr-6">
+                           {isHistoryLoading ? (
+                             <div className="text-xs text-gray-400 animate-pulse font-bold">جاري تحميل السجل...</div>
+                           ) : orderHistory.length > 0 ? (
+                             orderHistory.map((h, idx) => {
+                               const st = STATUS_MAP[h.new_status] || STATUS_MAP.new;
+                               return (
+                                 <div key={h.id} className="relative">
+                                   {/* Dot */}
+                                   <div className={`absolute -right-[31px] top-1 w-4 h-4 rounded-full border-4 border-white shadow-sm ${st.color.split(' ')[0]}`} />
+                                   
+                                   <div className="flex flex-col">
+                                      <div className="flex items-center gap-2">
+                                         <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${st.color}`}>
+                                            {st.label}
+                                         </span>
+                                         <span className="text-[10px] text-gray-400 font-bold" dir="ltr">
+                                            {new Date(h.changed_at).toLocaleString('ar-DZ', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })}
+                                         </span>
+                                      </div>
+                                      <p className="text-[11px] text-gray-500 mt-1 font-medium italic">
+                                         تم تغيير الحالة {h.old_status ? `من "${STATUS_MAP[h.old_status]?.label || h.old_status}" ` : ""}إلى "{st.label}"
+                                      </p>
+                                   </div>
+                                 </div>
+                               );
+                             })
+                           ) : (
+                             <div className="text-xs text-gray-400 font-bold italic py-2">لا يوجد سجل حركات لهذا الطلب بعد.</div>
+                           )}
+                        </div>
+                     </div>
 
                    <div>
                      <p className="text-[10px] uppercase font-black tracking-widest text-gray-400 mb-3">عناصر الأمان والإنذار (Anti-Fraud)</p>

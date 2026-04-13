@@ -13,7 +13,7 @@ declare global {
     gtag?: (...args: unknown[]) => void;
     dataLayer?: unknown[];
     // Our custom tracking helper used by OrderForm
-    trackMarketingEvent?: (event: "ViewContent" | "SubmitOrder" | "Purchase" | "AddToCart", data?: Record<string, unknown>) => void;
+    trackMarketingEvent?: (event: "ViewContent" | "SubmitOrder" | "Purchase" | "AddToCart" | "InitiateCheckout", data?: Record<string, unknown>) => void;
   }
 }
 
@@ -41,7 +41,18 @@ export default function MarketingPixels() {
       }
       // GA4
       if (gaId && window.gtag) {
-        window.gtag("event", event.replace(/([A-Z])/g, "_$1").toLowerCase().replace(/^_/, ""), data);
+        const gaEventMap: Record<string, string> = {
+          ViewContent: "view_item",
+          AddToCart: "add_to_cart",
+          InitiateCheckout: "begin_checkout",
+          SubmitOrder: "generate_lead", // Or "purchase" depending on strategy, but leads are common for COD
+          Purchase: "purchase"
+        };
+        const gaEvent = gaEventMap[event] || event.replace(/([A-Z])/g, "_$1").toLowerCase().replace(/^_/, "");
+        window.gtag("event", gaEvent, {
+          ...data,
+          items: (data as any).content_ids?.map((id: string) => ({ item_id: id })) || []
+        });
       }
     };
   }, [isLoaded, fbPixelId, tiktokId, gaId]);

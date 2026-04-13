@@ -359,12 +359,19 @@ export default function OrderForm({
 
     // ── Marketing tracking ────────────────────────────────────────────────────
     try {
-      window.trackMarketingEvent?.("SubmitOrder", {
+      const trackingData = {
         content_name: isCartOrder ? "Cart Order" : productName,
         value: productPrice,
         currency: "DZD",
         num_items: isCartOrder ? cartItems.length : 1,
-      });
+        content_ids: isCartOrder ? cartItems.map(i => i.productId) : [productId],
+        order_id: shortId,
+      };
+
+      // Track both for maximum compatibility with different ad engine optimization goals
+      window.trackMarketingEvent?.("SubmitOrder", trackingData);
+      window.trackMarketingEvent?.("Purchase", trackingData);
+      
     } catch { /* non-critical */ }
 
     setPendingOrderId(orderId);

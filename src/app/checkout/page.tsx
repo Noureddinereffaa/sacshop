@@ -35,6 +35,18 @@ export default function CheckoutPage() {
   useEffect(() => {
     setMounted(true);
     checkEligibility();
+    
+    // Track InitiateCheckout
+    try {
+      const items = useCartStore.getState().items;
+      const total = useCartStore.getState().getCartTotal();
+      window.trackMarketingEvent?.("InitiateCheckout", {
+        value: total,
+        currency: "DZD",
+        num_items: items.length,
+        content_ids: items.map(i => i.productId)
+      });
+    } catch { /* non-critical */ }
   }, []);
 
   async function checkEligibility() {

@@ -73,104 +73,108 @@ export async function generateAndUploadOrderPDF(data: OrderPDFData): Promise<str
           if (v) details.push(`${k}: ${v}`);
         });
       }
-      return details.length > 0 ? `<div style="font-size: 11px; color: #666; margin-top: 4px; border-top: 1px dashed #eee; padding-top: 4px;">${details.join(" | ")}</div>` : "";
+      return details.length > 0 ? `<div style="font-size: 10px; color: #777; margin-top: 5px; font-weight: 500;">${details.join(" | ")}</div>` : "";
     };
 
     let itemsHtml = "";
     if (isCartOrder && data.cartItems) {
       itemsHtml = data.cartItems.map((item, i) => `
-        <tr style="border-bottom: 1px solid #f0f0f0;">
-          <td style="padding: 15px 20px; text-align: right;">
-            <div style="font-weight: 800; font-size: 13px;">${i + 1}. ${item.name}</div>
-            ${renderDetails({ size: item.size, color: item.color })}
+        <tr style="border-bottom: 2px solid #f8f8f8;">
+          <td style="padding: 16px 20px; text-align: right; vertical-align: top;">
+            <div style="font-weight: 800; font-size: 14px; color: #111;">${i + 1}. ${item.name}</div>
+            ${renderDetails(item)}
           </td>
-          <td style="padding: 15px 20px; text-align: center; font-weight: 700;">${item.quantity}</td>
-          <td style="padding: 15px 20px; text-align: left; font-weight: 900; color: ${branding.primaryColor};">
-            ${(item.price * item.quantity).toLocaleString()} د.ج
+          <td style="padding: 16px 15px; text-align: center; vertical-align: middle; font-weight: 700; color: #444; border-right: 1px solid #f5f5f5;">${item.price.toLocaleString()} دج</td>
+          <td style="padding: 16px 15px; text-align: center; vertical-align: middle; font-weight: 700; color: #444; border-right: 1px solid #f5f5f5;">${item.quantity}</td>
+          <td style="padding: 16px 20px; text-align: left; vertical-align: middle; font-weight: 900; color: ${branding.primaryColor}; font-size: 16px;">
+            ${(item.price * item.quantity).toLocaleString()} <span style="font-size: 10px;">دج</span>
           </td>
         </tr>
       `).join("");
     } else {
+      const unitPrice = data.quantity > 0 ? data.productPrice / data.quantity : data.productPrice;
       itemsHtml = `
         <tr style="background: white;">
-          <td style="padding: 20px; text-align: right;">
-            <div style="font-weight: 900; font-size: 15px; color: #111; margin-bottom: 4px;">${data.productName}</div>
+          <td style="padding: 25px 20px; text-align: right; vertical-align: top;">
+            <div style="font-weight: 900; font-size: 17px; color: #111; margin-bottom: 6px;">${data.productName}</div>
             <div style="display: flex; flex-wrap: wrap; gap: 8px; font-size: 11px; color: #666;">
-               ${data.selectedSize ? `<span style="background: #f0f9ff; color: ${branding.primaryColor}; padding: 2px 8px; border-radius: 4px; border: 1px solid ${branding.primaryColor}20;">المقاس: ${data.selectedSize}</span>` : ""}
-               ${data.selectedColor ? `<span style="background: #f0f9ff; color: ${branding.primaryColor}; padding: 2px 8px; border-radius: 4px; border: 1px solid ${branding.primaryColor}20;">اللون: ${data.selectedColor}</span>` : ""}
-               ${data.numColors ? `<span style="background: #f0f9ff; color: ${branding.primaryColor}; padding: 2px 8px; border-radius: 4px; border: 1px solid ${branding.primaryColor}20;">طباعة: ${data.numColors} ألوان ${data.isDoubleSided ? '(جهتين)' : '(جهة واحدة)'}</span>` : ""}
+               ${data.selectedSize ? `<span style="background: #f0f9ff; color: ${branding.primaryColor}; padding: 3px 10px; border-radius: 6px; border: 1px solid ${branding.primaryColor}20; font-weight: 700;">المقاس: ${data.selectedSize}</span>` : ""}
+               ${data.selectedColor ? `<span style="background: #f0f9ff; color: ${branding.primaryColor}; padding: 3px 10px; border-radius: 6px; border: 1px solid ${branding.primaryColor}20; font-weight: 700;">اللون: ${data.selectedColor}</span>` : ""}
+               ${data.numColors ? `<span style="background: #f0f9ff; color: ${branding.primaryColor}; padding: 3px 10px; border-radius: 6px; border: 1px solid ${branding.primaryColor}20; font-weight: 700;">طباعة: ${data.numColors} ألوان ${data.isDoubleSided ? '(جهتين)' : '(جهة واحدة)'}</span>` : ""}
             </div>
             ${data.customVariantSelections ? `
-              <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #f0f0f0; display: flex; gap: 8px; flex-wrap: wrap;">
+              <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid #f5f5f5; display: flex; gap: 8px; flex-wrap: wrap;">
                 ${Object.entries(data.customVariantSelections)
                   .filter(([_, v]) => v)
-                  .map(([k, v]) => `<span style="font-size: 10px; background: #fafafa; border: 1px solid #eee; padding: 2px 6px; border-radius: 4px; color: #888;"><b>${k}:</b> ${v}</span>`).join("")}
+                  .map(([k, v]) => `<span style="font-size: 10px; background: #fafafa; border: 1px solid #eee; padding: 3px 8px; border-radius: 6px; color: #777;"><b>${k}:</b> ${v}</span>`).join("")}
               </div>
             ` : ""}
           </td>
-          <td style="padding: 20px; text-align: center; font-weight: 900; font-size: 16px;">${data.quantity}</td>
-          <td style="padding: 20px; text-align: left; font-weight: 900; font-size: 18px; color: ${branding.primaryColor};">
-            ${finalTotal.toLocaleString()} <span style="font-size: 12px;">د.ج</span>
+          <td style="padding: 25px 15px; text-align: center; vertical-align: middle; font-weight: 800; font-size: 16px; color: #444; border-right: 1px solid #f5f5f5;">${unitPrice.toLocaleString()} <span style="font-size: 9px; opacity: 0.6;">دج</span></td>
+          <td style="padding: 25px 15px; text-align: center; vertical-align: middle; font-weight: 800; font-size: 18px; border-right: 1px solid #f5f5f5;">${data.quantity}</td>
+          <td style="padding: 25px 20px; text-align: left; vertical-align: middle; font-weight: 900; font-size: 22px; color: ${branding.primaryColor};">
+            ${data.productPrice.toLocaleString()} <span style="font-size: 12px;">دج</span>
           </td>
         </tr>
       `;
     }
 
     container.innerHTML = `
-      <div style="padding: 40px; background: #fff;">
+      <div style="padding: 50px; background: #fff;">
         <!-- Luxury Header Section -->
-        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 40px; border-bottom: 4px solid ${branding.primaryColor}; padding-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 50px; border-bottom: 5px solid ${branding.primaryColor}; padding-bottom: 25px;">
           <div>
-            ${branding.logo ? `<img src="${branding.logo}" style="max-height: 70px; margin-bottom: 12px; display: block;" />` : `<div style="font-size: 32px; font-weight: 900; color: ${branding.primaryColor}; margin-bottom: 5px;">${branding.storeName}</div>`}
-            <div style="font-size: 12px; color: #888; letter-spacing: 1px;">أفضل خدمات الطباعة والتغليف في الجزائر</div>
+            ${branding.logo ? `<img src="${branding.logo}" style="max-height: 85px; margin-bottom: 15px; display: block;" />` : `<div style="font-size: 36px; font-weight: 900; color: ${branding.primaryColor}; margin-bottom: 5px;">${branding.storeName}</div>`}
+            <div style="font-size: 13px; color: #666; font-weight: 600;">أفضل خدمات الطباعة والتغليف في الجزائر</div>
           </div>
           <div style="text-align: left;">
-            <div style="font-size: 48px; font-weight: 900; color: #f0f0f0; margin-top: -15px;">وصل طلب</div>
-            <div style="background: ${branding.primaryColor}; color: white; padding: 10px 20px; border-radius: 8px; display: inline-block; margin-top: -10px; position: relative; z-index: 1; box-shadow: 0 4px 12px ${branding.primaryColor}30;">
-              <div style="font-size: 10px; opacity: 0.8; font-weight: bold; margin-bottom: 2px;">رقم الطلب الرسمي</div>
-              <div style="font-size: 22px; font-weight: 900; letter-spacing: 2px;">#${shortId}</div>
+            <div style="font-size: 56px; font-weight: 900; color: #f5f5f5; margin-top: -20px; text-transform: uppercase;">وصل طلب</div>
+            <div style="background: ${branding.primaryColor}; color: white; padding: 12px 24px; border-radius: 12px; display: inline-block; margin-top: -15px; position: relative; z-index: 1; box-shadow: 0 8px 20px ${branding.primaryColor}30;">
+              <div style="font-size: 10px; opacity: 0.9; font-weight: 900; margin-bottom: 4px; uppercase; letter-spacing: 1px;">رقم الطلب الرسمي</div>
+              <div style="font-size: 24px; font-weight: 900; letter-spacing: 2px;">#${shortId}</div>
             </div>
           </div>
         </div>
 
         <!-- Billing Details Grid -->
-        <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 30px; margin-bottom: 40px;">
-          <div style="background: #fafafa; border-radius: 12px; padding: 25px; border: 1px solid #f0f0f0;">
-             <div style="font-size: 11px; font-weight: 900; color: ${branding.primaryColor}; text-transform: uppercase; margin-bottom: 15px; border-bottom: 2px solid ${branding.primaryColor}15; padding-bottom: 5px;">بيانات العميل</div>
-             <div style="display: flex; flex-direction: column; gap: 12px;">
-                <div style="display: flex; justify-content: space-between;">
-                   <span style="color: #888; font-size: 12px;">اسم العميل:</span>
-                   <span style="font-weight: 800; font-size: 14px;">${data.customerName}</span>
+        <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 35px; margin-bottom: 45px;">
+          <div style="background: #fdfdfd; border-radius: 15px; padding: 25px; border: 1px solid #f0f0f0; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+             <div style="font-size: 12px; font-weight: 900; color: ${branding.primaryColor}; text-transform: uppercase; margin-bottom: 18px; border-bottom: 2px solid ${branding.primaryColor}15; padding-bottom: 6px;">بيانات العميل المستلم</div>
+             <div style="display: flex; flex-direction: column; gap: 14px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                   <span style="color: #666; font-size: 13px; font-weight: 600;">اسم العميل:</span>
+                   <span style="font-weight: 800; font-size: 15px; color: #111;">${data.customerName}</span>
                 </div>
-                <div style="display: flex; justify-content: space-between;">
-                   <span style="color: #888; font-size: 12px;">رقم الهاتف:</span>
-                   <span style="font-weight: 800; font-size: 14px; direction: ltr;">${data.customerPhone}</span>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                   <span style="color: #666; font-size: 13px; font-weight: 600;">رقم الهاتف:</span>
+                   <span style="font-weight: 800; font-size: 15px; color: #111; direction: ltr;">${data.customerPhone}</span>
                 </div>
              </div>
           </div>
-          <div style="background: #fafafa; border-radius: 12px; padding: 25px; border: 1px solid #f0f0f0;">
-             <div style="font-size: 11px; font-weight: 900; color: ${branding.primaryColor}; text-transform: uppercase; margin-bottom: 15px; border-bottom: 2px solid ${branding.primaryColor}15; padding-bottom: 5px;">تفاصيل التاريخ</div>
-             <div style="display: flex; flex-direction: column; gap: 12px;">
-                <div style="display: flex; justify-content: space-between;">
-                   <span style="color: #888; font-size: 12px;">تاريخ الإنشاء:</span>
-                   <span style="font-weight: 800; font-size: 14px;">${new Date().toLocaleDateString("ar-DZ")}</span>
+          <div style="background: #fdfdfd; border-radius: 15px; padding: 25px; border: 1px solid #f0f0f0; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+             <div style="font-size: 12px; font-weight: 900; color: ${branding.primaryColor}; text-transform: uppercase; margin-bottom: 18px; border-bottom: 2px solid ${branding.primaryColor}15; padding-bottom: 6px;">تفاصيل السجل</div>
+             <div style="display: flex; flex-direction: column; gap: 14px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                   <span style="color: #666; font-size: 13px; font-weight: 600;">تاريخ الإنشاء:</span>
+                   <span style="font-weight: 800; font-size: 15px; color: #111;">${new Date().toLocaleDateString("ar-DZ")}</span>
                 </div>
-                <div style="display: flex; justify-content: space-between;">
-                   <span style="color: #888; font-size: 12px;">وقت الطلب:</span>
-                   <span style="font-weight: 800; font-size: 14px;">${new Date().toLocaleTimeString("ar-DZ", { hour: "2-digit", minute: "2-digit" })}</span>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                   <span style="color: #666; font-size: 13px; font-weight: 600;">وقت الطلب:</span>
+                   <span style="font-weight: 800; font-size: 15px; color: #111;">${new Date().toLocaleTimeString("ar-DZ", { hour: "2-digit", minute: "2-digit" })}</span>
                 </div>
              </div>
           </div>
         </div>
 
         <!-- Items Table -->
-        <div style="margin-bottom: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); border-radius: 15px; overflow: hidden; border: 1px solid #eee;">
+        <div style="margin-bottom: 45px; box-shadow: 0 15px 40px rgba(0,0,0,0.04); border-radius: 20px; overflow: hidden; border: 1px solid #eee;">
           <table style="width: 100%; border-collapse: collapse;">
             <thead>
-              <tr style="background: #1a1a1a; color: white;">
-                <th style="padding: 18px 20px; text-align: right; font-size: 12px; font-weight: 900; border-left: 1px solid #333;">تفاصيل المنتج والمواصفات</th>
-                <th style="padding: 18px 20px; text-align: center; font-size: 12px; font-weight: 900; border-left: 1px solid #333; width: 80px;">الكمية</th>
-                <th style="padding: 18px 20px; text-align: left; font-size: 12px; font-weight: 900; width: 140px;">السعر الإجمالي</th>
+              <tr style="background: #111; color: white;">
+                <th style="padding: 22px 20px; text-align: right; font-size: 13px; font-weight: 900; border-left: 1px solid #222;">تفاصيل المنتج والمواصفات</th>
+                <th style="padding: 22px 15px; text-align: center; font-size: 13px; font-weight: 900; border-left: 1px solid #222; width: 100px;">سعر القطعة</th>
+                <th style="padding: 22px 15px; text-align: center; font-size: 13px; font-weight: 900; border-left: 1px solid #222; width: 80px;">الكمية</th>
+                <th style="padding: 22px 20px; text-align: left; font-size: 13px; font-weight: 900; width: 160px;">السعر الإجمالي</th>
               </tr>
             </thead>
             <tbody>
@@ -181,41 +185,45 @@ export async function generateAndUploadOrderPDF(data: OrderPDFData): Promise<str
 
         <!-- Summary & Totals -->
         <div style="display: flex; justify-content: flex-end;">
-          <div style="width: 300px; background: #1a1a1a; color: white; border-radius: 15px; padding: 25px; box-shadow: 0 15px 35px ${branding.primaryColor}20;">
+          <div style="width: 320px; background: #111; color: white; border-radius: 20px; padding: 30px; box-shadow: 0 20px 40px ${branding.primaryColor}20;">
             ${data.discountAmount > 0 ? `
-              <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 12px; opacity: 0.7;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 14px; font-size: 13px; opacity: 0.7; font-weight: 600;">
                 <span>المجموع الفرعي</span>
-                <span>${(finalTotal + data.discountAmount).toLocaleString()} د.ج</span>
+                <span>${(finalTotal + data.discountAmount).toLocaleString()} دج</span>
               </div>
-              <div style="display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 12px; color: #4ade80; font-weight: bold;">
-                <span>إجمالي الخصم</span>
-                <span>- ${data.discountAmount.toLocaleString()} د.ج</span>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 18px; font-size: 13px; color: #4ade80; font-weight: 800;">
+                <span>إجمالي الخصم المطبق</span>
+                <span>- ${data.discountAmount.toLocaleString()} دج</span>
               </div>
-              <div style="border-top: 1px solid #333; margin-bottom: 15px;"></div>
+              <div style="border-top: 1px solid #222; margin-bottom: 18px;"></div>
             ` : ""}
             <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size: 14px; font-weight: bold; opacity: 0.8;">المبلغ المطلوب</span>
-              <span style="font-size: 28px; font-weight: 900; color: ${branding.primaryColor};">${finalTotal.toLocaleString()} <span style="font-size: 14px;">د.ج</span></span>
+              <span style="font-size: 16px; font-weight: 900; opacity: 0.9;">المبلغ المطلوب</span>
+              <span style="font-size: 32px; font-weight: 900; color: ${branding.primaryColor};">${finalTotal.toLocaleString()} <span style="font-size: 14px;">دج</span></span>
             </div>
           </div>
         </div>
 
         ${data.notes ? `
-          <div style="margin-top: 40px; background: #fffbeb; border-right: 4px solid #fcd34d; border-radius: 0 8px 8px 0; padding: 20px;">
-            <div style="font-size: 11px; font-weight: 900; color: #92400e; text-transform: uppercase; margin-bottom: 8px;">ملاحظات خاصة:</div>
-            <div style="color: #78350f; font-weight: 600; line-height: 1.8;">${data.notes}</div>
+          <div style="margin-top: 45px; background: #fffcf0; border-right: 5px solid #fbbf24; border-radius: 4px 15px 15px 4px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
+            <div style="font-size: 12px; font-weight: 900; color: #b45309; text-transform: uppercase; margin-bottom: 10px; display: flex; items-center gap: 8px;">
+               <span style="display: inline-block; width: 6px; height: 6px; background: #b45309; border-radius: 50%;"></span>
+               ملاحظات فريق العمل والطباعة:
+            </div>
+            <div style="color: #92400e; font-weight: 700; line-height: 1.8; font-size: 14px;">${data.notes}</div>
           </div>
         ` : ""}
 
         <!-- Modern Footer -->
-        <div style="margin-top: 60px; text-align: center; border-top: 1px solid #eee; padding-top: 30px;">
-           <div style="font-size: 18px; font-weight: 900; color: ${branding.primaryColor};">${branding.storeName}</div>
-           <div style="font-size: 11px; color: #aaa; margin-top: 8px;">هذا وصل طلب رسمي ومعتمد للأغراض التجارية والإنتاجية</div>
-           <div style="display: flex; justify-content: center; gap: 20px; margin-top: 15px;">
-              <div style="font-size: 10px; color: #888;">✔ جودة مضمونة</div>
-              <div style="font-size: 10px; color: #888;">✔ توصيل سريع</div>
-              <div style="font-size: 10px; color: #888;">✔ دعم فني متواصل</div>
+        <div style="margin-top: 80px; text-align: center; border-top: 2px solid #f5f5f5; padding-top: 40px;">
+           <div style="font-size: 22px; font-weight: 900; color: ${branding.primaryColor}; margin-bottom: 12px; letter-spacing: 1px;">${branding.storeName}</div>
+           <div style="font-size: 12px; color: #999; font-weight: 600;">هذا الوصل وثيقة رسمية معتمدة لخدمات الطباعة وسير السكاكين</div>
+           <div style="display: flex; justify-content: center; gap: 30px; margin-top: 25px;">
+              <div style="font-size: 11px; color: #777; display: flex; align-items: center; gap: 6px;"><span style="color: ${branding.primaryColor};">✔</span> جودة مضمونة 100%</div>
+              <div style="font-size: 11px; color: #777; display: flex; align-items: center; gap: 6px;"><span style="color: ${branding.primaryColor};">✔</span> توصيل لـ 58 ولاية</div>
+              <div style="font-size: 11px; color: #777; display: flex; align-items: center; gap: 6px;"><span style="color: ${branding.primaryColor};">✔</span> دعم فني 24/7</div>
            </div>
+           <div style="margin-top: 30px; font-size: 10px; color: #ccc;">Powered by Antigravity Agency</div>
         </div>
       </div>
     `;

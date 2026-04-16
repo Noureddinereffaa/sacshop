@@ -44,9 +44,10 @@ export default function SettingsProvider({ children }: { children: React.ReactNo
         const marketing = settingsMap.marketing || null;
         const slider = settingsMap.slider || [];
         const partners = settingsMap.partners || [];
+        const popup = settingsMap.popup_offer || null;
  
         // 1. Update global store
-        setSettings(branding, discounts, navigation, promobar, marketing, slider, partners);
+        setSettings(branding, discounts, navigation, promobar, marketing, slider, partners, popup);
  
         // 2. Sync Cart Store logic
         setDiscountConfig({

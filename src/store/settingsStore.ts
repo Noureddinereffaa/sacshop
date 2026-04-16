@@ -19,6 +19,16 @@ interface Discounts {
   cartMinItems: number;
 }
 
+interface PopupOffer {
+  enabled: boolean;
+  title: string;
+  description: string;
+  image: string;
+  buttonText: string;
+  buttonLink: string;
+  delay: number;
+}
+
 interface NavigationItem {
   label: string;
   href: string;
@@ -37,8 +47,9 @@ interface SettingsState {
   marketing: any;
   slider: any[];
   partners: any[];
+  popup: PopupOffer;
   isLoaded: boolean;
-  setSettings: (branding: Branding, discounts: Discounts, navigation: NavigationItem[], promobar?: any, marketing?: any, slider?: any[], partners?: any[]) => void;
+  setSettings: (branding: Branding, discounts: Discounts, navigation: NavigationItem[], promobar?: any, marketing?: any, slider?: any[], partners?: any[], popup?: PopupOffer) => void;
 }
 
 export const useSettingsStore = create<SettingsState>((set) => ({
@@ -64,8 +75,9 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   marketing: {},
   slider: [],
   partners: [],
+  popup: { enabled: false, title: "", description: "", image: "", buttonText: "اطلب الآن", buttonLink: "/products", delay: 2000 },
   isLoaded: false,
-  setSettings: (branding, discounts, navigation, promobar, marketing, slider, partners) => 
+  setSettings: (branding, discounts, navigation, promobar, marketing, slider, partners, popup) => 
     set({ 
       branding, 
       discounts, 
@@ -74,6 +86,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
       marketing: marketing || {},
       slider: slider || [],
       partners: partners || [],
+      popup: popup || { enabled: false, title: "", description: "", image: "", buttonText: "اطلب الآن", buttonLink: "/products", delay: 2000 },
       isLoaded: true 
     }),
 }));

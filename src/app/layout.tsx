@@ -55,6 +55,7 @@ import WhatsAppButton from "@/components/WhatsAppButton";
 const QuickAddModal = dynamic(() => import("@/components/QuickAddModal"));
 import GlobalNavigation from "@/components/GlobalNavigation";
 import Footer from "@/components/Footer";
+import OfferPopup from "@/components/OfferPopup";
 
 export default function RootLayout({
   children,
@@ -81,6 +82,7 @@ export default function RootLayout({
           {children}
           <Footer />
           <QuickAddModal />
+          <OfferPopup />
           <WhatsAppButton />
         </SettingsProvider>
       </body>

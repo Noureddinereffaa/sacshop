@@ -98,7 +98,8 @@ export default function AdminSettings() {
                { id: "slider", name: "سلايدر الرئيسية", icon: ImageIcon },
                { id: "partners", name: "شركاء النجاح", icon: Users },
                { id: "promobar", name: "شريط العروض", icon: Zap },
-               { id: "offers", name: "العروض والخصومات", icon: Tag },
+               { id: "offers", name: "المستويات والولاء", icon: Tag },
+               { id: "popup", name: "نافذة العروض", icon: Zap },
                { id: "marketing", name: "بيكسلات التتبع", icon: BarChart2 },
             ].map((tab) => (
               <button
@@ -302,7 +303,105 @@ export default function AdminSettings() {
                   </div>
                 )}
 
-                {activeTab === "promobar" && (
+                {activeTab === "popup" && (
+                  <div className="space-y-10 animate-in fade-in duration-500 text-right">
+                    <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+                      <div>
+                        <h3 className="font-black text-gray-900 text-xl">إدارة النافذة المنبثقة (Popup)</h3>
+                        <p className="text-gray-500 text-sm mt-1">تظهر للزوار عند دخول الموقع للإعلان عن عروض خاصة</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                         <span className="text-xs font-bold text-gray-400">حالة النافذة:</span>
+                         <button 
+                           onClick={() => setSettings({ ...settings, popup_offer: { ...settings.popup_offer, enabled: !settings.popup_offer?.enabled } })}
+                           className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${settings.popup_offer?.enabled ? "bg-green-500 text-white shadow-lg shadow-green-100" : "bg-gray-100 text-gray-400"}`}
+                         >
+                           {settings.popup_offer?.enabled ? "نشطة الآن" : "متوقفة"}
+                         </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                      <div className="space-y-6">
+                        <div className="space-y-3">
+                           <label className="text-sm font-black text-gray-700 block mr-2">العنوان الجذاب (Title)</label>
+                           <input 
+                             type="text"
+                             value={settings.popup_offer?.title || ""}
+                             onChange={(e) => setSettings({ ...settings, popup_offer: { ...settings.popup_offer, title: e.target.value } })}
+                             placeholder="مثال: خصم 20% لفترة محدودة!"
+                             className="w-full bg-gray-50 border-none rounded-2xl py-4 px-5 font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 outline-none"
+                           />
+                        </div>
+
+                        <div className="space-y-3">
+                           <label className="text-sm font-black text-gray-700 block mr-2">وصف العرض (Description)</label>
+                           <textarea 
+                             value={settings.popup_offer?.description || ""}
+                             onChange={(e) => setSettings({ ...settings, popup_offer: { ...settings.popup_offer, description: e.target.value } })}
+                             placeholder="اكتب تفاصيل العرض هنا..."
+                             rows={3}
+                             className="w-full bg-gray-50 border-none rounded-2xl py-4 px-5 font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 outline-none resize-none"
+                           />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                           <div className="space-y-3">
+                              <label className="text-sm font-black text-gray-700 block mr-2">نص الزر</label>
+                              <input 
+                                type="text"
+                                value={settings.popup_offer?.buttonText || "اطلب الآن"}
+                                onChange={(e) => setSettings({ ...settings, popup_offer: { ...settings.popup_offer, buttonText: e.target.value } })}
+                                className="w-full bg-gray-50 border-none rounded-xl py-3 px-4 font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 outline-none"
+                              />
+                           </div>
+                           <div className="space-y-3">
+                              <label className="text-sm font-black text-gray-700 block mr-2">رابط التوجه</label>
+                              <input 
+                                type="text"
+                                dir="ltr"
+                                value={settings.popup_offer?.buttonLink || "/products"}
+                                onChange={(e) => setSettings({ ...settings, popup_offer: { ...settings.popup_offer, buttonLink: e.target.value } })}
+                                className="w-full bg-gray-50 border-none rounded-xl py-3 px-4 font-mono text-xs focus:ring-2 focus:ring-primary/20 outline-none"
+                              />
+                           </div>
+                        </div>
+
+                        <div className="space-y-3">
+                           <label className="text-sm font-black text-gray-700 block mr-2">توقيت الظهور (بالثواني)</label>
+                           <input 
+                             type="number"
+                             min="0"
+                             max="60"
+                             value={(settings.popup_offer?.delay || 2000) / 1000}
+                             onChange={(e) => setSettings({ ...settings, popup_offer: { ...settings.popup_offer, delay: parseInt(e.target.value) * 1000 } })}
+                             className="w-full bg-gray-50 border-none rounded-xl py-3 px-4 font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 outline-none"
+                           />
+                           <p className="text-[10px] text-gray-400 font-bold mr-2">الوقت المستغرق قبل ظهور النافذة للزائر</p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-6">
+                         <div className="space-y-3">
+                            <label className="text-sm font-black text-gray-700 block mr-2">صورة العرض (اختياري)</label>
+                            <div className="aspect-[4/5] bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200 overflow-hidden flex items-center justify-center">
+                               {settings.popup_offer?.image ? (
+                                 <img src={settings.popup_offer.image} className="w-full h-full object-cover" alt="preview" />
+                               ) : (
+                                 <ImageIcon size={48} className="text-gray-200" />
+                               )}
+                            </div>
+                            <ImageUploader 
+                              value={settings.popup_offer?.image || ""}
+                              onChange={(url) => setSettings({ ...settings, popup_offer: { ...settings.popup_offer, image: url } })}
+                              label=""
+                              placeholder="رفع صورة جذابة للعرض..."
+                            />
+                         </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
                  <div className="space-y-8 animate-in fade-in duration-500 text-right">
                     <div className="flex items-center justify-between mb-4">
                        <h3 className="font-bold text-gray-800">إعدادات شريط العروض العلوي</h3>

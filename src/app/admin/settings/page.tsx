@@ -22,7 +22,7 @@ import Link from "next/link";
 import ImageUploader from "@/components/ImageUploader";
 
 export default function AdminSettings() {
-  const [activeTab, setActiveTab] = useState<"branding" | "offers" | "marketing" | "navigation" | "promobar" | "slider" | "partners">("branding");
+  const [activeTab, setActiveTab] = useState<"branding" | "offers" | "marketing" | "navigation" | "promobar" | "slider" | "partners" | "popup">("branding");
   const [settings, setSettings] = useState<Record<string, any>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -402,7 +402,9 @@ export default function AdminSettings() {
                     </div>
                   </div>
                 )}
-                 <div className="space-y-8 animate-in fade-in duration-500 text-right">
+
+                {activeTab === "promobar" && (
+                  <div className="space-y-8 animate-in fade-in duration-500 text-right">
                     <div className="flex items-center justify-between mb-4">
                        <h3 className="font-bold text-gray-800">إعدادات شريط العروض العلوي</h3>
                        <div className="flex items-center gap-2">

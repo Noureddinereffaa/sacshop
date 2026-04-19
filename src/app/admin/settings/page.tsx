@@ -16,13 +16,15 @@ import {
   Crown,
   Zap,
   Image as ImageIcon,
-  Users
+  Users,
+  FileText
 } from "lucide-react";
 import Link from "next/link";
 import ImageUploader from "@/components/ImageUploader";
+import PoliciesEditor from "./components/PoliciesEditor";
 
 export default function AdminSettings() {
-  const [activeTab, setActiveTab] = useState<"branding" | "offers" | "marketing" | "navigation" | "promobar" | "slider" | "partners" | "popup">("branding");
+  const [activeTab, setActiveTab] = useState<"branding" | "offers" | "marketing" | "navigation" | "promobar" | "slider" | "partners" | "popup" | "policies">("branding");
   const [settings, setSettings] = useState<Record<string, any>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -91,7 +93,7 @@ export default function AdminSettings() {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
          {/* Tabs */}
-          <div className="space-y-2">
+          <div className="space-y-2 flex flex-col max-h-[80vh] overflow-y-auto pr-2 custom-scrollbar">
             {[
                { id: "branding", name: "الهوية والتواصل", icon: Palette },
                { id: "navigation", name: "قائمة الخدمات", icon: Globe },
@@ -101,6 +103,7 @@ export default function AdminSettings() {
                { id: "offers", name: "المستويات والولاء", icon: Tag },
                { id: "popup", name: "نافذة العروض", icon: Zap },
                { id: "marketing", name: "بيكسلات التتبع", icon: BarChart2 },
+               { id: "policies", name: "الصفحات القانونية", icon: FileText },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -974,6 +977,10 @@ export default function AdminSettings() {
                        </div>
                     </div>
                  </div>
+               )}
+
+               {activeTab === "policies" && (
+                 <PoliciesEditor settings={settings} setSettings={setSettings} />
                )}
             </div>
          </div>

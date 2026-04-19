@@ -11,14 +11,10 @@ export const revalidate = 60;
 
 export default async function Home() {
   const { data: rawProducts } = supabase 
-    ? await supabase.from("products").select("*").eq("is_published", true).eq("is_featured", true).limit(6)
+    ? await supabase.from("products").select("*").eq("is_published", true).order("created_at", { ascending: false }).limit(8)
     : { data: null };
 
-  const products = rawProducts && rawProducts.length > 0 ? rawProducts : [
-    { id: "1", name: "أكياس ورقية كرافت (Kraft Bags)", price: 35.00, image_url: "https://placehold.co/800x800/d2b48c/ffffff.png?text=Kraft+Bag", category: "أكياس ورقية" },
-    { id: "2", name: "أكياس فاخرة مغلفة", price: 120.00, image_url: "https://placehold.co/800x800/1a1a1a/ffffff.png?text=Luxury+Bag", category: "أكياس فاخرة" },
-    { id: "3", name: "علب شحن وتوصيل", price: 65.00, image_url: "https://placehold.co/800x800/c4a484/1a1a1a.png?text=Shipping+Box", category: "علب وتعبئة" },
-  ];
+  const products = rawProducts || [];
 
   // Fetch discount settings
   let discountEnabled = true; // Default to true as per cartStore
@@ -79,8 +75,8 @@ export default async function Home() {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-16">
             <div className="text-right">
-               <h2 className="text-4xl font-black text-gray-900 mb-4">أكياسنا الأكثر مبيعاً</h2>
-               <p className="text-gray-500 text-lg">اكتشف تشكيلتنا الواسعة من الأكياس ذات الجودة العالية</p>
+               <h2 className="text-4xl font-black text-gray-900 mb-4">أحدث المنتجات المضافة</h2>
+               <p className="text-gray-500 text-lg">استعرض أحدث ما وفرناه لكم بجودة عالية وأسعار تنافسية</p>
             </div>
             <Link href="/products" className="flex items-center gap-2 text-primary font-bold hover:gap-4 transition-all group">
                <span>مشاهدة كل المنتجات</span>

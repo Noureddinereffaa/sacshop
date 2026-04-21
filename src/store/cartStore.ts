@@ -43,6 +43,7 @@ interface CartStore {
   discountConfig: {
     enabled: boolean;
     percentage: number;
+    discountType: 'percentage' | 'fixed';
     minItems: number;
     advancedRules?: {
       productId: string;
@@ -50,7 +51,7 @@ interface CartStore {
       discountValue: number;
     }[];
   };
-  setDiscountConfig: (config: { enabled: boolean; percentage: number; minItems: number; advancedRules?: any[] }) => void;
+  setDiscountConfig: (config: { enabled: boolean; percentage: number; discountType: 'percentage' | 'fixed'; minItems: number; advancedRules?: any[] }) => void;
 }
 
 export const useCartStore = create<CartStore>()(
@@ -61,7 +62,7 @@ export const useCartStore = create<CartStore>()(
       customerStatus: 'guest',
       customer: null,
       appliedVipOffer: null,
-      discountConfig: { enabled: true, percentage: 10, minItems: 2, advancedRules: [] },
+      discountConfig: { enabled: true, percentage: 10, discountType: 'percentage', minItems: 2, advancedRules: [] },
       
       setDiscountConfig: (config) => set({ discountConfig: config }),
       setCustomerStatus: (status, customer = null) => set({ customerStatus: status, customer }),
@@ -159,8 +160,12 @@ export const useCartStore = create<CartStore>()(
                 totalCalculatedDiscount += Math.round(item.price * (rule.discountValue / 100)) * item.quantity;
               }
             } else {
-               // Fallback to global percentage if no specific rule
-               totalCalculatedDiscount += Math.round(item.price * (state.discountConfig.percentage / 100)) * item.quantity;
+               // Fallback to global percentage or fixed amount if no specific rule
+               if (state.discountConfig.discountType === 'fixed') {
+                 totalCalculatedDiscount += (state.discountConfig.percentage * item.quantity);
+               } else {
+                 totalCalculatedDiscount += Math.round(item.price * (state.discountConfig.percentage / 100)) * item.quantity;
+               }
             }
           });
           

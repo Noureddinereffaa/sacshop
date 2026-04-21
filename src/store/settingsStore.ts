@@ -16,6 +16,7 @@ interface Branding {
 interface Discounts {
   cartDiscountEnabled: boolean;
   cartDiscountPercentage: number;
+  newCustomerDiscountType: 'percentage' | 'fixed';
   cartMinItems: number;
   advancedRules?: {
     productId: string;
@@ -73,6 +74,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   discounts: {
     cartDiscountEnabled: true,
     cartDiscountPercentage: 10,
+    newCustomerDiscountType: 'percentage',
     cartMinItems: 2,
     advancedRules: []
   },

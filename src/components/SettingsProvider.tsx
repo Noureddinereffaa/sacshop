@@ -54,6 +54,7 @@ export default function SettingsProvider({ children }: { children: React.ReactNo
         setDiscountConfig({
           enabled: discounts.cartDiscountEnabled, 
           percentage: discounts.cartDiscountPercentage,
+          discountType: discounts.newCustomerDiscountType || 'percentage',
           minItems: discounts.cartMinItems,
           advancedRules: discounts.advancedRules
         });

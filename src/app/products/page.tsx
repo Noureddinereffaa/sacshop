@@ -71,7 +71,7 @@ function ProductsList() {
   useEffect(() => {
     let result = products;
     if (activeCategory !== "الكل") {
-      result = result.filter(p => p.category === activeCategory);
+      result = result.filter(p => p.category?.split(",").map(c => c.trim()).includes(activeCategory));
     }
     if (search.trim()) {
       result = result.filter(p =>

@@ -786,23 +786,47 @@ export default function ProductForm({ initialData }: ProductFormProps) {
               </h2>
               
               <div className="space-y-4">
-                 <div className="space-y-2">
-                   <label className="text-sm font-black text-gray-700 block">التصنيف الرئيسي</label>
-                   <select
-                     value={product.category || ""}
-                     onChange={e => setProduct(p => ({ ...p, category: e.target.value }))}
-                     className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20 outline-none font-bold"
-                   >
-                     <option value="">اختر تصنيفاً...</option>
-                     {dynamicCategories.map(c => <option key={c} value={c}>{c}</option>)}
-                   </select>
+                 <div className="space-y-3">
+                   <label className="text-sm font-black text-gray-700 block">التصنيفات (يمكنك اختيار أكثر من تصنيف)</label>
+                   <div className="flex flex-wrap gap-2">
+                     {dynamicCategories.map(c => {
+                       const isSelected = product.category?.split(",").map(cat => cat.trim()).includes(c);
+                       return (
+                         <button
+                           key={c}
+                           type="button"
+                           onClick={() => {
+                             const currentSelected = product.category ? product.category.split(",").map(cat => cat.trim()).filter(Boolean) : [];
+                             let newSelected;
+                             if (currentSelected.includes(c)) {
+                               newSelected = currentSelected.filter(cat => cat !== c);
+                             } else {
+                               newSelected = [...currentSelected, c];
+                             }
+                             setProduct(p => ({ ...p, category: newSelected.join(",") }));
+                           }}
+                           className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border ${
+                             isSelected ? "bg-primary/10 border-primary text-primary" : "bg-white border-gray-200 text-gray-600 hover:border-primary/50"
+                           }`}
+                         >
+                           {c}
+                         </button>
+                       );
+                     })}
+                   </div>
                  </div>
 
                  {/* Toggles */}
                  <div className="pt-4 space-y-4">
-                    <label className="flex items-center justify-between cursor-pointer p-4 bg-gray-50 rounded-xl border border-gray-100">
+                    <label className="flex items-center justify-between cursor-pointer p-4 bg-gray-50 rounded-xl border border-gray-100 relative group">
+                      <input 
+                        type="checkbox" 
+                        className="sr-only" 
+                        checked={product.is_published || false} 
+                        onChange={(e) => setProduct(p => ({ ...p, is_published: e.target.checked }))} 
+                      />
                       <div>
-                         <span className="font-black text-gray-900 block">نشر المنتج</span>
+                         <span className="font-black text-gray-900 block group-hover:text-primary transition-colors">نشر المنتج</span>
                          <span className="text-xs text-gray-500 font-medium mt-1 block">هل ترغب بعرض هذا المنتج للزبائن؟</span>
                       </div>
                       <div className={`w-12 h-6 rounded-full transition-colors ${product.is_published ? "bg-[#25D366]" : "bg-gray-300"} relative`}>
@@ -810,9 +834,15 @@ export default function ProductForm({ initialData }: ProductFormProps) {
                       </div>
                     </label>
 
-                    <label className="flex items-center justify-between cursor-pointer p-4 bg-yellow-50/50 rounded-xl border border-yellow-100">
+                    <label className="flex items-center justify-between cursor-pointer p-4 bg-yellow-50/50 rounded-xl border border-yellow-100 relative group">
+                      <input 
+                        type="checkbox" 
+                        className="sr-only" 
+                        checked={product.is_featured || false} 
+                        onChange={(e) => setProduct(p => ({ ...p, is_featured: e.target.checked }))} 
+                      />
                       <div>
-                         <span className="font-black text-yellow-600 block">منتج مميز ⭐</span>
+                         <span className="font-black text-yellow-600 block group-hover:text-yellow-700 transition-colors">منتج مميز ⭐</span>
                          <span className="text-xs text-yellow-500 font-medium mt-1 block">يظهر في قمة الصفحة الرئيسية للمتجر</span>
                       </div>
                       <div className={`w-12 h-6 rounded-full transition-colors ${product.is_featured ? "bg-yellow-400" : "bg-gray-300"} relative`}>

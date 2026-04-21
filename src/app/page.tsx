@@ -11,7 +11,11 @@ export const revalidate = 60;
 
 export default async function Home() {
   const { data: rawProducts } = supabase 
-    ? await supabase.from("products").select("*").eq("is_published", true).order("created_at", { ascending: false }).limit(8)
+    ? await supabase.from("products").select("*")
+        .eq("is_published", true)
+        .order("is_featured", { ascending: false, nullsFirst: false })
+        .order("created_at", { ascending: false })
+        .limit(8)
     : { data: null };
 
   const products = rawProducts || [];
@@ -75,8 +79,8 @@ export default async function Home() {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-16">
             <div className="text-right">
-               <h2 className="text-4xl font-black text-gray-900 mb-4">أحدث المنتجات المضافة</h2>
-               <p className="text-gray-500 text-lg">استعرض أحدث ما وفرناه لكم بجودة عالية وأسعار تنافسية</p>
+               <h2 className="text-4xl font-black text-gray-900 mb-4">المنتجات المميزة</h2>
+               <p className="text-gray-500 text-lg">استعرض أفضل المنتجات وأكثرها طلباً بجودة عالية وأسعار تنافسية</p>
             </div>
             <Link href="/products" className="flex items-center gap-2 text-primary font-bold hover:gap-4 transition-all group">
                <span>مشاهدة كل المنتجات</span>

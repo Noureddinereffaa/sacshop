@@ -5,19 +5,22 @@ import { Image as ImageIcon, Users2 } from "lucide-react";
 import { useSettingsStore } from "@/store/settingsStore";
 
 const PartnerCard = ({ partner }: { partner: { name: string; logo: string } }) => (
-  <div className="group relative flex-shrink-0 w-40 h-24 bg-white rounded-2xl border border-gray-100 shadow-sm flex items-center justify-center p-5 cursor-pointer transition-all duration-300 hover:shadow-lg hover:border-primary/20 hover:scale-105">
-    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity duration-300" />
+  <div className="group relative flex-shrink-0 w-44 h-28 bg-white rounded-2xl border border-gray-100 shadow-sm flex items-center justify-center p-6 cursor-pointer transition-all duration-300 hover:shadow-xl hover:border-primary/30 hover:scale-105">
+    {/* Hover glow */}
+    <div className="absolute inset-0 bg-gradient-to-br from-primary/6 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity duration-400" />
     {partner.logo ? (
       // eslint-disable-next-line @next/next/no-img-element
       <img
         src={partner.logo}
         alt={partner.name}
-        className="max-h-full max-w-full object-contain grayscale group-hover:grayscale-0 transition-all duration-300 pointer-events-none"
+        className="max-h-full max-w-full object-contain grayscale group-hover:grayscale-0 transition-all duration-500 pointer-events-none"
       />
     ) : (
-      <div className="flex flex-col items-center gap-2 opacity-50 group-hover:opacity-80 transition-opacity">
-        <ImageIcon size={28} className="text-gray-400 group-hover:text-primary transition-colors" />
-        <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">{partner.name}</span>
+      <div className="flex flex-col items-center gap-2 opacity-40 group-hover:opacity-70 transition-opacity">
+        <ImageIcon size={28} className="text-gray-400 group-hover:text-primary transition-colors duration-300" />
+        <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 text-center leading-tight">
+          {partner.name}
+        </span>
       </div>
     )}
   </div>
@@ -36,29 +39,39 @@ export default function Partners() {
   ];
 
   const partners = storePartners && storePartners.length > 0 ? storePartners : defaultPartners;
-
-  // ≤4 partners → static centered grid; more → infinite scroll marquee
   const useStaticGrid = partners.length <= 4;
 
-  // Repeat list enough times to fill any screen width and loop seamlessly
-  const repeatCount = Math.max(2, Math.ceil(12 / partners.length));
-  const scrollItems = Array.from({ length: repeatCount }, () => partners).flat();
+  // ── Infinite Marquee maths ──────────────────────────────────────────────────
+  // Card width (176px) + gap (24px) = 200px per slot.
+  // To guarantee the track fills a 2560px screen with NO gaps:
+  //   min cards per half = ceil(2560 / 200) = 13
+  //   sets of partners per half = ceil(13 / partners.length)
+  // We keep TWO identical halves → animation moves -50% = exactly one half.
+  const setsPerHalf = Math.max(2, Math.ceil(13 / partners.length));
+  const half = Array.from({ length: setsPerHalf }, () => partners).flat();
+  // Track = half + half (identical) so -50% snaps perfectly to start
+  const track = [...half, ...half];
 
-  // Speed: 5 s per partner slot (feels pleasantly slow)
-  const duration = partners.length * 5;
+  // Duration scales with the number of unique partners (4 s per partner)
+  const duration = Math.max(14, partners.length * 4);
 
   return (
     <section className="py-16 bg-white overflow-hidden relative">
-      {/* Edge dividers */}
+      {/* Edge rules */}
       <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
       <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
 
-      {/* CSS keyframe injected inline — no styled-jsx required */}
+      {/* Keyframe — injected once, no styled-jsx needed */}
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes partnerMarquee {
           0%   { transform: translateX(0); }
           100% { transform: translateX(-50%); }
         }
+        .partner-track {
+          animation: partnerMarquee ${duration}s linear infinite;
+          will-change: transform;
+        }
+        .partner-track:hover { animation-play-state: paused; }
       ` }} />
 
       {/* Header */}
@@ -102,22 +115,21 @@ export default function Partners() {
           </div>
         </div>
       ) : (
-        /* ── Infinite marquee for 5+ partners ── */
+        /* ── Infinite seamless marquee for 5+ partners ── */
         <div className="relative">
-          {/* Fade edges */}
-          <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
+          {/*
+            Thin fade masks — only 60px so logos are visible almost to the edge.
+            We use pointer-events:none so hover-pause still works on cards.
+          */}
+          <div className="absolute left-0 top-0 bottom-0 w-16 md:w-24 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-16 md:w-24 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
 
-          <div className="flex overflow-hidden">
-            <div
-              className="flex gap-6 items-center px-6 py-3"
-              style={{
-                animation: `partnerMarquee ${duration}s linear infinite`,
-                willChange: "transform",
-              }}
-            >
-              {scrollItems.map((partner, index) => (
-                <PartnerCard key={index} partner={partner} />
+          {/* Outer clip */}
+          <div className="overflow-hidden">
+            {/* Track: two identical halves — animation moves -50% = seamless loop */}
+            <div className="partner-track flex gap-6 items-center py-4 px-6">
+              {track.map((partner, index) => (
+                <PartnerCard key={`${index}-${partner.name}`} partner={partner} />
               ))}
             </div>
           </div>

@@ -36,6 +36,7 @@ export default function SettingsProvider({ children }: { children: React.ReactNo
         const discounts = {
           cartDiscountEnabled: settingsMap.discounts?.newCustomerDiscountEnabled !== false,
           cartDiscountPercentage: settingsMap.discounts?.newCustomerDiscountPercent || 10,
+          newCustomerDiscountType: settingsMap.discounts?.newCustomerDiscountType || 'percentage',
           cartMinItems: settingsMap.discounts?.newCustomerMinItems || 2,
           advancedRules: settingsMap.discounts?.advancedRules || [],
         };

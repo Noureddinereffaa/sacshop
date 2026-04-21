@@ -907,12 +907,22 @@ export default function AdminSettings() {
                              </select>
                           </div>
                            <div className="space-y-3">
-                             <label className="text-sm font-black text-gray-700 block mr-2">نسبة الخصم العامة (%)</label>
+                             <label className="text-sm font-black text-gray-700 block mr-2">نوع الخصم العام</label>
+                             <select
+                               value={settings.discounts?.newCustomerDiscountType || "percentage"}
+                               onChange={(e) => setSettings({ ...settings, discounts: { ...settings.discounts, newCustomerDiscountType: e.target.value } })}
+                               className="w-full bg-gray-50 border-none rounded-xl py-4 px-4 font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 transition-all"
+                             >
+                               <option value="percentage">نسبة مئوية (%)</option>
+                               <option value="fixed">مبلغ ثابت (د.ج)</option>
+                             </select>
+                           </div>
+                           <div className="space-y-3">
+                             <label className="text-sm font-black text-gray-700 block mr-2">القيمة العامة للخصم</label>
                              <input 
                                type="number" 
                                min="0"
-                               max="100"
-                               value={settings.discounts?.newCustomerDiscountPercent || 10}
+                               value={settings.discounts?.newCustomerDiscountPercent || 0}
                                onChange={(e) => setSettings({ ...settings, discounts: { ...settings.discounts, newCustomerDiscountPercent: parseInt(e.target.value) || 0 } })}
                                className="w-full bg-gray-50 border-none rounded-xl py-4 px-4 font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 transition-all"
                              />

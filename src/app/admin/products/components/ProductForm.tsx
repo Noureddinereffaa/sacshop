@@ -144,6 +144,29 @@ export default function ProductForm({ initialData }: ProductFormProps) {
      });
   };
 
+  const updateFlatTierPrice = (min_qty: number, newPrice: number) => {
+    setProduct(p => ({
+      ...p,
+      quantity_tiers: (p.quantity_tiers || []).map((t: any) => 
+        t.min_qty === min_qty ? { ...t, unit_price: newPrice } : t
+      )
+    }));
+  };
+
+  const updateMatrixTierPrice = (size: string, min_qty: number, newPrice: number) => {
+    setProduct(p => ({
+      ...p,
+      quantity_tiers: (p.quantity_tiers || []).map((q: any) => 
+        q.size === size ? {
+          ...q,
+          tiers: q.tiers.map((t: any) => 
+            t.min_qty === min_qty ? { ...t, unit_price: newPrice } : t
+          )
+        } : q
+      )
+    }));
+  };
+
   const addVariantImage = () => {
     if (!newVariantImage.image_url) return;
     setProduct(p => ({ ...p, variant_images: [...(p.variant_images || []), { ...newVariantImage }] }));
@@ -441,9 +464,18 @@ export default function ProductForm({ initialData }: ProductFormProps) {
                                   <span className="font-black text-gray-900">{tier.min_qty} قطعة</span>
                                </div>
                                <div className="flex items-center gap-4">
-                                 <div className="text-left">
+                                 <div className="text-left flex flex-col items-end">
                                     <span className="text-[10px] font-black text-gray-400 block uppercase">السعر</span>
-                                    <span className="font-black text-primary">{tier.unit_price} د.ج</span>
+                                    <div className="flex items-center gap-1" dir="ltr">
+                                       <span className="font-black text-primary text-sm mt-0.5">د.ج</span>
+                                       <input
+                                         type="number"
+                                         value={tier.unit_price === 0 ? "" : tier.unit_price}
+                                         onChange={e => updateFlatTierPrice(tier.min_qty, Number(e.target.value))}
+                                         className="w-16 bg-blue-50/50 border border-transparent hover:border-primary/30 focus:border-primary focus:bg-white rounded px-1 py-0.5 text-center font-black text-primary outline-none transition-all text-base"
+                                         dir="ltr"
+                                       />
+                                    </div>
                                  </div>
                                  <button type="button" onClick={() => removeFlatTier(tier.min_qty)} className="w-8 h-8 flex items-center justify-center bg-red-50 text-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white">
                                     <X size={14} />
@@ -515,9 +547,18 @@ export default function ProductForm({ initialData }: ProductFormProps) {
                                              <span className="font-black text-gray-900">{tier.min_qty}</span>
                                           </div>
                                           <div className="flex items-center gap-4">
-                                            <div className="text-left flex flex-col">
+                                            <div className="text-left flex flex-col items-end">
                                                <span className="text-[10px] font-black text-gray-400 uppercase">السعر</span>
-                                               <span className="font-black text-primary">{tier.unit_price} د.ج</span>
+                                               <div className="flex items-center gap-1" dir="ltr">
+                                                  <span className="font-black text-primary text-sm mt-0.5">د.ج</span>
+                                                  <input
+                                                    type="number"
+                                                    value={tier.unit_price === 0 ? "" : tier.unit_price}
+                                                    onChange={e => updateMatrixTierPrice(matrixObj.size, tier.min_qty, Number(e.target.value))}
+                                                    className="w-16 bg-blue-50/50 border border-transparent hover:border-primary/30 focus:border-primary focus:bg-white rounded px-1 py-0.5 text-center font-black text-primary outline-none transition-all text-base"
+                                                    dir="ltr"
+                                                  />
+                                               </div>
                                             </div>
                                             <button type="button" onClick={() => removeMatrixTier(matrixObj.size, tier.min_qty)} className="w-8 h-8 flex items-center justify-center bg-white text-red-500 rounded-full shadow-sm hover:bg-red-500 hover:text-white transition-all">
                                                <X size={14} />

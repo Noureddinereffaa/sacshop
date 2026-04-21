@@ -4,6 +4,25 @@ import { motion } from "framer-motion";
 import { Image as ImageIcon, Users2 } from "lucide-react";
 import { useSettingsStore } from "@/store/settingsStore";
 
+const PartnerCard = ({ partner }: { partner: { name: string; logo: string } }) => (
+  <div className="group relative flex-shrink-0 w-40 h-24 bg-white rounded-2xl border border-gray-100 shadow-sm flex items-center justify-center p-5 cursor-pointer transition-all duration-300 hover:shadow-lg hover:border-primary/20 hover:scale-105">
+    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity duration-300" />
+    {partner.logo ? (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={partner.logo}
+        alt={partner.name}
+        className="max-h-full max-w-full object-contain grayscale group-hover:grayscale-0 transition-all duration-300 pointer-events-none"
+      />
+    ) : (
+      <div className="flex flex-col items-center gap-2 opacity-50 group-hover:opacity-80 transition-opacity">
+        <ImageIcon size={28} className="text-gray-400 group-hover:text-primary transition-colors" />
+        <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">{partner.name}</span>
+      </div>
+    )}
+  </div>
+);
+
 export default function Partners() {
   const { partners: storePartners } = useSettingsStore();
 
@@ -13,44 +32,34 @@ export default function Partners() {
     { name: "DzBag", logo: "/partners/dzbag.png" },
     { name: "AlgerBox", logo: "/partners/algerbox.png" },
     { name: "EcoPack", logo: "/partners/ecopack.png" },
-    { name: "SmartBag", logo: "/partners/smartbag.png" }
+    { name: "SmartBag", logo: "/partners/smartbag.png" },
   ];
 
   const partners = storePartners && storePartners.length > 0 ? storePartners : defaultPartners;
-  
-  // If 4 or fewer partners, show a static centred grid — no need to scroll
+
+  // ≤4 partners → static centered grid; more → infinite scroll marquee
   const useStaticGrid = partners.length <= 4;
-  
-  // Duplicate enough times so it fills the screen + loops seamlessly
+
+  // Repeat list enough times to fill any screen width and loop seamlessly
   const repeatCount = Math.max(2, Math.ceil(12 / partners.length));
   const scrollItems = Array.from({ length: repeatCount }, () => partners).flat();
-  
-  // Scroll speed: ~5s per partner (feels pleasantly slow)
-  const duration = partners.length * 5;
 
-  const PartnerCard = ({ partner }: { partner: { name: string; logo: string } }) => (
-    <div className="group relative flex-shrink-0 w-40 h-24 bg-white rounded-2xl border border-gray-100 shadow-sm flex items-center justify-center p-5 cursor-pointer transition-all duration-300 hover:shadow-lg hover:border-primary/20 hover:scale-105">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity duration-300" />
-      {partner.logo ? (
-        <img
-          src={partner.logo}
-          alt={partner.name}
-          className="max-h-full max-w-full object-contain grayscale group-hover:grayscale-0 transition-all duration-300 pointer-events-none"
-        />
-      ) : (
-        <div className="flex flex-col items-center gap-2 opacity-50 group-hover:opacity-80 transition-opacity">
-          <ImageIcon size={28} className="text-gray-400 group-hover:text-primary transition-colors" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">{partner.name}</span>
-        </div>
-      )}
-    </div>
-  );
+  // Speed: 5 s per partner slot (feels pleasantly slow)
+  const duration = partners.length * 5;
 
   return (
     <section className="py-16 bg-white overflow-hidden relative">
-      {/* Subtle top/bottom dividers */}
+      {/* Edge dividers */}
       <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
       <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
+
+      {/* CSS keyframe injected inline — no styled-jsx required */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes partnerMarquee {
+          0%   { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+      ` }} />
 
       {/* Header */}
       <motion.div
@@ -75,8 +84,8 @@ export default function Partners() {
         </p>
       </motion.div>
 
-      {/* Static grid for few partners */}
       {useStaticGrid ? (
+        /* ── Static grid for ≤4 partners ── */
         <div className="container mx-auto px-4">
           <div className="flex flex-wrap gap-6 justify-center">
             {partners.map((partner, i) => (
@@ -93,9 +102,9 @@ export default function Partners() {
           </div>
         </div>
       ) : (
-        /* Infinite marquee scroll for 5+ partners */
+        /* ── Infinite marquee for 5+ partners ── */
         <div className="relative">
-          {/* Left/Right edge fades */}
+          {/* Fade edges */}
           <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
           <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
 
@@ -114,13 +123,6 @@ export default function Partners() {
           </div>
         </div>
       )}
-
-      <style jsx global>{`
-        @keyframes partnerMarquee {
-          0%   { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-      `}</style>
     </section>
   );
 }

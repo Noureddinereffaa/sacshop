@@ -1,7 +1,13 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Tajawal } from "next/font/google";
 import "./globals.css";
 import MarketingPixels from "@/components/MarketingPixels";
+import SettingsProvider from "@/components/SettingsProvider";
+import dynamic from "next/dynamic";
+import WhatsAppButton from "@/components/WhatsAppButton";
+import GlobalNavigation from "@/components/GlobalNavigation";
+import Footer from "@/components/Footer";
+import OfferPopup from "@/components/OfferPopup";
 
 const tajawal = Tajawal({
   subsets: ["arabic"],
@@ -9,13 +15,19 @@ const tajawal = Tajawal({
   variable: "--font-tajawal",
 });
 
+const QuickAddModal = dynamic(() => import("@/components/QuickAddModal"));
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#FF3366",
+};
+
 export const metadata: Metadata = {
   title: "Service Serigraphie | طباعة أكياس، ملصقات، وتغليف في الجزائر",
   description: "Service Serigraphie - شريكك الأول في الجزائر للطباعة الاحترافية. نحن متخصصون في طباعة الأكياس الورقية والقماشية، الملصقات (Stickers)، وحلول التغليف المخصصة. جودة عالية وتوصيل لـ 58 ولاية.",
   keywords: ["طباعة", "أكياس ورقية", "ملصقات", "تغليف", "سيريغرافي", "الجزائر", "أكياس قماشية", "Service Serigraphie", "printing algeria"],
   authors: [{ name: "Service Serigraphie" }],
-  viewport: "width=device-width, initial-scale=1",
-  themeColor: "#FF3366",
   icons: {
     icon: "/favicon.png?v=2",
     apple: "/favicon.png?v=2",
@@ -47,15 +59,6 @@ export const metadata: Metadata = {
     follow: true,
   },
 };
-
-import SettingsProvider from "@/components/SettingsProvider";
-import dynamic from "next/dynamic";
-import WhatsAppButton from "@/components/WhatsAppButton";
-
-const QuickAddModal = dynamic(() => import("@/components/QuickAddModal"));
-import GlobalNavigation from "@/components/GlobalNavigation";
-import Footer from "@/components/Footer";
-import OfferPopup from "@/components/OfferPopup";
 
 export default function RootLayout({
   children,

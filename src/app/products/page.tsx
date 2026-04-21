@@ -38,11 +38,16 @@ function ProductsList() {
 
   // Derive categories from navigation settings
   const dynamicCategories = ["الكل", ...(navigation || []).map(item => item.label)];
+  if (urlCategory && !dynamicCategories.includes(urlCategory)) {
+    dynamicCategories.push(urlCategory);
+  }
   
   useEffect(() => {
     setMounted(true);
     if (urlCategory) {
       setActiveCategory(urlCategory);
+    } else {
+      setActiveCategory("الكل");
     }
   }, [urlCategory]);
 

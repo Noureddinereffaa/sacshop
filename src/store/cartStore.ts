@@ -44,8 +44,13 @@ interface CartStore {
     enabled: boolean;
     percentage: number;
     minItems: number;
+    advancedRules?: {
+      productId: string;
+      discountType: 'percentage' | 'fixed';
+      discountValue: number;
+    }[];
   };
-  setDiscountConfig: (config: { enabled: boolean; percentage: number; minItems: number }) => void;
+  setDiscountConfig: (config: { enabled: boolean; percentage: number; minItems: number; advancedRules?: any[] }) => void;
 }
 
 export const useCartStore = create<CartStore>()(
@@ -56,7 +61,7 @@ export const useCartStore = create<CartStore>()(
       customerStatus: 'guest',
       customer: null,
       appliedVipOffer: null,
-      discountConfig: { enabled: true, percentage: 10, minItems: 2 },
+      discountConfig: { enabled: true, percentage: 10, minItems: 2, advancedRules: [] },
       
       setDiscountConfig: (config) => set({ discountConfig: config }),
       setCustomerStatus: (status, customer = null) => set({ customerStatus: status, customer }),
@@ -141,7 +146,25 @@ export const useCartStore = create<CartStore>()(
           discountType = 'welcome';
           percentage = state.discountConfig.percentage;
           label = "خصم ترحيبي للزبائن الجدد";
-          discountAmount = Math.round(subtotal * (percentage / 100));
+          
+          let totalCalculatedDiscount = 0;
+          const advancedRules = state.discountConfig.advancedRules || [];
+          
+          state.items.forEach(item => {
+            const rule = advancedRules.find(r => r.productId === item.productId);
+            if (rule) {
+              if (rule.discountType === 'fixed') {
+                totalCalculatedDiscount += (rule.discountValue * item.quantity);
+              } else if (rule.discountType === 'percentage') {
+                totalCalculatedDiscount += Math.round(item.price * (rule.discountValue / 100)) * item.quantity;
+              }
+            } else {
+               // Fallback to global percentage if no specific rule
+               totalCalculatedDiscount += Math.round(item.price * (state.discountConfig.percentage / 100)) * item.quantity;
+            }
+          });
+          
+          discountAmount = totalCalculatedDiscount;
         }
 
         const finalTotal = subtotal - discountAmount;

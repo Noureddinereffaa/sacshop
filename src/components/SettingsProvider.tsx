@@ -37,6 +37,7 @@ export default function SettingsProvider({ children }: { children: React.ReactNo
           cartDiscountEnabled: settingsMap.discounts?.newCustomerDiscountEnabled !== false,
           cartDiscountPercentage: settingsMap.discounts?.newCustomerDiscountPercent || 10,
           cartMinItems: settingsMap.discounts?.newCustomerMinItems || 2,
+          advancedRules: settingsMap.discounts?.advancedRules || [],
         };
  
         const navigation = settingsMap.navigation || [];
@@ -53,7 +54,8 @@ export default function SettingsProvider({ children }: { children: React.ReactNo
         setDiscountConfig({
           enabled: discounts.cartDiscountEnabled, 
           percentage: discounts.cartDiscountPercentage,
-          minItems: discounts.cartMinItems
+          minItems: discounts.cartMinItems,
+          advancedRules: discounts.advancedRules
         });
 
         // 3. Inject CSS Variables for Dynamic Branding

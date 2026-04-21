@@ -11,7 +11,7 @@ export default function PromoStrip() {
   if (!promobar || !promobar.enabled) return null;
 
   const savedButtons = promobar.buttons;
-  const buttons = (Array.isArray(savedButtons) && savedButtons.length > 0)
+  const buttons = Array.isArray(savedButtons)
     ? savedButtons
     : [
         { label: "إذا كنت صاحب صيدلية اضغط هنا", link: "/products?category=pharmacy", color: "green", position: "right" },

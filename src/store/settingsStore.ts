@@ -17,6 +17,11 @@ interface Discounts {
   cartDiscountEnabled: boolean;
   cartDiscountPercentage: number;
   cartMinItems: number;
+  advancedRules?: {
+    productId: string;
+    discountType: 'percentage' | 'fixed';
+    discountValue: number;
+  }[];
 }
 
 interface PopupOffer {
@@ -68,7 +73,8 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   discounts: {
     cartDiscountEnabled: true,
     cartDiscountPercentage: 10,
-    cartMinItems: 2
+    cartMinItems: 2,
+    advancedRules: []
   },
   navigation: [],
   promobar: { enabled: true, bgColor: "#00AEEF", position: 'top', buttons: [] },

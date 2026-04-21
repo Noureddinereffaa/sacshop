@@ -26,6 +26,7 @@ import PoliciesEditor from "./components/PoliciesEditor";
 export default function AdminSettings() {
   const [activeTab, setActiveTab] = useState<"branding" | "offers" | "marketing" | "navigation" | "promobar" | "slider" | "partners" | "popup" | "policies">("branding");
   const [settings, setSettings] = useState<Record<string, any>>({});
+  const [products, setProducts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -44,7 +45,15 @@ export default function AdminSettings() {
     // Fetch Settings
     const { data: settingsData } = await supabase.from("settings").select("*");
     const settingsMap = (settingsData || []).reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {});
+    
+    if (!settingsMap.discounts) settingsMap.discounts = {};
+    if (!settingsMap.discounts.advancedRules) settingsMap.discounts.advancedRules = [];
+    
     setSettings(settingsMap);
+    
+    // Fetch Products
+    const { data: productsData } = await supabase.from("products").select("id, name, price").order("created_at", { ascending: false });
+    setProducts(productsData || []);
     
     setIsLoading(false);
   }
@@ -897,8 +906,8 @@ export default function AdminSettings() {
                                <option value="false">معطل</option>
                              </select>
                           </div>
-                          <div className="space-y-3">
-                             <label className="text-sm font-black text-gray-700 block mr-2">نسبة الخصم المئوية (%)</label>
+                           <div className="space-y-3">
+                             <label className="text-sm font-black text-gray-700 block mr-2">نسبة الخصم العامة (%)</label>
                              <input 
                                type="number" 
                                min="0"
@@ -907,6 +916,7 @@ export default function AdminSettings() {
                                onChange={(e) => setSettings({ ...settings, discounts: { ...settings.discounts, newCustomerDiscountPercent: parseInt(e.target.value) || 0 } })}
                                className="w-full bg-gray-50 border-none rounded-xl py-4 px-4 font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 transition-all"
                              />
+                             <p className="text-[10px] text-gray-400 font-bold px-2">تُطبق على المنتجات التي ليس لها خصم مخصص أسفله (اجعلها 0 لإلغائها).</p>
                           </div>
                           <div className="space-y-3">
                              <label className="text-sm font-black text-gray-700 block mr-2">الحد الأدنى لعدد المنتجات</label>
@@ -918,6 +928,92 @@ export default function AdminSettings() {
                                className="w-full bg-gray-50 border-none rounded-xl py-4 px-4 font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 transition-all"
                              />
                           </div>
+                       </div>
+                       
+                       {/* ── Advanced Rules for Specific Products ── */}
+                       <div className="mt-8 border-t border-gray-100 pt-8 space-y-6">
+                          <div className="flex justify-between items-center">
+                             <h4 className="font-bold text-gray-800">تخصيص الخصم لمنتجات معينة</h4>
+                             <button 
+                               onClick={() => {
+                                 const advancedRules = settings.discounts?.advancedRules || [];
+                                 if (products.length > 0) {
+                                   setSettings({ 
+                                     ...settings, 
+                                     discounts: { 
+                                       ...settings.discounts, 
+                                       advancedRules: [...advancedRules, { productId: products[0].id, discountType: 'percentage', discountValue: 15 }] 
+                                     } 
+                                   });
+                                 }
+                               }}
+                               className="text-primary text-xs font-bold hover:underline"
+                             >
+                               + إضافة منتج مخصص
+                             </button>
+                          </div>
+
+                          {(settings.discounts?.advancedRules || []).map((rule: any, idx: number) => (
+                             <div key={idx} className="bg-gray-50 p-4 rounded-2xl border border-gray-100 flex flex-col md:flex-row gap-4 items-center">
+                                <div className="flex-1 w-full space-y-2">
+                                   <label className="text-[10px] font-black text-gray-400 uppercase">المنتج</label>
+                                   <select 
+                                     value={rule.productId}
+                                     onChange={(e) => {
+                                       const advancedRules = [...(settings.discounts?.advancedRules || [])];
+                                       advancedRules[idx].productId = e.target.value;
+                                       setSettings({ ...settings, discounts: { ...settings.discounts, advancedRules } });
+                                     }}
+                                     className="w-full bg-white border border-gray-200 rounded-xl py-2 px-3 text-xs font-bold text-gray-900"
+                                   >
+                                     {products.map(p => (
+                                        <option key={p.id} value={p.id}>{p.name}</option>
+                                     ))}
+                                   </select>
+                                </div>
+                                <div className="w-full md:w-1/4 space-y-2">
+                                   <label className="text-[10px] font-black text-gray-400 uppercase">نوع الخصم</label>
+                                   <select 
+                                     value={rule.discountType}
+                                     onChange={(e) => {
+                                       const advancedRules = [...(settings.discounts?.advancedRules || [])];
+                                       advancedRules[idx].discountType = e.target.value;
+                                       setSettings({ ...settings, discounts: { ...settings.discounts, advancedRules } });
+                                     }}
+                                     className="w-full bg-white border border-gray-200 rounded-xl py-2 px-3 text-xs font-bold text-gray-900"
+                                   >
+                                      <option value="percentage">نسبة مئوية (%)</option>
+                                      <option value="fixed">مبلغ ثابت (د.ج)</option>
+                                   </select>
+                                </div>
+                                <div className="w-full md:w-1/4 space-y-2">
+                                   <label className="text-[10px] font-black text-gray-400 uppercase">القيمة</label>
+                                   <input 
+                                     type="number" 
+                                     min="0"
+                                     value={rule.discountValue}
+                                     onChange={(e) => {
+                                       const advancedRules = [...(settings.discounts?.advancedRules || [])];
+                                       advancedRules[idx].discountValue = parseInt(e.target.value) || 0;
+                                       setSettings({ ...settings, discounts: { ...settings.discounts, advancedRules } });
+                                     }}
+                                     className="w-full bg-white border border-gray-200 rounded-xl py-2 px-3 text-xs font-bold text-gray-900"
+                                   />
+                                </div>
+                                <button 
+                                   onClick={() => {
+                                     const advancedRules = settings.discounts.advancedRules.filter((_: any, i: number) => i !== idx);
+                                     setSettings({ ...settings, discounts: { ...settings.discounts, advancedRules } });
+                                   }}
+                                   className="text-red-400 hover:text-red-600 mt-6"
+                                >
+                                   <Trash2 size={18} />
+                                </button>
+                             </div>
+                          ))}
+                          {(settings.discounts?.advancedRules || []).length === 0 && (
+                             <p className="text-xs text-gray-400 font-bold italic text-center">لم يتم إضافة منتجات مخصصة. سيتم تطبيق الخصم العام.</p>
+                          )}
                        </div>
                        
                        <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10">

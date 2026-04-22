@@ -628,26 +628,28 @@ export default function ProductDetailPage() {
                    </div>
 
                  {/* Price Breakdown Helper */}
-                 <div className="bg-primary/5 rounded-2xl p-4 border border-primary/10">
-                    <div className="flex justify-between text-xs font-bold text-gray-500 mb-2">
-                       <span>سعر القطعة (حسب المقاس والكمية واللون):</span>
-                       <span className="text-gray-900">{getBaseUnitPrice()} د.ج</span>
+                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm mt-4 overflow-hidden">
+                    <div className="p-4 space-y-3">
+                      <div className="flex justify-between text-sm font-bold text-gray-500">
+                         <span>سعر القطعة الأساسي:</span>
+                         <span className="text-gray-900 font-black">{getBaseUnitPrice()} د.ج</span>
+                      </div>
+                      {numColors > 1 && (
+                        <div className="flex justify-between text-sm font-bold text-gray-500">
+                          <span>إضافة {numColors - 1} ألوان إضافية:</span>
+                          <span className="text-gray-900 font-black">+{((numColors - 1) * (product?.printing_config?.extra_color_price || 0))} د.ج</span>
+                        </div>
+                      )}
+                      {isDoubleSided && (
+                        <div className="flex justify-between text-sm font-bold text-primary pt-3 border-t border-gray-50">
+                           <span>تكلفة الطباعة على جهتين:</span>
+                           <span className="font-black">{product?.printing_config?.double_sided_price ? `+${product.printing_config.double_sided_price * numColors} د.ج` : '× 2'}</span>
+                        </div>
+                      )}
                     </div>
-                    {numColors > 1 && (
-                      <div className="flex justify-between text-xs font-bold text-gray-500 mb-2">
-                        <span>إضافة {numColors - 1} ألوان إضافية:</span>
-                        <span className="text-gray-900">+{((numColors - 1) * (product?.printing_config?.extra_color_price || 0))} د.ج</span>
-                      </div>
-                    )}
-                    {isDoubleSided && (
-                      <div className="flex justify-between text-xs font-bold text-primary mb-2 pt-2 border-t border-primary/10">
-                         <span>إضافة الطباعة على جهتين ({numColors} ألوان):</span>
-                         <span>{product?.printing_config?.double_sided_price ? `+${product.printing_config.double_sided_price * numColors} د.ج` : '× 2'}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between text-sm font-black text-primary pt-2 border-t border-primary/20">
-                       <span>السعر النهائي للقطعة:</span>
-                       <span>{unitPriceAfterPrinting()} <span className="text-[10px]">د.ج / قطعة</span></span>
+                    <div className="flex justify-between items-center bg-primary/10 px-5 py-4 border-t border-primary/20">
+                       <span className="text-sm font-black text-primary">السعر النهائي للقطعة:</span>
+                       <span className="text-xl font-black text-primary">{unitPriceAfterPrinting()} <span className="text-xs">د.ج</span></span>
                     </div>
                  </div>
               </div>
@@ -689,20 +691,7 @@ export default function ProductDetailPage() {
                 </div>
               )}
 
-              {/* Trust Badges */}
-              <div className="grid grid-cols-2 gap-3 pt-2">
-                {[
-                  { icon: Star, text: "تصميم مخصص" },
-                  { icon: RefreshCcw, text: "ضمان الاستبدال" },
-                  { icon: ShieldCheck, text: "منتج أصلي 100%" },
-                  { icon: CheckCircle2, text: "جودة مضمونة 100%" },
-                ].map(badge => (
-                  <div key={badge.text} className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl">
-                    <badge.icon size={16} className="text-primary shrink-0" />
-                    <span className="text-xs font-bold text-gray-600">{badge.text}</span>
-                  </div>
-                ))}
-              </div>
+
             </div>
 
             {/* Add to Cart & Order Actions */}

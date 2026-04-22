@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Phone, User, Loader2, Edit3, MessageCircle, 
   ShoppingCart, Lock, Eye, EyeOff, CheckCircle2, 
-  Gift, Package, Crown, Sparkles
+  Gift, Package, Crown, Sparkles, Star, RefreshCcw, ShieldCheck
 } from "lucide-react";
 import Link from "next/link";
 import { CartItem, Product } from "@/types";
@@ -661,6 +661,21 @@ export default function OrderForm({
                 </motion.div>
               )}
             </AnimatePresence>
+          </div>
+
+          {/* Trust Badges */}
+          <div className="grid grid-cols-2 gap-3 pt-4 border-t border-gray-100">
+            {[
+              { icon: Star, text: "تصميم مخصص" },
+              { icon: RefreshCcw, text: "ضمان الاستبدال" },
+              { icon: ShieldCheck, text: "منتج أصلي 100%" },
+              { icon: CheckCircle2, text: "جودة مضمونة 100%" },
+            ].map(badge => (
+              <div key={badge.text} className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl">
+                <badge.icon size={16} className="text-primary shrink-0" />
+                <span className="text-xs font-bold text-gray-600">{badge.text}</span>
+              </div>
+            ))}
           </div>
 
           <AnimatePresence>

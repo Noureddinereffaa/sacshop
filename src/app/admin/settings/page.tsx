@@ -495,8 +495,11 @@ export default function AdminSettings() {
                                     type="text" 
                                     value={btn.label}
                                     onChange={(e) => {
-                                      const btns = [...settings.promobar.buttons];
-                                      btns[idx].label = e.target.value;
+                                      const btns = [...(settings.promobar?.buttons || [
+                                        { label: "إذا كنت صاحب صيدلية اضغط هنا", link: "/products?category=pharmacy", color: "green", position: "right" },
+                                        { label: "العروض والتخفيضات", link: "/offers", color: "white", position: "left" }
+                                      ])];
+                                      btns[idx] = { ...btns[idx], label: e.target.value };
                                       setSettings({ ...settings, promobar: { ...settings.promobar, buttons: btns } });
                                     }}
                                     className="w-full bg-white border border-gray-200 rounded-xl py-2 px-3 font-bold text-sm"
@@ -510,8 +513,11 @@ export default function AdminSettings() {
                                     value={btn.link}
                                     dir="ltr"
                                     onChange={(e) => {
-                                      const btns = [...settings.promobar.buttons];
-                                      btns[idx].link = e.target.value;
+                                      const btns = [...(settings.promobar?.buttons || [
+                                        { label: "إذا كنت صاحب صيدلية اضغط هنا", link: "/products?category=pharmacy", color: "green", position: "right" },
+                                        { label: "العروض والتخفيضات", link: "/offers", color: "white", position: "left" }
+                                      ])];
+                                      btns[idx] = { ...btns[idx], link: e.target.value };
                                       setSettings({ ...settings, promobar: { ...settings.promobar, buttons: btns } });
                                     }}
                                     className="w-full bg-white border border-gray-200 rounded-xl py-2 px-3 font-mono text-xs focus:ring-2 focus:ring-primary/20 outline-none"
@@ -533,8 +539,11 @@ export default function AdminSettings() {
                                      <select 
                                        value={btn.color}
                                        onChange={(e) => {
-                                         const btns = [...settings.promobar.buttons];
-                                         btns[idx].color = e.target.value;
+                                         const btns = [...(settings.promobar?.buttons || [
+                                           { label: "إذا كنت صاحب صيدلية اضغط هنا", link: "/products?category=pharmacy", color: "green", position: "right" },
+                                           { label: "العروض والتخفيضات", link: "/offers", color: "white", position: "left" }
+                                         ])];
+                                         btns[idx] = { ...btns[idx], color: e.target.value };
                                          setSettings({ ...settings, promobar: { ...settings.promobar, buttons: btns } });
                                        }}
                                        className="bg-white border text-xs p-1 rounded-md"
@@ -549,8 +558,11 @@ export default function AdminSettings() {
                                      <select 
                                        value={btn.position}
                                        onChange={(e) => {
-                                         const btns = [...settings.promobar.buttons];
-                                         btns[idx].position = e.target.value;
+                                         const btns = [...(settings.promobar?.buttons || [
+                                           { label: "إذا كنت صاحب صيدلية اضغط هنا", link: "/products?category=pharmacy", color: "green", position: "right" },
+                                           { label: "العروض والتخفيضات", link: "/offers", color: "white", position: "left" }
+                                         ])];
+                                         btns[idx] = { ...btns[idx], position: e.target.value };
                                          setSettings({ ...settings, promobar: { ...settings.promobar, buttons: btns } });
                                        }}
                                        className="bg-white border text-xs p-1 rounded-md"
@@ -562,7 +574,10 @@ export default function AdminSettings() {
                                </div>
                                <button 
                                  onClick={() => {
-                                   const btns = settings.promobar.buttons.filter((_: any, i: number) => i !== idx);
+                                   const btns = [...(settings.promobar?.buttons || [
+                                     { label: "إذا كنت صاحب صيدلية اضغط هنا", link: "/products?category=pharmacy", color: "green", position: "right" },
+                                     { label: "العروض والتخفيضات", link: "/offers", color: "white", position: "left" }
+                                   ])].filter((_: any, i: number) => i !== idx);
                                    setSettings({ ...settings, promobar: { ...settings.promobar, buttons: btns } });
                                  }}
                                  className="text-red-400 hover:text-red-600 transition-colors"

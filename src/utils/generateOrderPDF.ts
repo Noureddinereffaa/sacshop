@@ -1,7 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { CartItem } from "@/types";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+// jspdf and html2canvas removed from static import for code splitting
 
 interface OrderPDFData {
   orderId: string;
@@ -237,7 +236,8 @@ export async function generateAndUploadOrderPDF(data: OrderPDFData): Promise<str
     // Wait a tiny bit more for any layout shifts
     await new Promise(r => setTimeout(r, 100));
 
-    const canvas = await html2canvas(container, {
+    const html2canvasModule = (await import("html2canvas")).default;
+    const canvas = await html2canvasModule(container, {
       scale: 2,
       useCORS: true,
       backgroundColor: "#ffffff",
@@ -254,7 +254,8 @@ export async function generateAndUploadOrderPDF(data: OrderPDFData): Promise<str
     const pdfHeight = (canvasHeight * pdfWidth) / canvasWidth;
 
     // Create PDF with custom dimensions to avoid clipping
-    const pdf = new jsPDF({
+    const jsPDFModule = (await import("jspdf")).default;
+    const pdf = new jsPDFModule({
       orientation: "portrait",
       unit: "pt",
       format: [pdfWidth, pdfHeight]

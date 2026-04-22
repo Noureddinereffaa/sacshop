@@ -60,13 +60,81 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+import { createClient } from "@supabase/supabase-js";
+
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+  
+  let primaryColor = "#00AEEF";
+  let primaryColorRgb = "0 174 239";
+  let secondaryColor = "#e6007e";
+  let settingsMap: any = null;
+
+  if (supabaseUrl && supabaseKey) {
+    try {
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      const { data } = await supabase.from("settings").select("*");
+      settingsMap = (data || []).reduce(
+        (acc: Record<string, any>, s: { key: string; value: any }) => ({ ...acc, [s.key]: s.value }),
+        {}
+      );
+      
+      const branding = {
+        storeName: settingsMap.branding?.storeName || "Service Serigraphie",
+        logo: settingsMap.branding?.logo || "",
+        footerLogo: settingsMap.branding?.footerLogo || settingsMap.branding?.logo || "",
+        primaryColor: settingsMap.branding?.primaryColor || "#00AEEF",
+        secondaryColor: settingsMap.branding?.secondaryColor || "#e6007e",
+        whatsappNumber: settingsMap.branding?.whatsappNumber || "213",
+        contactEmail: settingsMap.branding?.contactEmail || "",
+        address: settingsMap.branding?.address || "الجزائر العاصمة",
+        facebookUrl: settingsMap.branding?.facebookUrl || "#",
+        instagramUrl: settingsMap.branding?.instagramUrl || "#",
+      };
+
+      const discounts = {
+        cartDiscountEnabled: settingsMap.discounts?.newCustomerDiscountEnabled !== false,
+        cartDiscountPercentage: settingsMap.discounts?.newCustomerDiscountPercent || 10,
+        newCustomerDiscountType: settingsMap.discounts?.newCustomerDiscountType || 'percentage',
+        cartMinItems: settingsMap.discounts?.newCustomerMinItems || 2,
+        advancedRules: settingsMap.discounts?.advancedRules || [],
+      };
+
+      const navigation = settingsMap.navigation || [];
+      const promobar = settingsMap.promobar || null;
+      const marketing = settingsMap.marketing || null;
+      const slider = settingsMap.slider || [];
+      const partners = settingsMap.partners || [];
+      const popup = settingsMap.popup_offer || null;
+
+      settingsMap = { branding, discounts, navigation, promobar, marketing, slider, partners, popup };
+      
+      primaryColor = branding.primaryColor;
+      secondaryColor = branding.secondaryColor;
+      
+      const hexToRgb = (hex: string) => {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? `${parseInt(result[1], 16)} ${parseInt(result[2], 16)} ${parseInt(result[3], 16)}` : "0 174 239";
+      };
+      primaryColorRgb = hexToRgb(primaryColor);
+    } catch (e) {
+      console.error("SSR Settings Fetch Error", e);
+    }
+  }
+
+  const cssVariables = {
+    '--color-primary': primaryColor,
+    '--color-secondary': secondaryColor,
+    '--color-primary-rgb': primaryColorRgb,
+  } as React.CSSProperties;
+
   return (
-    <html lang="ar" dir="rtl">
+    <html lang="ar" dir="rtl" style={cssVariables}>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -79,7 +147,7 @@ export default function RootLayout({
         />
       </head>
       <body className={`${tajawal.variable} font-sans`}>
-        <SettingsProvider>
+        <SettingsProvider initialSettings={settingsMap}>
           <MarketingPixels />
           <GlobalNavigation />
           {children}

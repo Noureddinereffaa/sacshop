@@ -506,6 +506,7 @@ export default function AdminSettings() {
                                   <label className="text-[10px] font-black text-gray-400 uppercase">الرابط (Link)</label>
                                   <input 
                                     type="text" 
+                                    list={`promobar-links-${idx}`}
                                     value={btn.link}
                                     dir="ltr"
                                     onChange={(e) => {
@@ -513,8 +514,16 @@ export default function AdminSettings() {
                                       btns[idx].link = e.target.value;
                                       setSettings({ ...settings, promobar: { ...settings.promobar, buttons: btns } });
                                     }}
-                                    className="w-full bg-white border border-gray-200 rounded-xl py-2 px-3 font-mono text-xs"
+                                    className="w-full bg-white border border-gray-200 rounded-xl py-2 px-3 font-mono text-xs focus:ring-2 focus:ring-primary/20 outline-none"
+                                    placeholder="أدخل الرابط أو اختر من القائمة..."
                                   />
+                                  <datalist id={`promobar-links-${idx}`}>
+                                    {settings.navigation?.map((navItem: any, i: number) => (
+                                      <option key={i} value={navItem.link}>{navItem.name}</option>
+                                    ))}
+                                    <option value="/offers">صفحة العروض</option>
+                                    <option value="/products">كل المنتجات</option>
+                                  </datalist>
                                </div>
                             </div>
                             <div className="flex items-center justify-between">

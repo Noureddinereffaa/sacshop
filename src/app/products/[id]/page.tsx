@@ -442,14 +442,18 @@ export default function ProductDetailPage() {
             {/* Product Info */}
             <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm space-y-6">
               {/* Category & Rating */}
-              <div className="flex items-center justify-between">
-                <div className="flex text-yellow-400 gap-0.5">
+              <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex text-yellow-400 gap-0.5 shrink-0">
                   {[...Array(5)].map((_, i) => <Star key={i} size={16} fill="currentColor" />)}
                   <span className="text-gray-400 text-sm font-bold mr-2">(120+ تقييم)</span>
                 </div>
-                <span className="text-primary text-xs font-black bg-primary/10 px-3 py-1.5 rounded-full uppercase tracking-wide">
-                  {product.category}
-                </span>
+                <div className="flex flex-wrap gap-2">
+                  {product.category?.split(',').map((cat, i) => (
+                    <span key={i} className="text-primary text-[10px] sm:text-xs font-black bg-primary/10 px-3 py-1.5 rounded-full uppercase tracking-wide text-center">
+                      {cat.trim()}
+                    </span>
+                  ))}
+                </div>
               </div>
 
               {/* Title */}

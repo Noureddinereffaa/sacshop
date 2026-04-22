@@ -10,25 +10,30 @@ export default function SettingsProvider({ children, initialSettings }: { childr
   const initialized = useRef(false);
 
   // Synchronous initialization for SSR Hydration
-  if (!initialized.current && initialSettings) {
-    const s = initialSettings;
-    setSettings(
-      s.branding,
-      s.discounts,
-      s.navigation,
-      s.promobar,
-      s.marketing,
-      s.slider,
-      s.partners,
-      s.popup
-    );
-    setDiscountConfig({
-      enabled: s.discounts.cartDiscountEnabled, 
-      percentage: s.discounts.cartDiscountPercentage,
-      discountType: s.discounts.newCustomerDiscountType || 'percentage',
-      minItems: s.discounts.cartMinItems,
-      advancedRules: s.discounts.advancedRules
-    });
+  if (!initialized.current) {
+    if (initialSettings) {
+      const s = initialSettings;
+      setSettings(
+        s.branding,
+        s.discounts,
+        s.navigation,
+        s.promobar,
+        s.marketing,
+        s.slider,
+        s.partners,
+        s.popup
+      );
+      setDiscountConfig({
+        enabled: s.discounts.cartDiscountEnabled, 
+        percentage: s.discounts.cartDiscountPercentage,
+        discountType: s.discounts.newCustomerDiscountType || 'percentage',
+        minItems: s.discounts.cartMinItems,
+        advancedRules: s.discounts.advancedRules
+      });
+    } else {
+      // If no initial settings (e.g. SSR fetch failed), at least unblock the UI
+      useSettingsStore.setState({ isLoaded: true });
+    }
     initialized.current = true;
   }
 

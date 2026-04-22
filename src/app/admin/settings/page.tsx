@@ -894,16 +894,27 @@ export default function AdminSettings() {
                           <h3 className="font-black text-gray-900 text-xl">خصم الترحيب (للزبائن الجدد فقط)</h3>
                        </div>
 
+                       {/* Alert / Explanation Box */}
+                       <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5 flex gap-4">
+                          <Tag className="text-primary shrink-0 mt-0.5" size={22} />
+                          <div>
+                            <h3 className="font-black text-gray-800 mb-1">كيف يعمل الخصم الترحيبي؟</h3>
+                            <p className="text-gray-600 text-sm leading-relaxed">
+                              يستهدف هذا الخصم <strong>الزبائن الجدد فقط</strong> لتشجيعهم على إتمام أول طلب. يمكنك تخصيص خصم معين لكل منتج (بالأسفل). أما المنتجات التي لم تُحدد لها خصماً مخصصاً، فسيُطبق عليها <strong>الخصم العام</strong> المحدد هنا تلقائياً، سواء كان الخصم العام عبارة عن نسبة مئوية (%) أو مبلغ ثابت يُخصم من كل قطعة.
+                            </p>
+                          </div>
+                       </div>
+
                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                           <div className="space-y-3">
-                             <label className="text-sm font-black text-gray-700 block mr-2">تفعيل الخصم</label>
+                             <label className="text-sm font-black text-gray-700 block mr-2">حالة الخصم الترحيبي</label>
                              <select
                                value={settings.discounts?.newCustomerDiscountEnabled === false ? "false" : "true"}
                                onChange={(e) => setSettings({ ...settings, discounts: { ...settings.discounts, newCustomerDiscountEnabled: e.target.value === "true" } })}
                                className="w-full bg-gray-50 border-none rounded-xl py-4 px-4 font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 transition-all"
                              >
-                               <option value="true">مفعل (للزبائن الجدد فقط)</option>
-                               <option value="false">معطل</option>
+                               <option value="true">مفعل (يظهر للزبائن الجدد)</option>
+                               <option value="false">معطل (مخفي للجميع)</option>
                              </select>
                           </div>
                            <div className="space-y-3">
@@ -913,12 +924,12 @@ export default function AdminSettings() {
                                onChange={(e) => setSettings({ ...settings, discounts: { ...settings.discounts, newCustomerDiscountType: e.target.value } })}
                                className="w-full bg-gray-50 border-none rounded-xl py-4 px-4 font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 transition-all"
                              >
-                               <option value="percentage">نسبة مئوية (%)</option>
-                               <option value="fixed">مبلغ ثابت (د.ج)</option>
+                               <option value="percentage">نسبة مئوية من السعر (%)</option>
+                               <option value="fixed">مبلغ ثابت لكل قطعة (د.ج)</option>
                              </select>
                            </div>
                            <div className="space-y-3">
-                             <label className="text-sm font-black text-gray-700 block mr-2">القيمة العامة للخصم</label>
+                             <label className="text-sm font-black text-gray-700 block mr-2">قيمة الخصم العام</label>
                              <input 
                                type="number" 
                                min="0"
@@ -926,10 +937,10 @@ export default function AdminSettings() {
                                onChange={(e) => setSettings({ ...settings, discounts: { ...settings.discounts, newCustomerDiscountPercent: parseInt(e.target.value) || 0 } })}
                                className="w-full bg-gray-50 border-none rounded-xl py-4 px-4 font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 transition-all"
                              />
-                             <p className="text-[10px] text-gray-400 font-bold px-2">تُطبق على المنتجات التي ليس لها خصم مخصص أسفله (اجعلها 0 لإلغائها).</p>
+                             <p className="text-[10px] text-gray-400 font-bold px-2">يُطبق على المنتجات التي ليس لها خصم مخصص أسفله (اجعلها 0 لإلغائها).</p>
                           </div>
                           <div className="space-y-3">
-                             <label className="text-sm font-black text-gray-700 block mr-2">الحد الأدنى لعدد المنتجات</label>
+                             <label className="text-sm font-black text-gray-700 block mr-2">الحد الأدنى للمنتجات لتفعيل الخصم</label>
                              <input 
                                type="number" 
                                min="1"

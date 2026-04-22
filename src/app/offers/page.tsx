@@ -175,33 +175,34 @@ export default function OffersPage() {
               </section>
             )}
 
-            {/* General Categories Offer Card (Pharmacy, etc.) */}
-            <section className="space-y-12 pt-12 border-t border-gray-100">
-              <div className="text-center space-y-3">
-                  <h2 className="text-3xl font-black text-gray-950">عروض مخصصة للقطاعات 🏥</h2>
-                  <p className="text-gray-500 font-bold">حلول تخصصية بأسعار المصنع مباشرة</p>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-xl hover:shadow-2xl transition-all group overflow-hidden relative">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-green-50 rounded-full blur-2xl -mr-16 -mt-16 group-hover:scale-150 transition-transform" />
-                    <div className="relative z-10">
-                      <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center text-green-600 mb-6">
-                          <PlusCircle size={32} />
-                      </div>
-                      <h3 className="text-2xl font-black text-gray-900 mb-4">باقة الصيدليات (Pharmacy Pro)</h3>
-                      <p className="text-gray-500 font-medium mb-8 leading-relaxed">نقدم للصيادلة أكياساً ورقية صديقة للبيئة مطابقة للمعايير الصحية وبأسعار خاصة للجملة. اطلب كمياتك الشهرية الآن بخصم ثابت.</p>
-                      <Link href="/products?category=pharmacy" className="flex items-center justify-between bg-green-50 p-4 rounded-3xl group-hover:bg-green-600 transition-colors">
-                          <span className="text-green-700 font-bold group-hover:text-white">اكتشف منتجات الصيدلة</span>
-                          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-green-600 shadow-sm border border-green-100">
-                            <ArrowLeft size={18} />
-                          </div>
-                      </Link>
-                    </div>
-                </div>
-              </div>
-            </section>
           </>
         )}
+
+        {/* General Categories Offer Card (Pharmacy, etc.) - ALWAYS VISIBLE */}
+        <section className="space-y-12 pt-12 border-t border-gray-100">
+          <div className="text-center space-y-3">
+              <h2 className="text-3xl font-black text-gray-950">عروض مخصصة للقطاعات 🏥</h2>
+              <p className="text-gray-500 font-bold">حلول تخصصية بأسعار المصنع مباشرة</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-xl hover:shadow-2xl transition-all group overflow-hidden relative">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-green-50 rounded-full blur-2xl -mr-16 -mt-16 group-hover:scale-150 transition-transform" />
+                <div className="relative z-10">
+                  <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center text-green-600 mb-6">
+                      <PlusCircle size={32} />
+                  </div>
+                  <h3 className="text-2xl font-black text-gray-900 mb-4">باقة الصيدليات (Pharmacy Pro)</h3>
+                  <p className="text-gray-500 font-medium mb-8 leading-relaxed">نقدم للصيادلة أكياساً ورقية صديقة للبيئة مطابقة للمعايير الصحية وبأسعار خاصة للجملة. اطلب كمياتك الشهرية الآن بخصم ثابت.</p>
+                  <Link href="/products?category=pharmacy" className="flex items-center justify-between bg-green-50 p-4 rounded-3xl group-hover:bg-green-600 transition-colors">
+                      <span className="text-green-700 font-bold group-hover:text-white">اكتشف منتجات الصيدلة</span>
+                      <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-green-600 shadow-sm border border-green-100">
+                        <ArrowLeft size={18} />
+                      </div>
+                  </Link>
+                </div>
+            </div>
+          </div>
+        </section>
 
         {/* CTA Section */}
         <section className="bg-gray-950 rounded-[3rem] p-12 text-center text-white relative overflow-hidden">

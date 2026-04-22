@@ -23,6 +23,9 @@ export const viewport: Viewport = {
   themeColor: "#FF3366",
 };
 
+export const revalidate = 60; // Revalidate settings every 60 seconds
+
+
 export const metadata: Metadata = {
   title: "Service Serigraphie | طباعة أكياس، ملصقات، وتغليف في الجزائر",
   description: "Service Serigraphie - شريكك الأول في الجزائر للطباعة الاحترافية. نحن متخصصون في طباعة الأكياس الورقية والقماشية، الملصقات (Stickers)، وحلول التغليف المخصصة. جودة عالية وتوصيل لـ 58 ولاية.",

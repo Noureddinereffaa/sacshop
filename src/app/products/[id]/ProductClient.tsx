@@ -46,6 +46,7 @@ export default function ProductClient({ initialProduct }: { initialProduct: Prod
   const [numColors, setNumColors] = useState<number>(1);
   const [isDoubleSided, setIsDoubleSided] = useState<boolean>(false);
   const [showToast, setShowToast] = useState(false);
+  const [showStickyButton, setShowStickyButton] = useState(false);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [customVariantSelections, setCustomVariantSelections] = useState<Record<string, string>>({});
 
@@ -199,6 +200,28 @@ export default function ProductClient({ initialProduct }: { initialProduct: Prod
       setSelectedColor(availableColors[0]?.name || "");
     }
   }, [availableColors, selectedColor, selectedSize]);
+
+  // Handle sticky mobile button visibility
+  useEffect(() => {
+    const handleScroll = () => {
+      const formElement = document.getElementById("order-form-section");
+      if (!formElement) return;
+
+      const rect = formElement.getBoundingClientRect();
+      const isPastForm = rect.top < 0 && rect.bottom < 0; // scrolled way past it
+      const isBeforeForm = rect.top > window.innerHeight; // haven't reached it yet
+
+      // Show button if the form is NOT currently visible in viewport AND we've scrolled down a bit
+      if ((isPastForm || isBeforeForm) && window.scrollY > 300) {
+        setShowStickyButton(true);
+      } else {
+        setShowStickyButton(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -676,7 +699,7 @@ export default function ProductClient({ initialProduct }: { initialProduct: Prod
             </div>
 
             {/* Add to Cart & Order Actions */}
-            <div className="space-y-4">
+            <div id="order-form-section" className="space-y-4">
               <OrderForm
                 product={product}
                 productId={product.id}
@@ -790,6 +813,35 @@ export default function ProductClient({ initialProduct }: { initialProduct: Prod
         </div>
       </section>
     </div>
+
+      {/* Sticky Mobile Order Button */}
+      <motion.div
+        initial={{ y: 100 }}
+        animate={{ y: showStickyButton ? 0 : 100 }}
+        className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-white/95 backdrop-blur-lg border-t border-gray-200 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] lg:hidden flex items-center justify-between gap-4"
+      >
+        <div className="flex flex-col">
+          <span className="text-xs font-bold text-gray-500 uppercase">السعر الإجمالي</span>
+          <span className="text-xl font-black text-gray-900 leading-none">
+            {effectivePrice.toLocaleString()} <span className="text-sm text-primary">د.ج</span>
+          </span>
+        </div>
+        <button
+          onClick={() => {
+            const form = document.getElementById("order-form-section");
+            if (form) {
+              const yOffset = -80; // account for fixed header
+              const y = form.getBoundingClientRect().top + window.scrollY + yOffset;
+              window.scrollTo({ top: y, behavior: 'smooth' });
+            }
+          }}
+          className="flex-1 bg-primary text-white py-3.5 px-6 rounded-2xl font-black text-lg flex items-center justify-center gap-2 shadow-lg shadow-primary/30 active:scale-95 transition-all"
+        >
+          <Package size={20} />
+          اطلب الآن
+        </button>
+      </motion.div>
+
     </main>
   );
 }

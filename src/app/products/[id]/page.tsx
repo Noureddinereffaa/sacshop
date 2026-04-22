@@ -705,14 +705,6 @@ export default function ProductDetailPage() {
               </div>
             </div>
 
-            {/* Description */}
-            {product.description && (
-              <div className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-sm">
-                <h3 className="font-black text-gray-900 mb-3 text-lg">وصف المنتج</h3>
-                <p className="text-gray-600 leading-loose">{product.description}</p>
-              </div>
-            )}
-
             {/* Add to Cart & Order Actions */}
             <div className="space-y-4">
               <OrderForm
@@ -783,6 +775,14 @@ export default function ProductDetailPage() {
                 </motion.div>
               )}
             </div>
+
+            {/* Description */}
+            {product.description && (
+              <div className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-sm">
+                <h3 className="font-black text-gray-900 mb-3 text-lg">وصف المنتج</h3>
+                <p className="text-gray-600 leading-loose">{product.description}</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

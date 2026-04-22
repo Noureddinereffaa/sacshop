@@ -70,11 +70,12 @@ export default function CheckoutPage() {
         setCustomerStatus(status);
         
         if (data.discountConfig) {
-          setDiscountConfig({
-            enabled: data.discountConfig.newCustomerDiscountEnabled,
-            percentage: data.discountConfig.newCustomerDiscountPercent,
-            minItems: data.discountConfig.newCustomerMinItems,
-          });
+                  setDiscountConfig({
+                    enabled: data.discountConfig.newCustomerDiscountEnabled,
+                    percentage: data.discountConfig.newCustomerDiscountPercent,
+                    discountType: data.discountConfig.newCustomerDiscountType || 'percentage',
+                    minItems: data.discountConfig.newCustomerMinItems,
+                  });
         }
 
         if (status === 'vip' && data.vipOffers) {

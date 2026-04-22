@@ -24,6 +24,7 @@ export default function CartDrawer() {
         setDiscountConfig({
           enabled: data.value.newCustomerDiscountEnabled !== false, 
           percentage: data.value.newCustomerDiscountPercent || 10,
+          discountType: data.value.newCustomerDiscountType || 'percentage',
           minItems: data.value.newCustomerMinItems || 2
         });
       }

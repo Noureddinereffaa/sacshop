@@ -30,12 +30,12 @@ export default function Partners() {
   const { partners: storePartners } = useSettingsStore();
 
   const defaultPartners = [
-    { name: "Cebita", logo: "/partners/cebita.png" },
-    { name: "Mostawdaa", logo: "/partners/mostawdaa.png" },
-    { name: "DzBag", logo: "/partners/dzbag.png" },
-    { name: "AlgerBox", logo: "/partners/algerbox.png" },
-    { name: "EcoPack", logo: "/partners/ecopack.png" },
-    { name: "SmartBag", logo: "/partners/smartbag.png" },
+    { name: "Cebita", logo: "" },
+    { name: "Mostawdaa", logo: "" },
+    { name: "DzBag", logo: "" },
+    { name: "AlgerBox", logo: "" },
+    { name: "EcoPack", logo: "" },
+    { name: "SmartBag", logo: "" },
   ];
 
   const partners = storePartners && storePartners.length > 0 ? storePartners : defaultPartners;

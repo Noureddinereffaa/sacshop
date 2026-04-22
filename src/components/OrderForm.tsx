@@ -130,6 +130,7 @@ export default function OrderForm({
             setDiscountConfig({
               enabled: data.discountConfig.newCustomerDiscountEnabled,
               percentage: data.discountConfig.newCustomerDiscountPercent,
+              discountType: data.discountConfig.newCustomerDiscountType || 'percentage',
               minItems: data.discountConfig.newCustomerMinItems,
             });
           }
@@ -596,6 +597,7 @@ export default function OrderForm({
                           setDiscountConfig({
                             enabled: data.discountConfig.newCustomerDiscountEnabled,
                             percentage: data.discountConfig.newCustomerDiscountPercent,
+                            discountType: data.discountConfig.newCustomerDiscountType || 'percentage',
                             minItems: data.discountConfig.newCustomerMinItems,
                           });
                         }

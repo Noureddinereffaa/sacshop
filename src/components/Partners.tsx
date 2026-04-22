@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Image as ImageIcon, Users2 } from "lucide-react";
+import { Star, Users2 } from "lucide-react";
 import { useSettingsStore } from "@/store/settingsStore";
 
 const PartnerCard = ({ partner }: { partner: { name: string; logo: string } }) => (
@@ -17,7 +17,7 @@ const PartnerCard = ({ partner }: { partner: { name: string; logo: string } }) =
       />
     ) : (
       <div className="flex flex-col items-center gap-2 opacity-40 group-hover:opacity-70 transition-opacity">
-        <ImageIcon size={28} className="text-gray-400 group-hover:text-primary transition-colors duration-300" />
+        <Star size={28} className="text-gray-400 group-hover:text-primary transition-colors duration-300" />
         <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 text-center leading-tight">
           {partner.name}
         </span>

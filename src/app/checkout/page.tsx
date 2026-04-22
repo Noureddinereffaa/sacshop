@@ -148,7 +148,13 @@ export default function CheckoutPage() {
                      <p className="text-gray-400 text-xs font-bold mt-1">عدد العناصر: {items.length}</p>
                    </div>
                    <div className="relative w-28 h-10 sm:w-36 sm:h-12 hidden xs:block">
-                      <Image src={branding?.logo || "/brand/logo-horizontal-1.png"} alt="Brand" fill className="object-contain object-left" />
+                      {branding?.logo ? (
+                         <Image src={branding.logo} alt="Brand" fill className="object-contain object-left" />
+                      ) : (
+                         <div className="w-full h-full flex flex-col items-end justify-center">
+                            <span className="font-black text-gray-900 text-sm">{branding?.storeName}</span>
+                         </div>
+                      )}
                    </div>
                 </div>
                 

@@ -61,8 +61,8 @@ interface SettingsState {
 export const useSettingsStore = create<SettingsState>((set) => ({
   branding: {
     storeName: "Service Serigraphie",
-    logo: "/brand/logo-horizontal-1.png",
-    footerLogo: "/brand/logo-horizontal-1.png",
+    logo: "",
+    footerLogo: "",
     primaryColor: "#00AEEF",
     secondaryColor: "#e6007e",
     whatsappNumber: "213",

@@ -1,21 +1,23 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+// Creates a fresh Supabase client on every call.
+// No caching — guarantees env vars are read at call time, not module load time.
+// This is critical for Next.js Server Components where module-level code
+// may execute before environment variables are available.
+export function getSupabase(): SupabaseClient | null {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-function createSupabaseClient(): SupabaseClient | null {
   if (!supabaseUrl || !supabaseAnonKey) {
-    if (typeof window === 'undefined') {
-      console.warn('[Service Serigraphie] Supabase env vars missing. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY to .env.local')
-    }
-    return null
+    return null;
   }
   try {
-    return createClient(supabaseUrl, supabaseAnonKey)
+    return createClient(supabaseUrl, supabaseAnonKey);
   } catch (e) {
     console.warn('[Service Serigraphie] Failed to initialize Supabase client:', e)
-    return null
+    return null;
   }
 }
 
-export const supabase = createSupabaseClient() as SupabaseClient
+// Backward-compatible export for client components (they run in browser where env vars are always available)
+export const supabase = getSupabase() as SupabaseClient;

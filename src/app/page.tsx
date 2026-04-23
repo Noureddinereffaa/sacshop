@@ -2,7 +2,7 @@ import Hero from "@/components/Hero";
 import Partners from "@/components/Partners";
 
 import { ArrowRight, ShoppingBag, Truck, ShieldCheck, Zap } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 import ProductCard from "@/components/ProductCard";
 import Link from "next/link";
 
@@ -10,6 +10,7 @@ import Link from "next/link";
 export const revalidate = 60; 
 
 export default async function Home() {
+  const supabase = getSupabase();
   const { data: rawProducts } = supabase 
     ? await supabase.from("products").select("*")
         .eq("is_published", true)

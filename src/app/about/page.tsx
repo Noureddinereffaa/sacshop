@@ -2,7 +2,7 @@ import Link from "next/link";
 import { CheckCircle2, Truck, ShieldCheck, HeadphonesIcon, Award, ArrowLeft } from "lucide-react";
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 import { defaultPolicies } from '@/utils/defaultPolicies';
 
 export const metadata = {
@@ -21,6 +21,7 @@ const iconMap: Record<string, any> = {
 
 export default async function AboutPage() {
   let customContent = defaultPolicies.about;
+  const supabase = getSupabase();
   if (supabase) {
     const { data } = await supabase.from("settings").select("value").eq("key", "policies").maybeSingle();
     // Validate if the data object structure is correct

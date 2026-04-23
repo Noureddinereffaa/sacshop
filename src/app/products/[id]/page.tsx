@@ -1,10 +1,10 @@
 import { Metadata, ResolvingMetadata } from 'next';
-import { supabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 import ProductClient from "./ProductClient";
 import { Product } from "@/types";
 
 type Props = {
-  params: { id: string }
+  params: Promise<{ id: string }>
 };
 
 // Fallback for demo when Supabase not connected
@@ -32,7 +32,8 @@ export async function generateMetadata(
   { params }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  const id = params.id;
+  const { id } = await params;
+  const supabase = getSupabase();
   
   if (!supabase || !id) {
     return {
@@ -68,7 +69,8 @@ export async function generateMetadata(
 
 // Server Component for fast initial load
 export default async function ProductPage({ params }: Props) {
-  const id = params.id;
+  const { id } = await params;
+  const supabase = getSupabase();
   let initialProduct: Product | null = null;
 
   if (supabase && id) {
@@ -91,3 +93,5 @@ export default async function ProductPage({ params }: Props) {
 
   return <ProductClient initialProduct={initialProduct} />;
 }
+
+

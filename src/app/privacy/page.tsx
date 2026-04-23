@@ -1,13 +1,14 @@
 import React from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 import { defaultPolicies } from '@/utils/defaultPolicies';
 
 export const revalidate = 60;
 
 export default async function PrivacyPolicy() {
   let customContent = defaultPolicies.privacy;
+  const supabase = getSupabase();
   if (supabase) {
     const { data } = await supabase.from("settings").select("value").eq("key", "policies").maybeSingle();
     if (data?.value?.privacy && typeof data.value.privacy === 'object' && Array.isArray(data.value.privacy.sections)) {

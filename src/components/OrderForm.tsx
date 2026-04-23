@@ -56,6 +56,7 @@ export default function OrderForm({
 
   const router = useRouter();
   const successRef = useRef<HTMLDivElement>(null);
+  const errorRef = useRef<HTMLDivElement>(null);
 
   const { customerStatus, customer, items } = useCartStore();
 
@@ -71,6 +72,17 @@ export default function OrderForm({
       successRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }, [step]);
+
+  // Auto-scroll to error message when it appears
+  useEffect(() => {
+    if (formError) {
+      // Use a small timeout to ensure the DOM element is rendered before scrolling
+      const timer = setTimeout(() => {
+        errorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [formError]);
   const [pendingWaLink, setPendingWaLink] = useState<string>("");
   const [pendingOrderId, setPendingOrderId] = useState<string>("");
   const [whatsappNumber, setWhatsappNumber] = useState<string>("213000000000");
@@ -684,6 +696,7 @@ export default function OrderForm({
           <AnimatePresence>
             {formError && (
               <motion.div
+                ref={errorRef}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}

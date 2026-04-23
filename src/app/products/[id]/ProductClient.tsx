@@ -208,19 +208,23 @@ export default function ProductClient({ initialProduct }: { initialProduct: Prod
       if (!formElement) return;
 
       const rect = formElement.getBoundingClientRect();
-      const isPastForm = rect.top < 0 && rect.bottom < 0; // scrolled way past it
-      const isBeforeForm = rect.top > window.innerHeight; // haven't reached it yet
+      const isPastForm = rect.top < 0 && rect.bottom < 0; 
+      const isBeforeForm = rect.top > window.innerHeight; 
 
-      // Show button if the form is NOT currently visible in viewport AND we've scrolled down a bit
       if ((isPastForm || isBeforeForm) && window.scrollY > 300) {
         setShowStickyButton(true);
+        document.body.classList.add("has-sticky-cta");
       } else {
         setShowStickyButton(false);
+        document.body.classList.remove("has-sticky-cta");
       }
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      document.body.classList.remove("has-sticky-cta");
+    };
   }, []);
 
   useEffect(() => {

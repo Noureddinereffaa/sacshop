@@ -265,19 +265,30 @@ export default function AdminOrders() {
           .maybeSingle();
 
         if (existingCustomer) {
+          const newTotalOrders = (existingCustomer.total_orders || 0) + 1;
           await supabase.from('customers').update({
-            total_orders: (existingCustomer.total_orders || 0) + 1,
+            total_orders: newTotalOrders,
             total_spent: (existingCustomer.total_spent || 0) + finalPrice,
             last_order_at: new Date().toISOString(),
+            is_vip: newTotalOrders >= 1,
           }).eq('id', existingCustomer.id);
+
+          // Link order to customer for data integrity
+          await supabase.from('orders').update({ customer_id: existingCustomer.id }).eq('id', selectedOrder.id);
         } else {
-          await supabase.from('customers').insert({
+          const { data: newCustomer } = await supabase.from('customers').insert({
             name: selectedOrder.customer_name,
             phone: selectedOrder.customer_phone,
             total_orders: 1,
             total_spent: finalPrice,
             last_order_at: new Date().toISOString(),
-          });
+            is_vip: true,
+          }).select('id').single();
+
+          // Link order to new customer
+          if (newCustomer) {
+            await supabase.from('orders').update({ customer_id: newCustomer.id }).eq('id', selectedOrder.id);
+          }
         }
       }
 

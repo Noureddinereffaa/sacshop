@@ -61,12 +61,29 @@ export async function POST(request: Request) {
        customerData = newCustomer;
     }
 
-    // 2. Fetch their past orders
+    // 2. Fetch their past orders — by phone (reliable) since orders may not always have customer_id
     const { data: ordersData } = await supabaseAdmin
       .from('orders')
       .select('*')
-      .eq('customer_id', customerData.id)
+      .eq('customer_phone', phone)
       .order('created_at', { ascending: false });
+
+    // 2b. Link any orphaned orders to this customer (background, non-blocking)
+    if (ordersData && ordersData.length > 0 && customerData.id) {
+      const orphanedIds = ordersData
+        .filter((o: any) => !o.customer_id)
+        .map((o: any) => o.id);
+      if (orphanedIds.length > 0) {
+        (async () => {
+          try {
+            await supabaseAdmin
+              .from('orders')
+              .update({ customer_id: customerData.id })
+              .in('id', orphanedIds);
+          } catch { /* non-blocking */ }
+        })();
+      }
+    }
 
     // 3. Fetch all active VIP offers and filter by customer eligibility
     const { data: allOffers } = await supabaseAdmin

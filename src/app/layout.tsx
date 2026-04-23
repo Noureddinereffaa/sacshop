@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Service Serigraphie | خدمات الطباعة والتغليف الاحترافية",
     description: "اطلب الآن أكياسك المخصصة، ملصقاتك، وحلول التغليف لعلامتك التجارية. جودة مضمونة وتوصيل سريع لكل الولايات.",
-    url: "https://www.facebook.com/search/top?q=service%20s%C3%A8rigraphie",
+    url: "https://serviceserigraphie.com",
     siteName: "Service Serigraphie",
     images: [
       {

@@ -29,10 +29,18 @@ export default function ProductCard({ product }: ProductCardProps) {
       viewport={{ once: true }}
       className="bg-white rounded-[2.5rem] p-5 border border-gray-100 shadow-sm hover:shadow-2xl transition-all group relative"
     >
-      {/* Badge */}
-      <div className="absolute top-8 left-8 z-20 bg-primary/90 backdrop-blur-md text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg">
-        جديد
-      </div>
+      {/* Dynamic Badge */}
+      {(() => {
+        const isNew = product.created_at && (Date.now() - new Date(product.created_at).getTime()) < 7 * 24 * 60 * 60 * 1000;
+        const isFeatured = product.is_featured;
+        if (isNew) return (
+          <div className="absolute top-8 left-8 z-20 bg-primary/90 backdrop-blur-md text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg">جديد</div>
+        );
+        if (isFeatured) return (
+          <div className="absolute top-8 left-8 z-20 bg-amber-500/90 backdrop-blur-md text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg">⭐ مميز</div>
+        );
+        return null;
+      })()}
 
       {/* Image Container */}
       <Link href={`/products/${id}`} className="block aspect-[4/5] bg-gray-100 rounded-[2rem] mb-6 overflow-hidden relative">

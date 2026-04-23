@@ -242,6 +242,7 @@ export default function OrderForm({
       customer_name: formData.name.trim(),
       customer_phone: formData.phone.trim(),
       customer_address: "يُحدد عبر واتساب",
+      customer_id: customer?.id || null, // Link to customer directly
       product_id: isCartOrder ? null : productId,
       quantity: isCartOrder ? null : quantity,
       size: isCartOrder ? null : selectedSize,
@@ -369,9 +370,9 @@ export default function OrderForm({
         order_id: shortId,
       };
 
-      // Track both for maximum compatibility with different ad engine optimization goals
+      // Track as Lead (not Purchase) — Purchase fires only when admin confirms
+      // This is critical for COD: Facebook should optimize for leads, not fake purchases
       window.trackMarketingEvent?.("SubmitOrder", trackingData);
-      window.trackMarketingEvent?.("Purchase", trackingData);
       
     } catch { /* non-critical */ }
 

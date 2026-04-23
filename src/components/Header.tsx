@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Search, Menu, X, UserCircle } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCartStore } from "@/store/cartStore";
 import { useSettingsStore } from "@/store/settingsStore";
@@ -11,9 +12,18 @@ import Image from "next/image";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const { items } = useCartStore();
   const { branding, navigation } = useSettingsStore();
   const [mounted, setMounted] = useState(false);
+  const router = useRouter();
+
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery("");
+    }
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -88,9 +98,14 @@ export default function Header() {
               <input 
                 type="text" 
                 placeholder="ابحث هنا..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                 className="bg-gray-50 border-gray-100 rounded-full py-3 px-11 text-sm focus:ring-4 focus:ring-primary/10 w-44 lg:w-56 transition-all h-11 border"
               />
-              <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <button onClick={handleSearch} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors">
+                <Search size={18} />
+              </button>
             </div>
 
             {/* Account Icon */}

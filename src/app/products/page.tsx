@@ -23,11 +23,12 @@ const STATIC_PRODUCTS: Product[] = [
 function ProductsList() {
   const searchParams = useSearchParams();
   const urlCategory = searchParams.get("category");
+  const urlSearch = searchParams.get("search");
   
   const [products, setProducts] = useState<Product[]>([]);
   const [filtered, setFiltered] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(urlSearch || "");
   const [activeCategory, setActiveCategory] = useState("الكل");
   
   const { items, getDiscountInfo, customerStatus, appliedVipOffer, discountConfig } = useCartStore();
@@ -49,7 +50,10 @@ function ProductsList() {
     } else {
       setActiveCategory("الكل");
     }
-  }, [urlCategory]);
+    if (urlSearch) {
+      setSearch(urlSearch);
+    }
+  }, [urlCategory, urlSearch]);
 
   useEffect(() => {
     async function fetchProducts() {

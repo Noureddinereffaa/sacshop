@@ -25,29 +25,49 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isChecking, setIsChecking] = useState(true);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const isAuth = localStorage.getItem("servseri_admin_auth") === "true";
-      setIsAuthenticated(isAuth);
-      setIsChecking(false);
+    // Verify session via secure server-side API (httpOnly cookie)
+    async function checkSession() {
+      try {
+        const res = await fetch("/api/admin-auth");
+        const data = await res.json();
+        setIsAuthenticated(data.authenticated === true);
+      } catch {
+        setIsAuthenticated(false);
+      } finally {
+        setIsChecking(false);
+      }
     }
+    checkSession();
   }, []);
 
   function isActive(href: string, exact?: boolean) {
     return exact ? pathname === href : pathname.startsWith(href);
   }
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Default fallback admin password
-    const adminPass = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "sacshopadmin";
-    if (password === adminPass) {
-      localStorage.setItem("servseri_admin_auth", "true");
-      setIsAuthenticated(true);
-    } else {
-      setError("كلمة المرور غير صحيحة");
+    setIsLoggingIn(true);
+    setError("");
+    try {
+      const res = await fetch("/api/admin-auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsAuthenticated(true);
+      } else {
+        setError(data.error || "كلمة المرور غير صحيحة");
+      }
+    } catch {
+      setError("خطأ في الاتصال بالخادم");
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -75,8 +95,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               />
               {error && <p className="text-red-500 text-xs font-bold mt-2 text-center">{error}</p>}
             </div>
-            <button type="submit" className="w-full bg-primary text-white py-4 rounded-xl font-black text-lg hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
-              الدخول للوحة التحكم
+            <button type="submit" disabled={isLoggingIn} className="w-full bg-primary text-white py-4 rounded-xl font-black text-lg hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-60">
+              {isLoggingIn ? "جاري التحقق..." : "الدخول للوحة التحكم"}
             </button>
           </form>
         </div>

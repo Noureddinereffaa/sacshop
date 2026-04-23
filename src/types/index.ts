@@ -71,6 +71,7 @@ export interface Product {
   stock: number;
   is_published: boolean;
   is_featured: boolean;
+  created_at?: string;
 }
 
 export interface CustomVariantGroup {

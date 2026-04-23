@@ -71,7 +71,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
   
   let primaryColor = "#00AEEF";
   let primaryColorRgb = "0 174 239";

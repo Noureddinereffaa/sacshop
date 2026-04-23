@@ -39,21 +39,17 @@ export default function Partners() {
   ];
 
   const partners = storePartners && storePartners.length > 0 ? storePartners : defaultPartners;
-  const useStaticGrid = partners.length <= 4;
+  const useStaticGrid = partners.length <= 5;
 
   // ── Infinite Marquee maths ──────────────────────────────────────────────────
   // Card width (176px) + gap (24px) = 200px per slot.
   // To guarantee the track fills a 2560px screen with NO gaps:
   //   min cards per half = ceil(2560 / 200) = 13
-  //   sets of partners per half = ceil(13 / partners.length)
-  // We keep TWO identical halves → animation moves -50% = exactly one half.
   const setsPerHalf = Math.max(2, Math.ceil(13 / partners.length));
   const half = Array.from({ length: setsPerHalf }, () => partners).flat();
-  // Track = half + half (identical) so -50% snaps perfectly to start
-  const track = [...half, ...half];
 
   // Duration scales with the number of unique partners (4 s per partner)
-  const duration = Math.max(14, partners.length * 4);
+  const duration = Math.max(20, partners.length * 5);
 
   return (
     <section className="py-16 bg-white overflow-hidden relative">
@@ -61,17 +57,28 @@ export default function Partners() {
       <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
       <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
 
-      {/* Keyframe — injected once, no styled-jsx needed */}
+      {/* Keyframe for perfectly seamless marquee */}
       <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes partnerMarquee {
+        @keyframes partnerMarqueeRtl {
           0%   { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
+          100% { transform: translateX(50%); } /* Moves right by exactly half its total width */
         }
-        .partner-track {
-          animation: partnerMarquee ${duration}s linear infinite;
+        @keyframes partnerMarqueeLtr {
+          0%   { transform: translateX(0); }
+          100% { transform: translateX(-50%); } 
+        }
+        .partner-track-wrapper {
+          display: flex;
+          width: max-content;
+          animation: partnerMarqueeRtl ${duration}s linear infinite;
           will-change: transform;
         }
-        .partner-track:hover { animation-play-state: paused; }
+        html[dir="ltr"] .partner-track-wrapper {
+          animation-name: partnerMarqueeLtr;
+        }
+        .partner-track-wrapper:hover {
+          animation-play-state: paused;
+        }
       ` }} />
 
       {/* Header */}
@@ -98,7 +105,7 @@ export default function Partners() {
       </motion.div>
 
       {useStaticGrid ? (
-        /* ── Static grid for ≤4 partners ── */
+        /* ── Static grid for ≤5 partners ── */
         <div className="container mx-auto px-4">
           <div className="flex flex-wrap gap-6 justify-center">
             {partners.map((partner, i) => (
@@ -115,22 +122,31 @@ export default function Partners() {
           </div>
         </div>
       ) : (
-        /* ── Infinite seamless marquee for 5+ partners ── */
+        /* ── Infinite seamless marquee for 6+ partners ── */
         <div className="relative">
-          {/*
-            Thin fade masks — only 60px so logos are visible almost to the edge.
-            We use pointer-events:none so hover-pause still works on cards.
-          */}
-          <div className="absolute left-0 top-0 bottom-0 w-16 md:w-24 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-16 md:w-24 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
+          {/* Edge fades */}
+          <div className="absolute left-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
 
           {/* Outer clip */}
-          <div className="overflow-hidden">
-            {/* Track: two identical halves — animation moves -50% = seamless loop */}
-            <div className="partner-track flex gap-6 items-center py-4 px-6">
-              {track.map((partner, index) => (
-                <PartnerCard key={`${index}-${partner.name}`} partner={partner} />
-              ))}
+          <div className="overflow-hidden py-4">
+            {/* The animated wrapper containing exactly two identical halves */}
+            <div className="partner-track-wrapper">
+              
+              {/* First Half */}
+              <div className="flex gap-6 items-center pl-6">
+                {half.map((partner, index) => (
+                  <PartnerCard key={`half1-${index}-${partner.name}`} partner={partner} />
+                ))}
+              </div>
+
+              {/* Second Half (Exact Duplicate) */}
+              <div className="flex gap-6 items-center pl-6">
+                {half.map((partner, index) => (
+                  <PartnerCard key={`half2-${index}-${partner.name}`} partner={partner} />
+                ))}
+              </div>
+
             </div>
           </div>
         </div>

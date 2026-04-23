@@ -21,7 +21,7 @@ export default function MarketingPixels() {
   const { marketing, isLoaded } = useSettingsStore();
 
   const fbPixelId = marketing?.fbPixelId || "26614569358191911";
-  const tiktokId = marketing?.tiktokPixelId || "D7L9BLBC77U3PUBF1320";
+  const tiktokId = marketing?.tiktokPixelId || "D7L9ISRC77U8CJLL7AFG";
   const gaId = marketing?.googleAnalyticsId;
 
   useEffect(() => {

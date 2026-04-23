@@ -329,8 +329,8 @@ export default function OrderForm({
     } else {
       const cartItemsSummary = isCartOrder ? cartItems.map((item, idx) => {
         const itemVariants = [
-          item.size ? `📐 ${item.size}` : '',
-          item.color ? `🎨 ${item.color}` : '',
+          item.size ? (item.sizeLabel ? `▫️ ${item.sizeLabel}: ${item.size}` : `📐 ${item.size}`) : '',
+          item.color ? (item.colorLabel ? `▫️ ${item.colorLabel}: ${item.color}` : `🎨 ${item.color}`) : '',
           item.num_colors ? `✨ ${item.num_colors} ألوان ${item.is_double_sided ? '(جهتين)' : '(جهة)'}` : '',
           item.custom_variant_selections ? Object.entries(item.custom_variant_selections).filter(([_, v]) => v).map(([k, v]) => `▫️ ${k}: ${v}`).join(", ") : ''
         ].filter(Boolean).join(" | ");

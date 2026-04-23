@@ -343,7 +343,9 @@ export default function ProductClient({ initialProduct }: { initialProduct: Prod
       quantity: quantity,
       image_url: allImages[selectedImage] || product.image_url,
       size: selectedSize || undefined,
+      sizeLabel: product.size_label || "المقاس",
       color: selectedColor || undefined,
+      colorLabel: product.color_label || "اللون",
       num_colors: numColors,
       is_double_sided: isDoubleSided,
       custom_variant_selections: customVariantSelections
@@ -514,7 +516,7 @@ export default function ProductClient({ initialProduct }: { initialProduct: Prod
               {product.sizes && product.sizes.length > 0 && (
                 <div className="space-y-3">
                   <label className="text-sm font-black text-gray-700 flex items-center gap-2">
-                    المقاس
+                    {product.size_label || "المقاس"}
                     {selectedSize && <span className="text-primary font-bold">({selectedSize})</span>}
                   </label>
                   <div className="flex gap-2 flex-wrap">
@@ -539,7 +541,7 @@ export default function ProductClient({ initialProduct }: { initialProduct: Prod
               {product.colors && product.colors.length > 0 && (
                 <div className="space-y-3">
                   <label className="text-sm font-black text-gray-700 flex items-center gap-2">
-                    اللون
+                    {product.color_label || "اللون"}
                     {selectedColor && <span className="text-primary font-bold">({selectedColor})</span>}
                   </label>
                   <div className="flex gap-3 flex-wrap">

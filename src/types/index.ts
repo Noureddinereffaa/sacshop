@@ -5,7 +5,9 @@ export interface CartItem {
   price: number;
   image_url?: string;
   size?: string;
+  sizeLabel?: string;
   color?: string;
+  colorLabel?: string;
   quantity: number;
   num_colors?: number;
   is_double_sided?: boolean;
@@ -51,7 +53,9 @@ export interface Product {
   gallery?: string[];
   category: string;
   sizes: string[];
+  size_label?: string;
   colors: { name: string; hex: string; extra_cost?: number }[];
+  color_label?: string;
   packages?: { label: string; quantity: number; price: number }[];
   quantity_tiers?: any[];
   variant_images?: { size?: string; color?: string; image_url: string }[];

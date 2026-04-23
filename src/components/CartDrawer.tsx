@@ -138,9 +138,10 @@ export default function CartDrawer() {
                           {/* Variants line */}
                           <div className="flex flex-col gap-1 mt-2">
                              <div className="flex flex-wrap gap-2 text-[10px] text-gray-500 font-bold">
-                                {item.size && <span className="bg-gray-100 px-2 py-0.5 rounded-md">📏 {item.size}</span>}
+                                {item.size && <span className="bg-gray-100 px-2 py-0.5 rounded-md border border-gray-200/50">{item.sizeLabel ? `${item.sizeLabel}: ` : '📏 '}{item.size}</span>}
                                 {item.color && (
-                                   <div className="flex items-center gap-1 bg-gray-100 px-2 py-0.5 rounded-md">
+                                   <div className="flex items-center gap-1 bg-gray-100 px-2 py-0.5 rounded-md border border-gray-200/50">
+                                     {item.colorLabel ? <span>{item.colorLabel}:</span> : null}
                                      <span className="w-2 h-2 rounded-full border border-gray-300" style={{ backgroundColor: item.color === 'أسود' ? '#000' : item.color === 'أبيض' ? '#fff' : item.color }}></span>
                                      {item.color}
                                    </div>

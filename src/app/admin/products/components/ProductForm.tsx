@@ -19,7 +19,9 @@ const EMPTY_PRODUCT: Partial<Product> = {
   gallery: [],
   category: "",
   sizes: [],
+  size_label: "",
   colors: [],
+  color_label: "",
   stock: 0,
   is_published: true,
   is_featured: false,
@@ -320,7 +322,19 @@ export default function ProductForm({ initialData }: ProductFormProps) {
 
               {/* Sizes */}
               <div className="space-y-3">
-                <label className="text-sm font-black text-gray-700 block">المقاسات (اضغط Enter للإضافة)</label>
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+                   <label className="text-sm font-black text-gray-700 block">المقاسات (اضغط Enter للإضافة)</label>
+                   <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-400 font-bold">تسمية العرض:</span>
+                      <input 
+                         type="text" 
+                         value={product.size_label || ""} 
+                         onChange={e => setProduct(p => ({ ...p, size_label: e.target.value }))}
+                         placeholder="المقاس"
+                         className="bg-gray-50 border border-gray-200 rounded-lg py-1 px-2 text-xs focus:ring-1 focus:ring-primary/20 outline-none w-24 text-center font-bold"
+                      />
+                   </div>
+                </div>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -347,8 +361,20 @@ export default function ProductForm({ initialData }: ProductFormProps) {
               </div>
 
               {/* Colors */}
-              <div className="space-y-3">
-                <label className="text-sm font-black text-gray-700 block">الألوان وتكلفة اللون (ضع 0 لجعله مجانياً)</label>
+              <div className="space-y-3 pt-4 border-t border-gray-50 mt-4">
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+                   <label className="text-sm font-black text-gray-700 block">الألوان وتكلفة اللون (ضع 0 لجعله مجانياً)</label>
+                   <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-400 font-bold">تسمية العرض:</span>
+                      <input 
+                         type="text" 
+                         value={product.color_label || ""} 
+                         onChange={e => setProduct(p => ({ ...p, color_label: e.target.value }))}
+                         placeholder="اللون"
+                         className="bg-gray-50 border border-gray-200 rounded-lg py-1 px-2 text-xs focus:ring-1 focus:ring-primary/20 outline-none w-24 text-center font-bold"
+                      />
+                   </div>
+                </div>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <div className="flex gap-2 flex-1">
                     <input

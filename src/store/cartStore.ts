@@ -9,7 +9,9 @@ export interface CartItem {
   quantity: number;
   image_url?: string;
   size?: string;
+  sizeLabel?: string;
   color?: string;
+  colorLabel?: string;
   num_colors?: number;
   is_double_sided?: boolean;
   custom_variant_selections?: Record<string, string>;

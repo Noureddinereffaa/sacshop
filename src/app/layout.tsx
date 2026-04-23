@@ -115,8 +115,9 @@ export default async function RootLayout({
       const slider = settingsMap.slider || [];
       const partners = settingsMap.partners || [];
       const popup = settingsMap.popup_offer || null;
+      const largeOrderCta = settingsMap.large_order_cta || null;
 
-      settingsMap = { branding, discounts, navigation, promobar, marketing, slider, partners, popup };
+      settingsMap = { branding, discounts, navigation, promobar, marketing, slider, partners, popup, largeOrderCta };
       
       primaryColor = branding.primaryColor;
       secondaryColor = branding.secondaryColor;

@@ -17,14 +17,15 @@ import {
   Zap,
   Image as ImageIcon,
   Users,
-  FileText
+  FileText,
+  Megaphone
 } from "lucide-react";
 import Link from "next/link";
 import ImageUploader from "@/components/ImageUploader";
 import PoliciesEditor from "./components/PoliciesEditor";
 
 export default function AdminSettings() {
-  const [activeTab, setActiveTab] = useState<"branding" | "offers" | "marketing" | "navigation" | "promobar" | "slider" | "partners" | "popup" | "policies">("branding");
+  const [activeTab, setActiveTab] = useState<"branding" | "offers" | "marketing" | "navigation" | "promobar" | "slider" | "partners" | "popup" | "policies" | "large_order">("branding");
   const [settings, setSettings] = useState<Record<string, any>>({});
   const [products, setProducts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -111,6 +112,7 @@ export default function AdminSettings() {
                { id: "promobar", name: "شريط العروض", icon: Zap },
                { id: "offers", name: "المستويات والولاء", icon: Tag },
                { id: "popup", name: "نافذة العروض", icon: Zap },
+               { id: "large_order", name: "قسم الطلبيات الكبيرة", icon: Megaphone },
                { id: "marketing", name: "بيكسلات التتبع", icon: BarChart2 },
                { id: "policies", name: "الصفحات القانونية", icon: FileText },
             ].map((tab) => (
@@ -1122,6 +1124,90 @@ export default function AdminSettings() {
 
                {activeTab === "policies" && (
                  <PoliciesEditor settings={settings} setSettings={setSettings} />
+               )}
+
+               {activeTab === "large_order" && (
+                 <div className="space-y-8 animate-in fade-in duration-500 text-right">
+                   <div className="flex items-center justify-between">
+                      <h3 className="font-black text-gray-900 text-xl">قسم "الطلبيات الكبيرة" (صفحة العروض)</h3>
+                      <label className="flex items-center gap-2 cursor-pointer bg-gray-50 px-4 py-2 rounded-xl">
+                         <span className="text-sm font-bold text-gray-600">{(settings.large_order_cta?.enabled !== false) ? 'مفعل' : 'معطل'}</span>
+                         <input
+                           type="checkbox"
+                           checked={settings.large_order_cta?.enabled !== false}
+                           onChange={e => setSettings({ ...settings, large_order_cta: { ...(settings.large_order_cta || {}), enabled: e.target.checked } })}
+                           className="w-5 h-5 rounded-lg accent-primary cursor-pointer"
+                         />
+                      </label>
+                   </div>
+                   <p className="text-sm text-gray-500 font-bold bg-blue-50 p-3 rounded-xl border border-blue-100">تحكم في محتوى القسم الأسود الموجود في أسفل صفحة العروض والتخفيضات. إذا تم تعطيله سيختفي تماماً.</p>
+                   <div className="space-y-5">
+                      <div className="space-y-2">
+                        <label className="text-sm font-black text-gray-700 block">العنوان الرئيسي</label>
+                        <input
+                          type="text"
+                          value={settings.large_order_cta?.title || "هل لديك طلبية كبيرة جداً؟"}
+                          onChange={e => setSettings({ ...settings, large_order_cta: { ...(settings.large_order_cta || {}), title: e.target.value } })}
+                          className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 outline-none"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-black text-gray-700 block">الوصف / النص التوضيحي</label>
+                        <textarea
+                          value={settings.large_order_cta?.description || ""}
+                          onChange={e => setSettings({ ...settings, large_order_cta: { ...(settings.large_order_cta || {}), description: e.target.value } })}
+                          className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 outline-none h-24 resize-none"
+                          placeholder="إذا كنت تمثل علامة تجارية أو تبحث عن أسعار المصنع..."
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-100">
+                         <div className="space-y-4 bg-green-50/50 p-5 rounded-2xl border border-green-100">
+                            <h4 className="text-sm font-black text-green-800 flex items-center gap-2">الزر الأول (واتساب)</h4>
+                            <div className="space-y-2">
+                              <label className="text-xs font-bold text-gray-500">نص الزر</label>
+                              <input
+                                type="text"
+                                value={settings.large_order_cta?.button1Text || "تحدث مع مدير المبيعات"}
+                                onChange={e => setSettings({ ...settings, large_order_cta: { ...(settings.large_order_cta || {}), button1Text: e.target.value } })}
+                                className="w-full bg-white border border-gray-200 rounded-xl py-2.5 px-4 font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 outline-none text-sm"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-xs font-bold text-gray-500">رابط الزر (رابط واتساب أو رابط آخر)</label>
+                              <input
+                                type="text"
+                                dir="ltr"
+                                value={settings.large_order_cta?.button1Link || "https://wa.me/213"}
+                                onChange={e => setSettings({ ...settings, large_order_cta: { ...(settings.large_order_cta || {}), button1Link: e.target.value } })}
+                                className="w-full bg-white border border-gray-200 rounded-xl py-2.5 px-4 font-mono font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 outline-none text-sm"
+                              />
+                            </div>
+                         </div>
+                         <div className="space-y-4 bg-gray-50 p-5 rounded-2xl border border-gray-200">
+                            <h4 className="text-sm font-black text-gray-700 flex items-center gap-2">الزر الثاني (اختياري)</h4>
+                            <div className="space-y-2">
+                              <label className="text-xs font-bold text-gray-500">نص الزر</label>
+                              <input
+                                type="text"
+                                value={settings.large_order_cta?.button2Text || "مشاهدة كافة الأسعار"}
+                                onChange={e => setSettings({ ...settings, large_order_cta: { ...(settings.large_order_cta || {}), button2Text: e.target.value } })}
+                                className="w-full bg-white border border-gray-200 rounded-xl py-2.5 px-4 font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 outline-none text-sm"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-xs font-bold text-gray-500">رابط الزر</label>
+                              <input
+                                type="text"
+                                dir="ltr"
+                                value={settings.large_order_cta?.button2Link || "/products"}
+                                onChange={e => setSettings({ ...settings, large_order_cta: { ...(settings.large_order_cta || {}), button2Link: e.target.value } })}
+                                className="w-full bg-white border border-gray-200 rounded-xl py-2.5 px-4 font-mono font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 outline-none text-sm"
+                              />
+                            </div>
+                         </div>
+                      </div>
+                   </div>
+                 </div>
                )}
             </div>
          </div>

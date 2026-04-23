@@ -40,6 +40,16 @@ interface NavigationItem {
   href: string;
 }
 
+interface LargeOrderCta {
+  enabled: boolean;
+  title: string;
+  description: string;
+  button1Text: string;
+  button1Link: string;
+  button2Text: string;
+  button2Link: string;
+}
+
 interface SettingsState {
   branding: Branding;
   discounts: Discounts;
@@ -54,8 +64,9 @@ interface SettingsState {
   slider: any[];
   partners: any[];
   popup: PopupOffer;
+  largeOrderCta: LargeOrderCta;
   isLoaded: boolean;
-  setSettings: (branding: Branding, discounts: Discounts, navigation: NavigationItem[], promobar?: any, marketing?: any, slider?: any[], partners?: any[], popup?: PopupOffer) => void;
+  setSettings: (branding: Branding, discounts: Discounts, navigation: NavigationItem[], promobar?: any, marketing?: any, slider?: any[], partners?: any[], popup?: PopupOffer, largeOrderCta?: LargeOrderCta) => void;
 }
 
 export const useSettingsStore = create<SettingsState>((set) => ({
@@ -84,8 +95,17 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   slider: [],
   partners: [],
   popup: { enabled: false, title: "", description: "", image: "", buttonText: "اطلب الآن", buttonLink: "/products", delay: 2000 },
+  largeOrderCta: {
+    enabled: true,
+    title: "هل لديك طلبية كبيرة جداً؟",
+    description: "إذا كنت تمثل علامة تجارية أو تبحث عن أسعار المصنع للكميات التي تتجاوز 10,000 قطعة، تواصل معنا مباشرة للحصول على عرض سعر مخصص.",
+    button1Text: "تحدث مع مدير المبيعات",
+    button1Link: "https://wa.me/213",
+    button2Text: "مشاهدة كافة الأسعار",
+    button2Link: "/products"
+  },
   isLoaded: false,
-  setSettings: (branding, discounts, navigation, promobar, marketing, slider, partners, popup) => 
+  setSettings: (branding, discounts, navigation, promobar, marketing, slider, partners, popup, largeOrderCta) => 
     set({ 
       branding, 
       discounts, 
@@ -95,6 +115,15 @@ export const useSettingsStore = create<SettingsState>((set) => ({
       slider: slider || [],
       partners: partners || [],
       popup: popup || { enabled: false, title: "", description: "", image: "", buttonText: "اطلب الآن", buttonLink: "/products", delay: 2000 },
+      largeOrderCta: largeOrderCta || {
+        enabled: true,
+        title: "هل لديك طلبية كبيرة جداً؟",
+        description: "إذا كنت تمثل علامة تجارية أو تبحث عن أسعار المصنع للكميات التي تتجاوز 10,000 قطعة، تواصل معنا مباشرة للحصول على عرض سعر مخصص.",
+        button1Text: "تحدث مع مدير المبيعات",
+        button1Link: "https://wa.me/213",
+        button2Text: "مشاهدة كافة الأسعار",
+        button2Link: "/products"
+      },
       isLoaded: true 
     }),
 }));

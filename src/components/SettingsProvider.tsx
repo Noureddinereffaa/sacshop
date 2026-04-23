@@ -21,7 +21,8 @@ export default function SettingsProvider({ children, initialSettings }: { childr
         s.marketing,
         s.slider,
         s.partners,
-        s.popup
+        s.popup,
+        s.largeOrderCta
       );
       setDiscountConfig({
         enabled: s.discounts.cartDiscountEnabled, 

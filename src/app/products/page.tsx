@@ -119,12 +119,12 @@ function ProductsList() {
                      ? (customerStatus === 'vip' 
                         ? `خصم حصري: ${appliedVipOffer?.title} 👏`
                         : "مبروك! الخصم الترحيبي مُفعّل في سلتك 👏")
-                     : `خصم ${percentage}% بانتظارك!`}
+                     : `خصم ${discountConfig.discountType === 'percentage' ? `${discountConfig.percentage}%` : `${discountConfig.percentage} د.ج`} بانتظارك!`}
                  </h3>
                  <p className={`font-bold text-sm ${isEligible ? "text-green-700/80" : "text-gray-500"}`}>
                    {isEligible 
                      ? "يمكنك الاستمرار في التسوق أو إتمام طلبك الآن بالأسعار المخفضة." 
-                     : `لقد أضفت منتجاً، أضف منتجاً آخر لسلّتك الآن للحصول على خصم ${percentage}% المباشر!`}
+                     : `لقد أضفت منتجاً، أضف منتجاً آخر لسلّتك الآن للحصول على الخصم المباشر!`}
                  </p>
                </div>
              </div>

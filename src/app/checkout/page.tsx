@@ -256,11 +256,11 @@ export default function CheckoutPage() {
                   </div>
                   
                   {/* Progress Indicator Context */}
-                  {customerStatus === 'new' && !isEligible && (
+                  {customerStatus === 'new' && !isEligible && useCartStore.getState().discountConfig.enabled && (
                      <div className="p-3 bg-yellow-50 rounded-xl border border-yellow-100 mb-6 flex items-center gap-3">
                         <Star className="text-yellow-600 fill-yellow-600" size={16} />
                         <span className="text-[10px] font-bold text-yellow-800">
-                          أضف {useCartStore.getState().discountConfig.minItems} منتجات أو أكثر للحصول على خصم الترحيب ({useCartStore.getState().discountConfig.percentage}%)!
+                          أضف {useCartStore.getState().discountConfig.minItems} منتجات أو أكثر للحصول على خصم الترحيب ({useCartStore.getState().discountConfig.discountType === 'percentage' ? `${useCartStore.getState().discountConfig.percentage}%` : `${useCartStore.getState().discountConfig.percentage} د.ج`})!
                         </span>
                      </div>
                   )}

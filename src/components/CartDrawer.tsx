@@ -86,7 +86,7 @@ export default function CartDrawer() {
                      <ShoppingBag size={20} />
                    </div>
                    <div>
-                     <p className="font-black">خصم {discountConfig.percentage}% على المجموع!</p>
+                     <p className="font-black">خصم {discountConfig.discountType === 'percentage' ? `${discountConfig.percentage}%` : `${discountConfig.percentage} د.ج`} على المجموع!</p>
                      <p className="text-xs font-bold opacity-80">
                        {isEligible 
                          ? 'مبروك! تم تفعيل الخصم 👏' 
@@ -214,7 +214,7 @@ export default function CartDrawer() {
                 <div className="space-y-2 mb-4">
                   {isEligible && discountAmount > 0 && (
                     <div className="flex items-center justify-between text-green-600 text-sm font-bold">
-                      <span>الخصم المكتسب ({getDiscountInfo().percentage}%):</span>
+                      <span>الخصم المكتسب ({getDiscountInfo().discountType === 'welcome' && discountConfig.discountType === 'fixed' ? `${discountConfig.percentage} د.ج` : `${getDiscountInfo().percentage}%`}):</span>
                       <span>- {discountAmount} د.ج</span>
                     </div>
                   )}

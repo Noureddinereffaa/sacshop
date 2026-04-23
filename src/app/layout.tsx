@@ -8,6 +8,7 @@ import WhatsAppButton from "@/components/WhatsAppButton";
 import GlobalNavigation from "@/components/GlobalNavigation";
 import Footer from "@/components/Footer";
 import OfferPopup from "@/components/OfferPopup";
+import ScrollToTop from "@/components/ScrollToTop";
 
 const tajawal = Tajawal({
   subsets: ["arabic"],
@@ -151,6 +152,7 @@ export default async function RootLayout({
       </head>
       <body className={`${tajawal.variable} font-sans`}>
         <SettingsProvider initialSettings={settingsMap}>
+          <ScrollToTop />
           <MarketingPixels />
           <GlobalNavigation />
           {children}

@@ -30,33 +30,48 @@ export default function AdminCustomersPage() {
   };
 
   useEffect(() => {
-    async function fetchCustomers() {
-      if (!supabase) { setIsLoading(false); return; }
-      const { data } = await supabase
-        .from("customers")
-        .select("*")
-        .order("last_order_at", { ascending: false });
-      
-      setCustomers(data || []);
-      setIsLoading(false);
-    }
     fetchCustomers();
   }, []);
+
+  async function fetchCustomers() {
+    if (!supabase) { setIsLoading(false); return; }
+    const { data, error } = await supabase
+      .from("customers")
+      .select("*")
+      .order("last_order_at", { ascending: false });
+    
+    if (error) {
+      console.error("Error fetching customers:", error);
+      showToast("خطأ في جلب الزبائن: " + error.message, "error");
+    } else {
+      setCustomers(data || []);
+    }
+    setIsLoading(false);
+  }
 
   const filtered = customers.filter(c => 
     c.name.toLowerCase().includes(search.toLowerCase()) || 
     c.phone.includes(search)
   );
 
-  async function fetchCustomers() {
-    if (!supabase) { setIsLoading(false); return; }
-    const { data } = await supabase
+  const deleteCustomer = async (id: string, name: string) => {
+    if (!confirm(`هل أنت متأكد من حذف الزبون "${name}"؟ لن يتم حذف طلباته السابقة.`)) return;
+    if (!supabase) return;
+
+    const { error } = await supabase
       .from("customers")
-      .select("*")
-      .order("last_order_at", { ascending: false });
-    
-    setCustomers(data || []);
-  }
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      console.error("Error deleting customer:", error);
+      showToast(`فشل الحذف: ${error.message}`, 'error');
+    } else {
+      showToast(`تم حذف الزبون ${name} بنجاح`, 'success');
+      setSelectedIds(prev => prev.filter(i => i !== id));
+      fetchCustomers();
+    }
+  };
 
   const deleteBulkCustomers = async () => {
     if (!selectedIds.length) return;
@@ -70,12 +85,13 @@ export default function AdminCustomersPage() {
       .delete()
       .in("id", selectedIds);
     
-    if (!error) {
+    if (error) {
+      console.error("Error deleting customers:", error);
+      showToast(`فشل الحذف الجماعي: ${error.message}`, 'error');
+    } else {
       showToast(`تم حذف ${selectedIds.length} زبائن بنجاح`, 'success');
       setSelectedIds([]);
       fetchCustomers();
-    } else {
-      showToast('حدث خطأ أثناء الحذف الجماعي', 'error');
     }
     setIsDeletingBulk(false);
   };
@@ -183,6 +199,7 @@ export default function AdminCustomersPage() {
                   <th className="px-6 py-5 text-right">المشتريات</th>
                   <th className="px-6 py-5 text-right">الإنفاق الإجمالي</th>
                   <th className="px-6 py-5 text-right">تاريخ آخر طلب</th>
+                  <th className="px-6 py-5 text-left">إجراءات</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -231,6 +248,18 @@ export default function AdminCustomersPage() {
                       {new Date(customer.last_order_at || customer.created_at).toLocaleDateString("ar-DZ", {
                         year: "numeric", month: "short", day: "numeric"
                       })}
+                    </td>
+                    <td className="px-6 py-4 text-left">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteCustomer(customer.id, customer.name);
+                        }}
+                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                        title="حذف الزبون"
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </td>
                   </tr>
                 ))}

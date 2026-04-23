@@ -105,12 +105,18 @@ export default function AdminOrders() {
       setIsLoading(false);
       return;
     }
-    const { data } = await supabase
+    // Use a timestamp to bypass any potential browser caching
+    const { data, error } = await supabase
       .from("orders")
       .select("*")
       .order("created_at", { ascending: false });
     
-    if (data) setOrders(data);
+    if (error) {
+      console.error("Supabase Error fetching orders:", error);
+      showToast('حدث خطأ أثناء جلب الطلبات: ' + error.message, 'error');
+    } else if (data) {
+      setOrders([...data]); // Create a new array reference to force UI update
+    }
     setIsLoading(false);
   }
 
@@ -138,9 +144,9 @@ export default function AdminOrders() {
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {
       const matchesSearch = 
-        order.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.customer_phone.includes(searchTerm) ||
-        order.order_number.toString().includes(searchTerm);
+        (order.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
+        (order.customer_phone?.includes(searchTerm) || false) ||
+        (order.order_number?.toString().includes(searchTerm) || false);
       
       const matchesStatus = statusFilter === "all" || order.status === statusFilter;
       
@@ -183,11 +189,14 @@ export default function AdminOrders() {
     if (!confirm("هل أنت متأكد أنك تريد حذف هذا الطلب نهائياً؟")) return;
     if (!supabase) return;
     const { error } = await supabase.from("orders").delete().eq("id", id);
-    if (!error) {
+    if (error) {
+      console.error("Error deleting order:", error);
+      showToast('فشل حذف الطلب: ' + error.message, 'error');
+    } else {
       showToast('تم حذف الطلب بنجاح', 'success');
+      setOrders(prev => prev.filter(order => order.id !== id)); // Remove immediately from UI
       setSelectedOrder(null);
       setSelectedIds(prev => prev.filter(orderId => orderId !== id));
-      fetchOrders();
     }
   };
 
@@ -203,12 +212,14 @@ export default function AdminOrders() {
       .delete()
       .in("id", selectedIds);
     
-    if (!error) {
-      showToast(`تم حذف ${selectedIds.length} طلبات بنجاح`, 'success');
-      setSelectedIds([]);
-      fetchOrders();
+    if (error) {
+      console.error("Error deleting bulk orders:", error);
+      showToast('فشل الحذف الجماعي: ' + error.message, 'error');
     } else {
-      showToast('حدث خطأ أثناء الحذف الجماعي', 'error');
+      showToast(`تم حذف ${selectedIds.length} طلبات بنجاح`, 'success');
+      setOrders(prev => prev.filter(order => !selectedIds.includes(order.id))); // Remove immediately from UI
+      setSelectedIds([]);
+      setSelectedOrder(null);
     }
     setIsDeletingBulk(false);
   };

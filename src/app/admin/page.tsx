@@ -54,9 +54,14 @@ export default function AdminDashboard() {
         supabase.from("customers").select("id, is_vip"),
       ]);
 
+      if (ordersRes.error) console.error("Admin Dashboard: Error fetching orders:", ordersRes.error);
+      if (productsRes.error) console.error("Admin Dashboard: Error fetching products:", productsRes.error);
+      if (customersRes.error) console.error("Admin Dashboard: Error fetching customers:", customersRes.error);
+
       const orders = ordersRes.data || [];
       const activeStatuses = ['confirmed', 'processing', 'shipped', 'delivered'];
       const sorted = [...orders].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      
       setStats({
         totalOrders: orders.length,
         newOrders: orders.filter(o => o.status === "new").length,

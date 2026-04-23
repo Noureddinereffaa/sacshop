@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSettingsStore } from "@/store/settingsStore";
 import {
   LayoutDashboard, ShoppingBag, Package,
   Settings, Users, Crown, LogOut, ChevronLeft, Menu, X
@@ -27,6 +28,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isChecking, setIsChecking] = useState(true);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { branding } = useSettingsStore();
 
   useEffect(() => {
     // Verify session via secure server-side API (httpOnly cookie)
@@ -115,7 +117,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               S
             </div>
             <div>
-              <p className="font-black text-lg tracking-tight">Service Serigraphie</p>
+              <p className="font-black text-lg tracking-tight">{branding?.storeName || "Service Serigraphie"}</p>
               <p className="text-gray-500 text-xs font-bold">لوحة التحكم</p>
             </div>
           </Link>
@@ -173,7 +175,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <Link href="/" className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center font-black text-xl">S</div>
                   <div>
-                    <p className="font-black text-lg tracking-tight">Service Serigraphie</p>
+                    <p className="font-black text-lg tracking-tight">{branding?.storeName || "Service Serigraphie"}</p>
                     <p className="text-gray-500 text-xs font-bold">لوحة التحكم</p>
                   </div>
                 </Link>

@@ -229,7 +229,16 @@ export default function ProductClient({ initialProduct }: { initialProduct: Prod
 
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, []);
+    if (product) {
+      window.trackMarketingEvent?.("ViewContent", {
+        content_name: product.name,
+        content_ids: [product.id],
+        content_type: "product",
+        value: product.price,
+        currency: "DZD"
+      });
+    }
+  }, [product]);
 
   if (isLoading) {
     return (

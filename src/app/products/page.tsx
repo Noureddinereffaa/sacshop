@@ -30,7 +30,7 @@ function ProductsList() {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("الكل");
   
-  const { items, getDiscountInfo, customerStatus, appliedVipOffer } = useCartStore();
+  const { items, getDiscountInfo, customerStatus, appliedVipOffer, discountConfig } = useCartStore();
   const { isEligible, percentage } = getDiscountInfo();
   const { navigation } = useSettingsStore();
 
@@ -100,8 +100,8 @@ function ProductsList() {
       </section>
 
       <div className="container mx-auto px-4 py-12">
-        {/* UPSell Banner B2B logic */}
-        {mounted && items.length > 0 && (isEligible || customerStatus !== 'vip') && (
+        {/* UPSell Banner B2B logic (only when discount enabled or VIP) */}
+        {mounted && items.length > 0 && (isEligible || (customerStatus !== 'vip' && discountConfig.enabled)) && (
           <div className={`mb-10 p-6 rounded-3xl border-2 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl transition-all ${
             isEligible 
               ? "bg-green-50 border-green-200 text-green-800" 

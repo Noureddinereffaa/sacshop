@@ -489,8 +489,8 @@ export default function ProductClient({ initialProduct }: { initialProduct: Prod
                   </div>
                 </div>
 
-                {/* Welcome Upsell Alert (Only for New/Guest) */}
-                {customerStatus !== 'vip' && (
+                {/* Welcome Upsell Alert (Only for New/Guest AND when discount is enabled) */}
+                {customerStatus !== 'vip' && discountConfig.enabled && (
                   <motion.div 
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}

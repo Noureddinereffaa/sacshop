@@ -10,7 +10,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
 export default function CartDrawer() {
-  const { items, isOpen, setIsOpen, removeItem, updateQuantity, getDiscountInfo, setDiscountConfig, customerStatus } = useCartStore();
+  const { items, isOpen, setIsOpen, removeItem, updateQuantity, getDiscountInfo, setDiscountConfig, customerStatus, discountConfig } = useCartStore();
   
   // Hydration & Settings Fetch
   const [mounted, setMounted] = useState(false);
@@ -73,8 +73,8 @@ export default function CartDrawer() {
 
             {/* Cart Items */}
             <div className="flex-1 overflow-y-auto p-4 custom-scrollbar flex flex-col gap-4">
-              {/* Discount Promo Banner */}
-              {items.length > 0 && (
+              {/* Discount Promo Banner (only when welcome discount is enabled) */}
+              {items.length > 0 && discountConfig.enabled && (
                 <div className={`p-4 rounded-2xl border flex items-center gap-3 transition-colors ${
                   isEligible 
                    ? 'bg-green-50 border-green-200 text-green-800' 
@@ -86,11 +86,11 @@ export default function CartDrawer() {
                      <ShoppingBag size={20} />
                    </div>
                    <div>
-                     <p className="font-black">خصم 10% على المجموع!</p>
+                     <p className="font-black">خصم {discountConfig.percentage}% على المجموع!</p>
                      <p className="text-xs font-bold opacity-80">
                        {isEligible 
                          ? 'مبروك! تم تفعيل الخصم 👏' 
-                         : 'أضف منتجاً آخر لسلّتك لتفعيل الخصم المباشر.'}
+                         : `أضف ${discountConfig.minItems} منتجات لسلّتك لتفعيل الخصم المباشر.`}
                      </p>
                    </div>
                 </div>
@@ -203,18 +203,18 @@ export default function CartDrawer() {
             {items.length > 0 && (
               <div className="p-6 pb-8 md:pb-6 bg-white border-t border-gray-100 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)] sticky bottom-0 z-10 w-full">
                 {/* Discount Progress */}
-                {!isEligible && (customerStatus === 'new' || customerStatus === 'guest') && (
+                {!isEligible && discountConfig.enabled && (customerStatus === 'new' || customerStatus === 'guest') && (
                   <div className="mb-4 p-3 bg-yellow-50 rounded-xl border border-yellow-100 flex items-center gap-2 animate-pulse">
                     <Gift size={16} className="text-yellow-600" />
                     <span className="text-[10px] font-bold text-yellow-800">
-                      أضف {useCartStore.getState().discountConfig.minItems} منتجات مختلفة للحصول على خصم الترحيب!
+                      أضف {discountConfig.minItems} منتجات مختلفة للحصول على خصم الترحيب!
                     </span>
                   </div>
                 )}
                 <div className="space-y-2 mb-4">
-                  {isEligible && (
+                  {isEligible && discountAmount > 0 && (
                     <div className="flex items-center justify-between text-green-600 text-sm font-bold">
-                      <span>الخصم المكتسب (10%):</span>
+                      <span>الخصم المكتسب ({getDiscountInfo().percentage}%):</span>
                       <span>- {discountAmount} د.ج</span>
                     </div>
                   )}

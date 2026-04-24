@@ -21,6 +21,7 @@ async function getProducts() {
     .from("products")
     .select("*")
     .eq("is_published", true)
+    .order("sort_order", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: false });
   
   if (error || !data || data.length === 0) return STATIC_PRODUCTS;

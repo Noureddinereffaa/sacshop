@@ -35,6 +35,7 @@ export default function OffersPage() {
         .select("*")
         .eq("is_published", true)
         .not("compare_price", "is", null)
+        .order("sort_order", { ascending: true, nullsFirst: false })
         .order("created_at", { ascending: false });
       
       // Filter products where compare_price is actually higher than price

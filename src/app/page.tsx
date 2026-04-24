@@ -15,6 +15,7 @@ export default async function Home() {
     ? await supabase.from("products").select("*")
         .eq("is_published", true)
         .order("is_featured", { ascending: false, nullsFirst: false })
+        .order("sort_order", { ascending: true, nullsFirst: false })
         .order("created_at", { ascending: false })
         .limit(8)
     : { data: null };

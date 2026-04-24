@@ -71,6 +71,7 @@ export interface Product {
   stock: number;
   is_published: boolean;
   is_featured: boolean;
+  sort_order?: number;
   created_at?: string;
 }
 

@@ -337,27 +337,7 @@ export default function AdminSettings() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                       <div className="space-y-6">
-                        <div className="space-y-3">
-                           <label className="text-sm font-black text-gray-700 block mr-2">العنوان الجذاب (Title)</label>
-                           <input 
-                             type="text"
-                             value={settings.popup_offer?.title || ""}
-                             onChange={(e) => setSettings({ ...settings, popup_offer: { ...settings.popup_offer, title: e.target.value } })}
-                             placeholder="مثال: خصم 20% لفترة محدودة!"
-                             className="w-full bg-gray-50 border-none rounded-2xl py-4 px-5 font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 outline-none"
-                           />
-                        </div>
-
-                        <div className="space-y-3">
-                           <label className="text-sm font-black text-gray-700 block mr-2">وصف العرض (Description)</label>
-                           <textarea 
-                             value={settings.popup_offer?.description || ""}
-                             onChange={(e) => setSettings({ ...settings, popup_offer: { ...settings.popup_offer, description: e.target.value } })}
-                             placeholder="اكتب تفاصيل العرض هنا..."
-                             rows={3}
-                             className="w-full bg-gray-50 border-none rounded-2xl py-4 px-5 font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 outline-none resize-none"
-                           />
-                        </div>
+                        {/* Title and Description fields removed for an image-only popup */}
 
                         <div className="grid grid-cols-2 gap-4">
                            <div className="space-y-3">

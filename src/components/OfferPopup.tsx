@@ -51,7 +51,7 @@ export default function OfferPopup() {
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="relative w-full max-w-lg bg-white rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row text-right"
+            className="relative w-full max-w-sm sm:max-w-md bg-white rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col text-right"
             dir="rtl"
           >
             {/* Close Button */}
@@ -62,22 +62,28 @@ export default function OfferPopup() {
               <X size={20} />
             </button>
 
-            {/* Content Section */}
-            <div className={`flex-1 p-8 sm:p-10 flex flex-col justify-center ${popup.image ? 'md:w-1/2' : 'w-full text-center items-center'}`}>
-              <div className={`flex items-center gap-2 text-primary mb-4 ${!popup.image && 'justify-center'}`}>
-                <Sparkles size={18} className="animate-pulse" />
-                <span className="text-xs font-black uppercase tracking-widest">عرض حصري</span>
+            {/* Image Section */}
+            {popup.image ? (
+              <div className="relative w-full aspect-square sm:aspect-[4/5] bg-gray-50">
+                <Image
+                  src={popup.image}
+                  alt={popup.title || "عرض خاص"}
+                  fill
+                  className="object-cover"
+                  priority
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
               </div>
-              
-              <h2 className="text-2xl sm:text-3xl font-black text-gray-900 mb-4 leading-tight">
-                {popup.title}
-              </h2>
-              
-              <p className="text-gray-500 text-sm sm:text-base leading-relaxed mb-8 font-medium">
-                {popup.description}
-              </p>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                 <Sparkles size={48} className="text-primary/20 mb-4 animate-pulse" />
+                 <span className="text-lg font-black text-gray-400">لا توجد صورة للعرض</span>
+              </div>
+            )}
 
-              <Link href={popup.buttonLink || "/products"} onClick={closePopup}>
+            {/* Action Button Section */}
+            <div className="p-4 sm:p-6 bg-white w-full flex flex-col gap-3 z-10">
+              <Link href={popup.buttonLink || "/products"} onClick={closePopup} className="w-full">
                 <button className="w-full bg-primary hover:bg-primary/90 text-white py-4 rounded-2xl font-black shadow-xl shadow-primary/20 flex items-center justify-center gap-3 group transition-all">
                   <span>{popup.buttonText || "اطلب الآن"}</span>
                   <ArrowRight size={20} className="rotate-180 group-hover:-translate-x-1 transition-transform" />
@@ -86,38 +92,11 @@ export default function OfferPopup() {
               
               <button 
                 onClick={closePopup}
-                className="mt-4 text-xs font-bold text-gray-400 hover:text-gray-600 transition-colors"
+                className="mt-2 text-xs font-bold text-gray-400 hover:text-gray-600 transition-colors w-full text-center"
               >
                 ربما لاحقاً
               </button>
             </div>
-
-            {/* Image Section (Optional) */}
-            {popup.image && (
-              <div className="relative hidden md:block md:w-1/2 min-h-[400px]">
-                <Image
-                  src={popup.image}
-                  alt={popup.title}
-                  fill
-                  className="object-cover"
-                  priority
-                />
-                <div className="absolute inset-0 bg-gradient-to-r from-white via-transparent to-transparent" />
-              </div>
-            )}
-            
-            {/* Mobile Image (Small) */}
-            {popup.image && (
-              <div className="relative md:hidden h-48 w-full order-first">
-                <Image
-                  src={popup.image}
-                  alt={popup.title}
-                  fill
-                  className="object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent" />
-              </div>
-            )}
           </motion.div>
         </div>
       )}

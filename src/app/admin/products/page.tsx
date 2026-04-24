@@ -4,23 +4,144 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   Plus, Search, Edit2, Trash2, Eye, EyeOff, Star,
-  Package, Loader2
+  Package, Loader2, GripVertical, Save, X
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Product } from "@/types";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+
+function SortableProductRow({ product, togglePublish, toggleFeatured, deleteProduct, isReordering }: any) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: product.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : 1,
+    position: isDragging ? "relative" as const : "static" as const,
+  };
+
+  return (
+    <tr
+      ref={setNodeRef}
+      style={style}
+      className={`block lg:table-row bg-white lg:bg-transparent rounded-2xl mb-4 p-4 lg:p-0 border border-gray-100 lg:border-none ${isDragging ? "opacity-90 ring-2 ring-primary shadow-xl z-50 bg-gray-50" : "hover:bg-gray-50/50 transition-colors shadow-sm lg:shadow-none"}`}
+    >
+      <td className="px-4 py-3 lg:px-6 lg:py-4 block lg:table-cell border-b border-gray-50 lg:border-none">
+        <div className="flex items-center gap-4">
+          {isReordering && (
+            <div 
+              {...attributes} 
+              {...listeners} 
+              className="cursor-grab active:cursor-grabbing p-2 text-gray-400 hover:text-primary transition-colors touch-none"
+            >
+              <GripVertical size={20} />
+            </div>
+          )}
+          <div className="w-14 h-14 bg-gray-100 rounded-xl overflow-hidden shrink-0 relative">
+            {product.image_url && product.image_url.startsWith('http') ? (
+              <Image src={product.image_url} alt={product.name} fill className="object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-gray-300">
+                <Package size={24} />
+              </div>
+            )}
+          </div>
+          <div>
+            <p className="font-bold text-gray-900 line-clamp-1">{product.name}</p>
+            {product.is_featured && (
+              <span className="text-[10px] bg-yellow-100 text-yellow-600 font-bold px-2 py-0.5 rounded-full inline-block mt-1">
+                ⭐ مميز
+              </span>
+            )}
+          </div>
+        </div>
+      </td>
+      <td className="px-4 py-3 lg:px-6 lg:py-4 block lg:table-cell flex items-center justify-between lg:justify-start border-b border-gray-50 lg:border-none">
+        <span className="lg:hidden text-xs text-gray-400 font-bold">السعر</span>
+        <div className="text-left lg:text-right">
+          <p className="font-black text-primary text-base lg:text-sm">{product.price.toLocaleString()} د.ج</p>
+          {product.compare_price && (
+            <p className="text-xs text-gray-400 line-through">{product.compare_price.toLocaleString()} د.ج</p>
+          )}
+        </div>
+      </td>
+      <td className="px-4 py-3 lg:px-6 lg:py-4 block lg:table-cell flex items-center justify-between lg:justify-start border-b border-gray-50 lg:border-none">
+        <span className="lg:hidden text-xs text-gray-400 font-bold">التصنيف</span>
+        <span className="text-xs lg:text-sm bg-gray-100 text-gray-600 px-3 py-1 rounded-full font-medium">
+          {product.category || "—"}
+        </span>
+      </td>
+      <td className="px-4 py-3 lg:px-6 lg:py-4 block lg:table-cell flex items-center justify-between lg:justify-start border-b border-gray-50 lg:border-none">
+        <span className="lg:hidden text-xs text-gray-400 font-bold">المخزون</span>
+        <span className={`font-bold text-sm ${product.stock <= 5 ? "text-red-500" : "text-gray-700"}`}>
+          {product.stock}
+        </span>
+      </td>
+      <td className="px-4 py-3 lg:px-6 lg:py-4 block lg:table-cell flex items-center justify-between lg:justify-start border-b border-gray-50 lg:border-none">
+         <span className="lg:hidden text-xs text-gray-400 font-bold">الحالة</span>
+        <span className={`px-3 py-1 rounded-full text-[11px] font-black ${product.is_published ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-500"}`}>
+          {product.is_published ? "منشور" : "مخفي"}
+        </span>
+      </td>
+      <td className="px-4 py-3 lg:px-6 lg:py-4 block lg:table-cell flex items-center justify-between lg:justify-center mt-2 lg:mt-0">
+        <span className="lg:hidden text-xs text-gray-400 font-bold">الإجراءات</span>
+        <div className="flex items-center justify-end lg:justify-center gap-1">
+          <button onClick={() => toggleFeatured(product.id, product.is_featured)} disabled={isReordering} className={`p-2 lg:p-2 w-10 h-10 lg:w-auto lg:h-auto flex items-center justify-center rounded-lg transition-colors ${product.is_featured ? "text-yellow-500 bg-yellow-50" : "text-gray-400 hover:bg-gray-100"}`} title="تمييز">
+            <Star size={16} />
+          </button>
+          <button onClick={() => togglePublish(product.id, product.is_published)} disabled={isReordering} className="p-2 lg:p-2 w-10 h-10 lg:w-auto lg:h-auto flex items-center justify-center text-blue-400 hover:bg-blue-50 rounded-lg transition-colors" title={product.is_published ? "إخفاء" : "نشر"}>
+            {product.is_published ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+          <Link href={isReordering ? "#" : `/admin/products/${product.id}/edit`} className={`p-2 lg:p-2 w-10 h-10 lg:w-auto lg:h-auto flex items-center justify-center rounded-lg transition-colors ${isReordering ? 'text-gray-300 pointer-events-none' : 'text-gray-500 hover:bg-gray-100'}`} title="تعديل">
+            <Edit2 size={16} />
+          </Link>
+          <button onClick={() => deleteProduct(product.id)} disabled={isReordering} className="p-2 lg:p-2 w-10 h-10 lg:w-auto lg:h-auto flex items-center justify-center text-red-400 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50" title="حذف">
+            <Trash2 size={16} />
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+}
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [isReordering, setIsReordering] = useState(false);
+  const [isSavingOrder, setIsSavingOrder] = useState(false);
 
   useEffect(() => { fetchProducts(); }, []);
 
   async function fetchProducts() {
     setIsLoading(true);
     if (!supabase) { setIsLoading(false); return; }
-    const { data } = await supabase.from("products").select("*").order("created_at", { ascending: false });
+    // Fetch products ordered by sort_order first, then created_at
+    const { data } = await supabase.from("products").select("*").order("sort_order", { ascending: true, nullsFirst: false }).order("created_at", { ascending: false });
     setProducts(data || []);
     setIsLoading(false);
   }
@@ -48,21 +169,94 @@ export default function AdminProductsPage() {
     fetchProducts();
   }
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (active.id !== over?.id) {
+      setProducts((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over?.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  }
+
+  async function saveNewOrder() {
+    if (!supabase) return;
+    setIsSavingOrder(true);
+    try {
+      const updates = products.map((product, index) => 
+        supabase.from("products").update({ sort_order: index }).eq("id", product.id)
+      );
+      await Promise.all(updates);
+      setIsReordering(false);
+      alert("تم حفظ الترتيب بنجاح");
+      fetchProducts(); // Refresh to ensure sync
+    } catch (err) {
+      console.error(err);
+      alert("حدث خطأ أثناء حفظ الترتيب");
+    } finally {
+      setIsSavingOrder(false);
+    }
+  }
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-20">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-black text-gray-900">إدارة المنتجات</h1>
           <p className="text-gray-500">{products.length} منتج في المتجر</p>
         </div>
-        <Link
-          href="/admin/products/new"
-          className="bg-primary text-white px-6 py-3 rounded-xl font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
-        >
-          <Plus size={20} />
-          إضافة منتج جديد
-        </Link>
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          {isReordering ? (
+             <>
+                <button
+                  onClick={() => { setIsReordering(false); fetchProducts(); }}
+                  disabled={isSavingOrder}
+                  className="bg-white text-gray-600 px-4 py-3 rounded-xl font-bold hover:bg-gray-50 transition-all border border-gray-200 flex-1 md:flex-none flex items-center justify-center gap-2"
+                >
+                  <X size={20} />
+                  إلغاء
+                </button>
+                <button
+                  onClick={saveNewOrder}
+                  disabled={isSavingOrder}
+                  className="bg-green-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-green-600 transition-all shadow-lg shadow-green-500/20 flex-1 md:flex-none flex items-center justify-center gap-2"
+                >
+                  {isSavingOrder ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
+                  حفظ الترتيب
+                </button>
+             </>
+          ) : (
+             <>
+                <button
+                  onClick={() => { setIsReordering(true); setSearch(""); }}
+                  className="bg-white text-gray-700 px-4 py-3 rounded-xl font-bold hover:bg-gray-50 transition-all border border-gray-200 shadow-sm flex-1 md:flex-none flex items-center justify-center gap-2"
+                >
+                  <GripVertical size={20} />
+                  ترتيب المنتجات
+                </button>
+                <Link
+                  href="/admin/products/new"
+                  className="bg-primary text-white px-6 py-3 rounded-xl font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 flex-1 md:flex-none flex items-center justify-center gap-2"
+                >
+                  <Plus size={20} />
+                  إضافة منتج
+                </Link>
+             </>
+          )}
+        </div>
       </div>
 
       {/* Stats */}
@@ -80,17 +274,26 @@ export default function AdminProductsPage() {
         ))}
       </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-        <input
-          type="text"
-          placeholder="البحث عن منتج..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="w-full bg-white border border-gray-200 rounded-xl py-3 pr-12 pl-4 focus:ring-2 focus:ring-primary/20 outline-none"
-        />
-      </div>
+      {/* Search - Hidden during reordering to avoid index issues */}
+      {!isReordering && (
+        <div className="relative">
+          <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <input
+            type="text"
+            placeholder="البحث عن منتج..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full bg-white border border-gray-200 rounded-xl py-3 pr-12 pl-4 focus:ring-2 focus:ring-primary/20 outline-none font-medium"
+          />
+        </div>
+      )}
+
+      {isReordering && (
+         <div className="bg-blue-50 border border-blue-100 text-blue-700 p-4 rounded-xl flex items-center gap-3 font-bold animate-in fade-in">
+            <GripVertical size={20} className="animate-pulse" />
+            <p>قم بسحب وإفلات المنتجات لتغيير ترتيبها، ثم اضغط على "حفظ الترتيب" في الأعلى.</p>
+         </div>
+      )}
 
       {/* Products Table */}
       <div className="bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden">
@@ -106,89 +309,68 @@ export default function AdminProductsPage() {
           </div>
         ) : (
           <div className="overflow-x-hidden">
-            <table className="w-full text-right block lg:table">
-              <thead className="hidden lg:table-header-group">
-                <tr className="bg-gray-50 text-gray-500 text-xs font-black uppercase tracking-widest border-b border-gray-100 block lg:table-row">
-                  <th className="px-6 py-5 block lg:table-cell">المنتج</th>
-                  <th className="px-6 py-5 block lg:table-cell">السعر</th>
-                  <th className="px-6 py-5 block lg:table-cell">التصنيف</th>
-                  <th className="px-6 py-5 block lg:table-cell">المخزون</th>
-                  <th className="px-6 py-5 block lg:table-cell">الحالة</th>
-                  <th className="px-6 py-5 text-center block lg:table-cell">الإجراءات</th>
-                </tr>
-              </thead>
-              <tbody className="block lg:table-row-group divide-y lg:divide-y-0 lg:divide-gray-100">
-                {filtered.map(product => (
-                  <tr key={product.id} className="block lg:table-row hover:bg-gray-50/50 transition-colors bg-white lg:bg-transparent rounded-2xl mb-4 p-4 lg:p-0 shadow-sm lg:shadow-none border border-gray-100 lg:border-none">
-                    <td className="px-4 py-3 lg:px-6 lg:py-4 block lg:table-cell border-b border-gray-50 lg:border-none">
-                      <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 bg-gray-100 rounded-xl overflow-hidden shrink-0 relative">
-                          {product.image_url && product.image_url.startsWith('http') ? (
-                            <Image src={product.image_url} alt={product.name} fill className="object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-300">
-                              <Package size={24} />
-                            </div>
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-bold text-gray-900 line-clamp-1">{product.name}</p>
-                          {product.is_featured && (
-                            <span className="text-[10px] bg-yellow-100 text-yellow-600 font-bold px-2 py-0.5 rounded-full inline-block mt-1">
-                              ⭐ مميز
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 lg:px-6 lg:py-4 block lg:table-cell flex items-center justify-between lg:justify-start border-b border-gray-50 lg:border-none">
-                      <span className="lg:hidden text-xs text-gray-400 font-bold">السعر</span>
-                      <div className="text-left lg:text-right">
-                        <p className="font-black text-primary text-base lg:text-sm">{product.price.toLocaleString()} د.ج</p>
-                        {product.compare_price && (
-                          <p className="text-xs text-gray-400 line-through">{product.compare_price.toLocaleString()} د.ج</p>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 lg:px-6 lg:py-4 block lg:table-cell flex items-center justify-between lg:justify-start border-b border-gray-50 lg:border-none">
-                      <span className="lg:hidden text-xs text-gray-400 font-bold">التصنيف</span>
-                      <span className="text-xs lg:text-sm bg-gray-100 text-gray-600 px-3 py-1 rounded-full font-medium">
-                        {product.category || "—"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 lg:px-6 lg:py-4 block lg:table-cell flex items-center justify-between lg:justify-start border-b border-gray-50 lg:border-none">
-                      <span className="lg:hidden text-xs text-gray-400 font-bold">المخزون</span>
-                      <span className={`font-bold text-sm ${product.stock <= 5 ? "text-red-500" : "text-gray-700"}`}>
-                        {product.stock}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 lg:px-6 lg:py-4 block lg:table-cell flex items-center justify-between lg:justify-start border-b border-gray-50 lg:border-none">
-                       <span className="lg:hidden text-xs text-gray-400 font-bold">الحالة</span>
-                      <span className={`px-3 py-1 rounded-full text-[11px] font-black ${product.is_published ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-500"}`}>
-                        {product.is_published ? "منشور" : "مخفي"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 lg:px-6 lg:py-4 block lg:table-cell flex items-center justify-between lg:justify-center mt-2 lg:mt-0">
-                      <span className="lg:hidden text-xs text-gray-400 font-bold">الإجراءات</span>
-                      <div className="flex items-center justify-end lg:justify-center gap-1">
-                        <button onClick={() => toggleFeatured(product.id, product.is_featured)} className={`p-2 lg:p-2 w-10 h-10 lg:w-auto lg:h-auto flex items-center justify-center rounded-lg transition-colors ${product.is_featured ? "text-yellow-500 bg-yellow-50" : "text-gray-400 hover:bg-gray-100"}`} title="تمييز">
-                          <Star size={16} />
-                        </button>
-                        <button onClick={() => togglePublish(product.id, product.is_published)} className="p-2 lg:p-2 w-10 h-10 lg:w-auto lg:h-auto flex items-center justify-center text-blue-400 hover:bg-blue-50 rounded-lg transition-colors" title={product.is_published ? "إخفاء" : "نشر"}>
-                          {product.is_published ? <EyeOff size={16} /> : <Eye size={16} />}
-                        </button>
-                        <Link href={`/admin/products/${product.id}/edit`} className="p-2 lg:p-2 w-10 h-10 lg:w-auto lg:h-auto flex items-center justify-center text-gray-500 hover:bg-gray-100 rounded-lg transition-colors" title="تعديل">
-                          <Edit2 size={16} />
-                        </Link>
-                        <button onClick={() => deleteProduct(product.id)} className="p-2 lg:p-2 w-10 h-10 lg:w-auto lg:h-auto flex items-center justify-center text-red-400 hover:bg-red-50 rounded-lg transition-colors" title="حذف">
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
+            {isReordering ? (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={products.map(p => p.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <table className="w-full text-right block lg:table">
+                    <thead className="hidden lg:table-header-group">
+                      <tr className="bg-gray-50 text-gray-500 text-xs font-black uppercase tracking-widest border-b border-gray-100 block lg:table-row">
+                        <th className="px-6 py-5 block lg:table-cell">المنتج</th>
+                        <th className="px-6 py-5 block lg:table-cell">السعر</th>
+                        <th className="px-6 py-5 block lg:table-cell">التصنيف</th>
+                        <th className="px-6 py-5 block lg:table-cell">المخزون</th>
+                        <th className="px-6 py-5 block lg:table-cell">الحالة</th>
+                        <th className="px-6 py-5 text-center block lg:table-cell">الإجراءات</th>
+                      </tr>
+                    </thead>
+                    <tbody className="block lg:table-row-group divide-y lg:divide-y-0 lg:divide-gray-100">
+                      {products.map(product => (
+                        <SortableProductRow 
+                           key={product.id} 
+                           product={product} 
+                           isReordering={true}
+                           togglePublish={togglePublish}
+                           toggleFeatured={toggleFeatured}
+                           deleteProduct={deleteProduct}
+                        />
+                      ))}
+                    </tbody>
+                  </table>
+                </SortableContext>
+              </DndContext>
+            ) : (
+              <table className="w-full text-right block lg:table">
+                <thead className="hidden lg:table-header-group">
+                  <tr className="bg-gray-50 text-gray-500 text-xs font-black uppercase tracking-widest border-b border-gray-100 block lg:table-row">
+                    <th className="px-6 py-5 block lg:table-cell">المنتج</th>
+                    <th className="px-6 py-5 block lg:table-cell">السعر</th>
+                    <th className="px-6 py-5 block lg:table-cell">التصنيف</th>
+                    <th className="px-6 py-5 block lg:table-cell">المخزون</th>
+                    <th className="px-6 py-5 block lg:table-cell">الحالة</th>
+                    <th className="px-6 py-5 text-center block lg:table-cell">الإجراءات</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="block lg:table-row-group divide-y lg:divide-y-0 lg:divide-gray-100">
+                  {filtered.map(product => (
+                    <SortableProductRow 
+                       key={product.id} 
+                       product={product} 
+                       isReordering={false}
+                       togglePublish={togglePublish}
+                       toggleFeatured={toggleFeatured}
+                       deleteProduct={deleteProduct}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         )}
       </div>

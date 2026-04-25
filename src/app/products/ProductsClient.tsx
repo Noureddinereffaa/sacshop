@@ -97,15 +97,13 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
                  </p>
                </div>
              </div>
-             <Link href="/checkout" className="w-full sm:w-auto">
-               <button className={`w-full px-8 py-4 rounded-xl font-black flex items-center justify-center gap-2 transition-all ${
-                 isEligible 
-                   ? "bg-green-600 text-white hover:bg-green-700 shadow-lg shadow-green-600/20" 
-                   : "bg-primary text-white hover:bg-primary/90 shadow-lg shadow-primary/20"
-               }`}>
-                 الذهاب للدفع <ArrowLeft size={18} />
-               </button>
-             </Link>
+             {isEligible && (
+               <Link href="/checkout" className="w-full sm:w-auto">
+                 <button className="w-full px-8 py-4 rounded-xl font-black flex items-center justify-center gap-2 transition-all bg-green-600 text-white hover:bg-green-700 shadow-lg shadow-green-600/20">
+                   الذهاب للدفع <ArrowLeft size={18} />
+                 </button>
+               </Link>
+             )}
           </div>
         )}
 

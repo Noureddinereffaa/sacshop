@@ -504,24 +504,6 @@ export default function ProductClient({ initialProduct }: { initialProduct: Prod
                   </div>
                 </div>
 
-                {/* Welcome Upsell Alert (Only for New/Guest AND when discount is enabled) */}
-                {customerStatus !== 'vip' && discountConfig.enabled && (
-                  <motion.div 
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-2xl p-4 flex items-center gap-3 shadow-sm"
-                  >
-                    <div className="w-10 h-10 bg-yellow-400 rounded-xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-yellow-400/20 animate-bounce">
-                      <Gift size={20} />
-                    </div>
-                    <div>
-                      <p className="text-sm font-black text-yellow-800">هدية ترحيبية للزبائن الجدد! 🎁</p>
-                      <p className="text-[10px] font-bold text-yellow-700/70 leading-tight mt-0.5">
-                        أهلاً بك في أول طلب لك! أضف {discountConfig.minItems} قطع أو أكثر واحصل على تخفيض {discountConfig.discountType === 'percentage' ? `${discountConfig.percentage}%` : `${discountConfig.percentage} د.ج`} فوري.
-                      </p>
-                    </div>
-                  </motion.div>
-                )}
 
               </div>
 

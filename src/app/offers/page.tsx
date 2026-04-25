@@ -12,7 +12,7 @@ import { Product } from "@/types";
 
 export default function OffersPage() {
   const { discountConfig } = useCartStore();
-  const { largeOrderCta, branding } = useSettingsStore();
+  const { largeOrderCta, branding, popup } = useSettingsStore();
   const [vipOffers, setVipOffers] = useState<any[]>([]);
   const [discountedProducts, setDiscountedProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -97,6 +97,28 @@ export default function OffersPage() {
 
       <div className="container mx-auto px-4 py-16 space-y-24">
         
+        {/* ═══════════════════════════════════════════════════ */}
+        {/* Popup Content as a Post / Banner                  */}
+        {/* ═══════════════════════════════════════════════════ */}
+        {popup?.enabled && popup?.image && (
+          <section className="max-w-4xl mx-auto">
+            <Link href={popup.buttonLink || "/products"} className="flex flex-col group relative rounded-[2rem] sm:rounded-[3rem] overflow-hidden shadow-2xl border-4 border-white animate-in fade-in zoom-in duration-700 bg-white">
+               <div className="w-full relative flex justify-center bg-gray-50 overflow-hidden">
+                 <img 
+                   src={popup.image} 
+                   alt={popup.title || "عرض حصري"}
+                   className="w-full h-auto max-h-[75vh] object-contain group-hover:scale-[1.02] transition-transform duration-700"
+                 />
+               </div>
+               <div className="p-6 sm:p-8 flex justify-center bg-white border-t border-gray-100 relative z-10">
+                 <button className="bg-primary text-white px-10 sm:px-16 py-4 sm:py-5 rounded-2xl font-black text-lg sm:text-xl transition-all shadow-xl shadow-primary/20 flex items-center gap-3 group-hover:-translate-y-1">
+                   {popup.buttonText || "اطلب الآن"} <ArrowLeft size={24} className="group-hover:-translate-x-2 transition-transform" />
+                 </button>
+               </div>
+            </Link>
+          </section>
+        )}
+
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 space-y-4">
             <Loader2 className="animate-spin text-primary" size={48} />

@@ -58,7 +58,7 @@ export default function OrderForm({
   const successRef = useRef<HTMLDivElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
 
-  const { customerStatus, customer, items } = useCartStore();
+  const { customerStatus, customer, items, discountConfig } = useCartStore();
 
   const [formError, setFormError] = useState<string | null>(null);
   const showError = (msg: string) => {
@@ -573,6 +573,25 @@ export default function OrderForm({
               <span className="text-2xl font-black text-[#25D366]">{productPrice.toLocaleString()} د.ج</span>
             </div>
           </div>
+
+          {/* Welcome Upsell Alert */}
+          {customerStatus !== 'vip' && discountConfig?.enabled && (
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-2xl p-4 flex items-center gap-3 shadow-sm mb-2"
+            >
+              <div className="w-10 h-10 bg-yellow-400 rounded-xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-yellow-400/20 animate-bounce">
+                <Gift size={20} />
+              </div>
+              <div>
+                <p className="text-sm font-black text-yellow-800">هدية ترحيبية للزبائن الجدد! 🎁</p>
+                <p className="text-[10px] font-bold text-yellow-700/70 leading-tight mt-0.5">
+                  أهلاً بك في أول طلب لك! أضف {discountConfig.minItems} قطع أو أكثر واحصل على تخفيض {discountConfig.discountType === 'percentage' ? `${discountConfig.percentage}%` : `${discountConfig.percentage} د.ج`} فوري.
+                </p>
+              </div>
+            </motion.div>
+          )}
 
           <div className="space-y-3">
             {onAddToCart && (

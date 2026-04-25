@@ -60,9 +60,8 @@ export default function ProductCard({ product }: ProductCardProps) {
       </Link>
 
       {/* Info */}
-      <div className="px-2">
-        <span className="text-primary font-bold text-xs uppercase tracking-wider mb-2 block">{category}</span>
-        <h3 className="text-xl font-bold text-gray-900 mb-4 line-clamp-1 group-hover:text-primary transition-colors">
+      <div className="px-2 pt-2">
+        <h3 className="text-xl font-bold text-gray-900 mb-4 group-hover:text-primary transition-colors leading-tight">
           {name}
         </h3>
         

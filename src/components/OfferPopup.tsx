@@ -64,15 +64,12 @@ export default function OfferPopup() {
 
             {/* Image Section */}
             {popup.image ? (
-              <div className="relative w-full aspect-square sm:aspect-[4/5] bg-gray-50">
-                <Image
+              <div className="relative w-full bg-gray-50 flex justify-center items-center overflow-hidden">
+                <img
                   src={popup.image}
                   alt={popup.title || "عرض خاص"}
-                  fill
-                  className="object-cover"
-                  priority
+                  className="w-full h-auto max-h-[60vh] object-contain"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-20 text-center">

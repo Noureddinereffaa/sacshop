@@ -579,17 +579,37 @@ export default function OrderForm({
             <motion.div 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-2xl p-4 flex items-center gap-3 shadow-sm mb-2"
+              className={`border rounded-2xl p-4 flex items-center gap-3 shadow-sm mb-2 transition-colors ${
+                items.length >= discountConfig.minItems 
+                  ? "bg-green-50 border-green-200" 
+                  : "bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-200"
+              }`}
             >
-              <div className="w-10 h-10 bg-yellow-400 rounded-xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-yellow-400/20 animate-bounce">
-                <Gift size={20} />
-              </div>
-              <div>
-                <p className="text-sm font-black text-yellow-800">هدية ترحيبية للزبائن الجدد! 🎁</p>
-                <p className="text-[10px] font-bold text-yellow-700/70 leading-tight mt-0.5">
-                  أهلاً بك في أول طلب لك! أضف {discountConfig.minItems} منتجات أو أكثر واحصل على تخفيض {discountConfig.discountType === 'percentage' ? `${discountConfig.percentage}%` : `${discountConfig.percentage} د.ج`} فوري.
-                </p>
-              </div>
+              {items.length >= discountConfig.minItems ? (
+                <>
+                  <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-green-500/20">
+                    <CheckCircle2 size={20} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-black text-green-800">مبارك! أنت مؤهل للخصم الترحيبي 🎉</p>
+                    <p className="text-[10px] font-bold text-green-700/80 leading-tight mt-0.5">
+                      لقد استوفيت الشروط ({items.length} منتجات في السلة). اضغط على زر "إنهاء الطلبات" بالأسفل لتطبيق الخصم وتأكيد الطلب!
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="w-10 h-10 bg-yellow-400 rounded-xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-yellow-400/20 animate-bounce">
+                    <Gift size={20} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-black text-yellow-800">هدية ترحيبية للزبائن الجدد! 🎁</p>
+                    <p className="text-[10px] font-bold text-yellow-700/70 leading-tight mt-0.5">
+                      أهلاً بك في أول طلب لك! أضف {discountConfig.minItems} منتجات أو أكثر واحصل على تخفيض {discountConfig.discountType === 'percentage' ? `${discountConfig.percentage}%` : `${discountConfig.percentage} د.ج`} فوري. (أضفت {items.length})
+                    </p>
+                  </div>
+                </>
+              )}
             </motion.div>
           )}
 

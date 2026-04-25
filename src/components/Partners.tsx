@@ -13,7 +13,7 @@ const PartnerCard = ({ partner }: { partner: { name: string; logo: string } }) =
       <img
         src={partner.logo}
         alt={partner.name}
-        className="max-h-full max-w-full object-contain grayscale group-hover:grayscale-0 transition-all duration-500 pointer-events-none"
+        className="max-h-full max-w-full object-contain transition-all duration-500 pointer-events-none"
       />
     ) : (
       <div className="flex flex-col items-center gap-2 opacity-40 group-hover:opacity-70 transition-opacity">
@@ -94,9 +94,9 @@ export default function Partners() {
           <span>شركاء النجاح</span>
         </div>
         <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-3">
-          يثقون بنا{" "}
+          نفخر بثقة{" "}
           <span className="text-transparent bg-clip-text bg-gradient-to-l from-primary to-primary/70">
-            {partners.length}+ علامة تجارية
+            أكثر من 600 عميل
           </span>
         </h2>
         <p className="text-gray-500 font-medium max-w-lg mx-auto text-sm">

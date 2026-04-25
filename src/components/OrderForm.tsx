@@ -593,7 +593,7 @@ export default function OrderForm({
           </div>
 
           {/* Welcome Upsell Alert */}
-          {customerStatus !== 'vip' && discountConfig?.enabled && (
+          {customerStatus !== 'vip' && discountConfig?.enabled && productId !== 'cart-order' && (
             <motion.div 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}

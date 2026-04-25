@@ -266,21 +266,7 @@ export default function CheckoutPage() {
                   )}
                 </div>
              </div>
-             
-             <div className="bg-primary/5 p-6 rounded-[2rem] border border-primary/10">
-                <div className="flex gap-4">
-                   <div className="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center shrink-0">
-                      <Star className="text-primary fill-primary" size={20} />
-                   </div>
-                   <div>
-                      <p className="font-black text-primary text-sm">هدية مع كل طلب!</p>
-                      <p className="text-primary/70 text-[10px] font-bold leading-relaxed">
-                        كلما زادت طلباتك، زاد عدد نجومك ⭐ وتفتحت لك عروض أقوى في "نادي VIP" الخاص بنا.
-                      </p>
-                   </div>
-                </div>
-             </div>
-          </div>
+           </div>
 
           {/* Checkout Form */}
           <div className="lg:col-span-7 lg:order-1">

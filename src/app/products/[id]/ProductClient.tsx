@@ -13,7 +13,7 @@ import {
   CheckCircle2, Package, Zap, Crown, Tag, Gift, Sparkles, ShoppingBag, ArrowLeft, Search
 } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Product } from "@/types";
 
 // Fallback for demo when Supabase not connected
@@ -46,6 +46,7 @@ export default function ProductClient({ initialProduct }: { initialProduct: Prod
   const [numColors, setNumColors] = useState<number>(1);
   const [isDoubleSided, setIsDoubleSided] = useState<boolean>(false);
   const [showToast, setShowToast] = useState(false);
+  const [toastKey, setToastKey] = useState(0);
   const [showStickyButton, setShowStickyButton] = useState(false);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [customVariantSelections, setCustomVariantSelections] = useState<Record<string, string>>({});
@@ -372,8 +373,12 @@ export default function ProductClient({ initialProduct }: { initialProduct: Prod
     });
 
     // Show success message and stay on page
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 3000);
+    setShowToast(false); // Reset to ensure animation triggers if already open
+    setTimeout(() => {
+      setToastKey(prev => prev + 1);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+    }, 50);
     // useCartStore.getState().setIsOpen(true);
     // router.push('/products');
   };
@@ -396,16 +401,33 @@ export default function ProductClient({ initialProduct }: { initialProduct: Prod
       </div>
 
       {/* Floating Toast Notification */}
-      <motion.div 
-        initial={{ opacity: 0, y: -50 }}
-        animate={{ opacity: showToast ? 1 : 0, y: showToast ? 0 : -50 }}
-        className="fixed top-24 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
-      >
-        <div className="bg-gray-900/90 text-white px-6 py-3 rounded-full font-bold shadow-2xl flex items-center gap-3 backdrop-blur-md border border-gray-700">
-           <CheckCircle2 className="text-[#25D366]" size={20} />
-           تمت إضافة المنتج إلى السلة بنجاح
-        </div>
-      </motion.div>
+      <AnimatePresence mode="wait">
+        {showToast && (
+          <motion.div 
+            key={toastKey}
+            initial={{ opacity: 0, y: -50, scale: 0.8 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.9 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            className="fixed top-20 sm:top-24 left-1/2 -translate-x-1/2 z-[100] w-[92%] sm:w-max pointer-events-none"
+          >
+            <div className="bg-white p-4 rounded-2xl shadow-2xl shadow-green-500/20 border-2 border-green-500 flex items-center justify-between gap-4 w-full">
+               <div className="flex items-center gap-3">
+                 <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-green-500/30">
+                   <ShoppingBag size={20} className="animate-pulse" />
+                 </div>
+                 <div className="text-right">
+                   <p className="font-black text-sm text-gray-900 leading-tight">عظيم! تمت الإضافة 🛒</p>
+                   <p className="text-[11px] font-bold text-gray-500 mt-0.5 line-clamp-1">{product.name}</p>
+                 </div>
+               </div>
+               <div className="bg-green-50 text-green-600 p-2 rounded-xl shrink-0">
+                  <CheckCircle2 size={18} />
+               </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="container mx-auto px-4 py-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">

@@ -71,26 +71,13 @@ export const useCartStore = create<CartStore>()(
       setAppliedVipOffer: (offer) => set({ appliedVipOffer: offer }),
       
       addItem: (item) => set((state) => {
-        // Find if this exact configuration exists
-        const existing = state.items.find(
-          (i) => 
-            i.productId === item.productId && 
-            i.size === item.size && 
-            i.color === item.color &&
-            i.num_colors === item.num_colors &&
-            i.is_double_sided === item.is_double_sided &&
-            JSON.stringify(i.custom_variant_selections) === JSON.stringify(item.custom_variant_selections)
-        );
-
-        if (existing) {
-          return {
-            items: state.items.map((i) =>
-              i.id === existing.id ? { ...i, quantity: i.quantity + item.quantity } : i
-            )
-          };
-        }
-        
-        return { items: [...state.items, item] };
+        // Generate a truly unique ID so every addition creates a new row,
+        // allowing the user to clearly see multiple additions even of the same size/color.
+        const uniqueId = typeof crypto !== 'undefined' && crypto.randomUUID 
+          ? crypto.randomUUID() 
+          : (Date.now().toString() + Math.random().toString(36).substring(2, 9));
+          
+        return { items: [...state.items, { ...item, id: uniqueId }] };
       }),
       
       removeItem: (id) => set((state) => ({ 
@@ -116,8 +103,8 @@ export const useCartStore = create<CartStore>()(
       
       getDiscountInfo: () => {
         const state = get();
-        // Count unique products, not total pieces
-        const productCount = new Set(state.items.map(i => i.productId)).size;
+        // Count the number of order lines (items added to the cart)
+        const productCount = state.items.length;
         const subtotal = state.items.reduce((total, item) => total + (item.price * item.quantity), 0);
         
         let isEligible = false;
@@ -153,23 +140,37 @@ export const useCartStore = create<CartStore>()(
           let totalCalculatedDiscount = 0;
           const advancedRules = state.discountConfig.advancedRules || [];
           
-          state.items.forEach(item => {
-            const rule = advancedRules.find(r => r.productId === item.productId);
-            if (rule) {
-              if (rule.discountType === 'fixed') {
-                totalCalculatedDiscount += (rule.discountValue * item.quantity);
-              } else if (rule.discountType === 'percentage') {
-                totalCalculatedDiscount += Math.round(item.price * (rule.discountValue / 100)) * item.quantity;
+          if (advancedRules && advancedRules.length > 0) {
+            state.items.forEach(item => {
+              const rule = advancedRules.find(r => r.productId === item.productId);
+              if (rule) {
+                if (rule.discountType === 'fixed') {
+                  totalCalculatedDiscount += (rule.discountValue * item.quantity);
+                } else if (rule.discountType === 'percentage') {
+                  totalCalculatedDiscount += Math.round(item.price * (rule.discountValue / 100)) * item.quantity;
+                }
+              } else {
+                 // Fallback to global percentage or fixed amount if no specific rule
+                 if (state.discountConfig.discountType === 'fixed') {
+                   // Only apply the fixed discount once to the whole order if it's not per-item
+                   totalCalculatedDiscount += (state.discountConfig.percentage / state.items.length);
+                 } else {
+                   totalCalculatedDiscount += Math.round(item.price * (state.discountConfig.percentage / 100)) * item.quantity;
+                 }
               }
-            } else {
-               // Fallback to global percentage or fixed amount if no specific rule
-               if (state.discountConfig.discountType === 'fixed') {
-                 totalCalculatedDiscount += (state.discountConfig.percentage * item.quantity);
-               } else {
-                 totalCalculatedDiscount += Math.round(item.price * (state.discountConfig.percentage / 100)) * item.quantity;
-               }
+            });
+            // Fix any rounding issues for fixed fallback
+            if (state.discountConfig.discountType === 'fixed' && !advancedRules.some(r => state.items.some(i => i.productId === r.productId))) {
+              totalCalculatedDiscount = state.discountConfig.percentage;
             }
-          });
+          } else {
+            // No advanced rules: apply discount directly to the cart subtotal
+            if (state.discountConfig.discountType === 'fixed') {
+              totalCalculatedDiscount = state.discountConfig.percentage; // Fixed amount off the entire order
+            } else {
+              totalCalculatedDiscount = Math.round(subtotal * (state.discountConfig.percentage / 100)); // Percentage off the entire order
+            }
+          }
           
           discountAmount = totalCalculatedDiscount;
         }

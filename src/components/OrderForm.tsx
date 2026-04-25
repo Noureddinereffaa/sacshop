@@ -587,7 +587,7 @@ export default function OrderForm({
               <div>
                 <p className="text-sm font-black text-yellow-800">هدية ترحيبية للزبائن الجدد! 🎁</p>
                 <p className="text-[10px] font-bold text-yellow-700/70 leading-tight mt-0.5">
-                  أهلاً بك في أول طلب لك! أضف {discountConfig.minItems} قطع أو أكثر واحصل على تخفيض {discountConfig.discountType === 'percentage' ? `${discountConfig.percentage}%` : `${discountConfig.percentage} د.ج`} فوري.
+                  أهلاً بك في أول طلب لك! أضف {discountConfig.minItems} منتجات أو أكثر واحصل على تخفيض {discountConfig.discountType === 'percentage' ? `${discountConfig.percentage}%` : `${discountConfig.percentage} د.ج`} فوري.
                 </p>
               </div>
             </motion.div>

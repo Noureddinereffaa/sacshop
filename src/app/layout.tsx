@@ -111,7 +111,9 @@ export default async function RootLayout({
 
       const navigation = settingsMap.navigation || [];
       const promobar = settingsMap.promobar || null;
-      const marketing = settingsMap.marketing || null;
+      const rawMarketing = settingsMap.marketing || {};
+      const marketing = { ...rawMarketing };
+      delete marketing.fbAccessToken; // Do not leak CAPI token to client
       const slider = settingsMap.slider || [];
       const partners = settingsMap.partners || [];
       const popup = settingsMap.popup_offer || null;

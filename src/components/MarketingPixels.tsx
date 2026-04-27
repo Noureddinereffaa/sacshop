@@ -13,7 +13,7 @@ declare global {
     gtag?: (...args: unknown[]) => void;
     dataLayer?: unknown[];
     // Our custom tracking helper used by OrderForm
-    trackMarketingEvent?: (event: "ViewContent" | "SubmitOrder" | "Purchase" | "AddToCart" | "InitiateCheckout", data?: Record<string, unknown>) => void;
+    trackMarketingEvent?: (event: "ViewContent" | "SubmitOrder" | "Purchase" | "AddToCart" | "InitiateCheckout" | "Contact", data?: Record<string, unknown>) => void;
   }
 }
 
@@ -27,17 +27,47 @@ export default function MarketingPixels() {
   useEffect(() => {
     if (!isLoaded) return;
 
+    // Capture UTM parameters and save them for 30 days
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const utmParams = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'fbclid', 'ttclid'];
+      let utmData = JSON.parse(localStorage.getItem('marketing_utms') || '{}');
+      let hasNewUtms = false;
+      
+      utmParams.forEach(param => {
+        if (params.has(param)) {
+          utmData[param] = params.get(param);
+          hasNewUtms = true;
+        }
+      });
+      
+      if (hasNewUtms) {
+        utmData.captured_at = new Date().toISOString();
+        localStorage.setItem('marketing_utms', JSON.stringify(utmData));
+      }
+    } catch (e) {
+      console.error("Error saving UTM params", e);
+    }
+
     // ── Global trackMarketingEvent helper ─────────────────
     // Called by OrderForm, QuickAdd, Product Detail
     window.trackMarketingEvent = (event, data = {}) => {
       console.log(`[Tracking Event] ${event}`, data);
       // FB
       if (fbPixelId && window.fbq) {
-        window.fbq("track", event, data);
+        const fbEventMap: Record<string, string> = {
+          SubmitOrder: "Lead", // Optimize COD form submissions as Leads
+        };
+        const fbEvent = fbEventMap[event] || event;
+        window.fbq("track", fbEvent, data);
       }
       // TikTok
       if (tiktokId && window.ttq) {
-        window.ttq.track(event, data);
+        const ttEventMap: Record<string, string> = {
+          SubmitOrder: "PlaceAnOrder", // Standard TikTok event for order submission
+        };
+        const ttEvent = ttEventMap[event] || event;
+        window.ttq.track(ttEvent, data);
       }
       // GA4
       if (gaId && window.gtag) {

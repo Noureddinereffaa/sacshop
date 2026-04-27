@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { 
   Search, Filter, Eye, CheckCircle2, 
   XCircle, Trash2, AlertTriangle, PhoneCall,
-  Clock, Package, Truck, MessageCircle, X, ChevronDown, CheckCircle, History
+  Clock, Package, Truck, MessageCircle, X, ChevronDown, CheckCircle, History, Megaphone
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -41,6 +41,17 @@ interface Order {
     num_colors?: number;
     is_double_sided?: boolean;
     custom_variants?: Record<string, string>;
+    capi_sync_status?: 'success' | 'failed';
+    capi_last_error?: string;
+    capi_event_id?: string;
+    utms?: {
+      utm_source?: string;
+      utm_medium?: string;
+      utm_campaign?: string;
+      fbclid?: string;
+      ttclid?: string;
+      [key: string]: string | undefined;
+    };
   };
 }
 
@@ -165,6 +176,16 @@ export default function AdminOrders() {
       showToast(`تم تغيير حالة الطلب #${order.order_number} إلى ${STATUS_MAP[status].label}`);
       if (selectedOrder?.id === order.id) setSelectedOrder({ ...selectedOrder, status });
       fetchOrders();
+      
+      // Send CAPI event if status is delivered or confirmed
+      if (status === 'delivered' || status === 'confirmed') {
+        const eventName = status === 'delivered' ? 'Purchase' : 'Lead';
+        fetch('/api/marketing/capi', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ eventName, order: { ...order, status } })
+        }).catch(err => console.error("CAPI error:", err));
+      }
     } else {
       showToast('حدث خطأ أثناء تغيير الحالة', 'error');
     }
@@ -307,8 +328,17 @@ export default function AdminOrders() {
         ? `✅ تم تحديث تفاصيل الطلب #${selectedOrder.order_number}` 
         : `✅ تم تأكيد الطلب #${selectedOrder.order_number} بنجاح!`);
       
-      setSelectedOrder({ ...selectedOrder, ...updates, status: 'confirmed' } as Order);
+      const updatedOrder = { ...selectedOrder, ...updates, status: 'confirmed' } as Order;
+      setSelectedOrder(updatedOrder);
       fetchOrders();
+
+      if (selectedOrder.status === 'new') {
+        fetch('/api/marketing/capi', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ eventName: 'Purchase', order: updatedOrder })
+        }).catch(err => console.error("CAPI error:", err));
+      }
     } else {
       showToast('حدث خطأ أثناء معالجة الطلب', 'error');
     }
@@ -604,6 +634,71 @@ export default function AdminOrders() {
                           <p className="font-black text-primary">{value}</p>
                         </div>
                       ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* CAPI Server Sync Status */}
+                {selectedOrder.metadata?.capi_sync_status && (
+                  <div className="mb-8 bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${selectedOrder.metadata.capi_sync_status === 'success' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                        {selectedOrder.metadata.capi_sync_status === 'success' ? <CheckCircle size={20} /> : <AlertTriangle size={20} />}
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black tracking-widest text-gray-400 uppercase">حالة المزامنة مع فيسبوك (CAPI)</p>
+                        <p className={`font-black text-sm mt-0.5 ${selectedOrder.metadata.capi_sync_status === 'success' ? 'text-green-700' : 'text-red-600'}`}>
+                          {selectedOrder.metadata.capi_sync_status === 'success' ? 'تم إرسال التحويل (Purchase) بنجاح' : 'فشل إرسال التحويل'}
+                        </p>
+                        {selectedOrder.metadata.capi_last_error && (
+                          <p className="text-xs text-red-500 mt-1">{selectedOrder.metadata.capi_last_error}</p>
+                        )}
+                      </div>
+                    </div>
+                    {selectedOrder.metadata.capi_sync_status === 'success' && (
+                      <div className="text-left bg-white px-3 py-1.5 rounded-lg border border-gray-200">
+                        <p className="text-[9px] text-gray-400 font-bold mb-0.5">Event ID</p>
+                        <p className="text-xs font-mono font-bold text-gray-700 truncate max-w-[100px]" dir="ltr">
+                          {selectedOrder.metadata.capi_event_id}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Marketing Attribution Section */}
+                {selectedOrder.metadata?.utms && Object.keys(selectedOrder.metadata.utms).length > 0 && (
+                  <div className="mb-8 bg-indigo-50/50 p-5 rounded-2xl border border-indigo-100 shadow-sm">
+                    <p className="text-[10px] uppercase font-black tracking-widest text-indigo-500 mb-4 flex items-center gap-2">
+                      <Megaphone size={14} /> مصدر الإعلان (UTM Tracking)
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {selectedOrder.metadata.utms.utm_source && (
+                        <div className="bg-white p-3 rounded-xl border border-indigo-50 shadow-sm">
+                          <p className="text-[10px] text-gray-400 font-bold mb-1">المصدر (Source)</p>
+                          <p className="font-black text-indigo-900 text-sm truncate" dir="ltr">{selectedOrder.metadata.utms.utm_source}</p>
+                        </div>
+                      )}
+                      {selectedOrder.metadata.utms.utm_campaign && (
+                        <div className="bg-white p-3 rounded-xl border border-indigo-50 shadow-sm">
+                          <p className="text-[10px] text-gray-400 font-bold mb-1">الحملة (Campaign)</p>
+                          <p className="font-black text-indigo-900 text-sm truncate" dir="ltr">{selectedOrder.metadata.utms.utm_campaign}</p>
+                        </div>
+                      )}
+                      {selectedOrder.metadata.utms.utm_medium && (
+                        <div className="bg-white p-3 rounded-xl border border-indigo-50 shadow-sm">
+                          <p className="text-[10px] text-gray-400 font-bold mb-1">الوسيط (Medium)</p>
+                          <p className="font-black text-indigo-900 text-sm truncate" dir="ltr">{selectedOrder.metadata.utms.utm_medium}</p>
+                        </div>
+                      )}
+                      {(selectedOrder.metadata.utms.fbclid || selectedOrder.metadata.utms.ttclid) && (
+                        <div className="bg-white p-3 rounded-xl border border-indigo-50 shadow-sm col-span-2">
+                          <p className="text-[10px] text-gray-400 font-bold mb-1">معرف النقرة (Click ID)</p>
+                          <p className="font-bold text-gray-500 text-xs truncate" dir="ltr">
+                            {selectedOrder.metadata.utms.fbclid || selectedOrder.metadata.utms.ttclid}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

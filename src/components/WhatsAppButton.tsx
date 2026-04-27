@@ -1,15 +1,26 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useSettingsStore } from "@/store/settingsStore";
-
 import { usePathname } from "next/navigation";
 
 export default function WhatsAppButton() {
   const pathname = usePathname();
   const { branding } = useSettingsStore();
+  const [isInAppBrowser, setIsInAppBrowser] = useState(false);
 
-  if (pathname?.startsWith("/admin")) return null;
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const ua = navigator.userAgent || navigator.vendor || (window as any).opera;
+      // Detect Facebook or Instagram in-app browsers
+      if (ua.indexOf("FBAN") > -1 || ua.indexOf("FBAV") > -1 || ua.indexOf("Instagram") > -1) {
+        setIsInAppBrowser(true);
+      }
+    }
+  }, []);
+
+  if (pathname?.startsWith("/admin") || isInAppBrowser) return null;
 
   const whatsappNumber = branding.whatsappNumber?.replace(/[^0-9]/g, "") || "213";
   const message = `مرحباً ${branding.storeName}، أريد الاستفسار عن منتجاتكم.`;

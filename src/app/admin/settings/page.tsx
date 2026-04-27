@@ -1099,6 +1099,44 @@ export default function AdminSettings() {
                          />
                        </div>
                     </div>
+                    <div className="space-y-3 pt-6 border-t border-gray-100 mt-6">
+                       <label className="text-sm font-black text-gray-700 block mr-2 flex items-center gap-2">
+                         <Zap className="text-yellow-500" size={18} />
+                         Facebook Conversions API Token (CAPI)
+                       </label>
+                       <p className="text-xs text-gray-500 font-bold -mt-2 mb-3">
+                         مطلوب لإرسال أحداث الشراء من لوحة التحكم (السيرفر) مباشرة لفيسبوك.
+                       </p>
+                       <div className="relative">
+                         <input 
+                           type="text"
+                           dir="ltr"
+                           placeholder="EAAB..."
+                           value={settings.marketing?.fbAccessToken || ""}
+                           onChange={(e) => setSettings({ ...settings, marketing: { ...settings.marketing, fbAccessToken: e.target.value } })}
+                           className="w-full bg-gray-50 border-none rounded-xl py-4 px-4 font-mono font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 transition-all"
+                         />
+                       </div>
+                    </div>
+                    <div className="space-y-3 pt-6 border-t border-gray-100 mt-6">
+                       <label className="text-sm font-black text-gray-700 block mr-2 flex items-center gap-2">
+                         <BarChart2 className="text-blue-500" size={18} />
+                         Facebook Ad Account ID (لجلب تكاليف الإعلانات)
+                       </label>
+                       <p className="text-xs text-gray-500 font-bold -mt-2 mb-3">
+                         مطلوب لجلب المصاريف الإعلانية الحقيقية إلى صفحة التقارير.
+                       </p>
+                       <div className="relative">
+                         <input 
+                           type="text"
+                           dir="ltr"
+                           placeholder="مثال: act_123456789012345"
+                           value={settings.marketing?.fbAdAccountId || ""}
+                           onChange={(e) => setSettings({ ...settings, marketing: { ...settings.marketing, fbAdAccountId: e.target.value } })}
+                           className="w-full bg-gray-50 border-none rounded-xl py-4 px-4 font-mono font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 transition-all"
+                         />
+                       </div>
+                    </div>
                  </div>
                )}
 

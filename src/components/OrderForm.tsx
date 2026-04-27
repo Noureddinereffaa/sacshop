@@ -266,6 +266,22 @@ export default function OrderForm({
     const waNumber = whatsappNumber.replace(/[^0-9]/g, "");
     const shortId = orderId.split("-")[0].toUpperCase();
 
+    // ── Extract UTMs if present ──────────────────────────────────────────────
+    let utms = null;
+    try {
+      const storedUtms = localStorage.getItem('marketing_utms');
+      if (storedUtms) utms = JSON.parse(storedUtms);
+    } catch (e) {}
+
+    const orderMetadata = {
+      ...(!isCartOrder ? { 
+        num_colors: numColors, 
+        is_double_sided: isDoubleSided,
+        custom_variants: customVariantSelections
+      } : {}),
+      utms: utms
+    };
+
     // ── Save order to database first ─────────────────────────────────────────
     const { error } = await supabase.from("orders").insert({
       id: orderId,
@@ -283,11 +299,7 @@ export default function OrderForm({
       status: "new",
       cart_items: isCartOrder ? cartItems : [],
       admin_notes: formData.notes.trim() || null,
-      metadata: !isCartOrder ? { 
-        num_colors: numColors, 
-        is_double_sided: isDoubleSided,
-        custom_variants: customVariantSelections
-      } : null
+      metadata: Object.keys(orderMetadata).length > 0 ? orderMetadata : null
     });
     if (error) throw new Error(error.message);
 
@@ -447,6 +459,14 @@ export default function OrderForm({
           {pendingWaLink && (
             <button
               onClick={() => {
+                try {
+                  window.trackMarketingEvent?.("Contact", {
+                    content_name: (cartItems && cartItems.length > 0) ? "Cart Order" : productName,
+                    value: productPrice,
+                    currency: "DZD",
+                    order_id: pendingOrderId.split("-")[0].toUpperCase()
+                  });
+                } catch { /* ignore */ }
                 window.open(pendingWaLink, "_blank");
                 if (cartItems && cartItems.length > 0) {
                   useCartStore.getState().clearCart();

@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import { useSettingsStore } from "@/store/settingsStore";
 import {
   LayoutDashboard, ShoppingBag, Package,
-  Settings, Users, Crown, LogOut, ChevronLeft, Menu, X, BarChart3
+  Settings, Users, Crown, LogOut, ChevronLeft, Menu, X, BarChart3, FileText
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -19,6 +19,7 @@ const NAV_LINKS = [
   { href: "/admin/customers", label: "الزبائن", icon: Users },
   { href: "/admin/analytics", label: "التقارير والإحصائيات", icon: BarChart3 },
   { href: "/admin/settings", label: "الإعدادات", icon: Settings },
+  { href: "/admin/marketing-report", label: "دليل التتبع (PDF)", icon: FileText },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

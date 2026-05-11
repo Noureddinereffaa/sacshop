@@ -490,9 +490,13 @@ export default function ProductClient({ initialProduct }: { initialProduct: Prod
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {product.category?.split(',').map((cat, i) => (
-                    <span key={i} className="text-primary text-[10px] sm:text-xs font-black bg-primary/10 px-3 py-1.5 rounded-full uppercase tracking-wide text-center">
+                    <Link 
+                      key={i} 
+                      href={`/products?category=${encodeURIComponent(cat.trim())}`}
+                      className="text-primary text-[10px] sm:text-xs font-black bg-primary/10 px-3 py-1.5 rounded-full uppercase tracking-wide text-center hover:bg-primary hover:text-white transition-all"
+                    >
                       {cat.trim()}
-                    </span>
+                    </Link>
                   ))}
                 </div>
               </div>

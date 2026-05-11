@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useState, useCallback } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Product } from "@/types";
 import ProductCard from "@/components/ProductCard";
 import { Search, Filter, Loader2, Gift, ArrowLeft, CheckCircle2 } from "lucide-react";
@@ -10,13 +10,15 @@ import { useSettingsStore } from "@/store/settingsStore";
 import Link from "next/link";
 
 export default function ProductsClient({ initialProducts }: { initialProducts: Product[] }) {
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const urlCategory = searchParams.get("category");
   const urlSearch = searchParams.get("search");
   
   const [filtered, setFiltered] = useState<Product[]>(initialProducts);
   const [search, setSearch] = useState(urlSearch || "");
-  const [activeCategory, setActiveCategory] = useState("الكل");
+  const [activeCategory, setActiveCategory] = useState(urlCategory || "الكل");
   
   const { items, getDiscountInfo, customerStatus, appliedVipOffer, discountConfig } = useCartStore();
   const { isEligible } = getDiscountInfo();
@@ -30,8 +32,39 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
     dynamicCategories.push(urlCategory);
   }
   
+  // Helper to update URL params
+  const createQueryString = useCallback(
+    (name: string, value: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (value) {
+        params.set(name, value);
+      } else {
+        params.delete(name);
+      }
+      return params.toString();
+    },
+    [searchParams]
+  );
+
+  const handleCategoryChange = (cat: string) => {
+    setActiveCategory(cat);
+    const queryString = createQueryString("category", cat === "الكل" ? "" : cat);
+    router.push(`${pathname}${queryString ? `?${queryString}` : ""}`, { scroll: false });
+  };
+
+  const handleSearchChange = (val: string) => {
+    setSearch(val);
+    const queryString = createQueryString("search", val.trim());
+    // Use replace for search to avoid clogging history
+    router.replace(`${pathname}${queryString ? `?${queryString}` : ""}`, { scroll: false });
+  };
+
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  // Sync state with URL changes (e.g. back/forward browser buttons)
+  useEffect(() => {
     if (urlCategory) {
       setActiveCategory(urlCategory);
     } else {
@@ -39,6 +72,8 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
     }
     if (urlSearch) {
       setSearch(urlSearch);
+    } else {
+      setSearch("");
     }
   }, [urlCategory, urlSearch]);
 
@@ -111,30 +146,30 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
         <div className="flex flex-col md:flex-row gap-4 mb-10">
           <div className="relative flex-1">
             <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="ابحث عن منتج..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="w-full bg-white border border-gray-200 rounded-2xl py-3.5 pr-12 pl-4 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium shadow-sm"
-            />
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <Filter size={18} className="text-gray-400 shrink-0" />
-            {dynamicCategories.map(cat => (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${
-                  activeCategory === cat
-                    ? "bg-primary text-white shadow-lg shadow-primary/20"
-                    : "bg-white border border-gray-200 text-gray-600 hover:border-primary hover:text-primary"
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
+              <input
+                type="text"
+                placeholder="ابحث عن منتج..."
+                value={search}
+                onChange={e => handleSearchChange(e.target.value)}
+                className="w-full bg-white border border-gray-200 rounded-2xl py-3.5 pr-12 pl-4 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium shadow-sm"
+              />
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Filter size={18} className="text-gray-400 shrink-0" />
+              {dynamicCategories.map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => handleCategoryChange(cat)}
+                  className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${
+                    activeCategory === cat
+                      ? "bg-primary text-white shadow-lg shadow-primary/20"
+                      : "bg-white border border-gray-200 text-gray-600 hover:border-primary hover:text-primary"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
         </div>
 
         {/* Products Grid */}

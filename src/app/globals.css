@@ -72,3 +72,17 @@
     bottom: 100px !important;
   }
 }
+
+/* Hide Facebook Injected Chat/WhatsApp plugins */
+#fb-root, 
+.fb_dialog, 
+.fb-customerchat, 
+iframe[src*="facebook.com/plugins/customer_chat"],
+.fb_customer_chat_bounce_in_v2,
+.fb_customer_chat_bounce_out_v2 {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  z-index: -9999 !important;
+  pointer-events: none !important;
+}

@@ -14,7 +14,13 @@ export default function WhatsAppButton() {
     if (typeof window !== 'undefined') {
       const ua = navigator.userAgent || navigator.vendor || (window as any).opera;
       // Detect Facebook or Instagram in-app browsers
-      if (ua.indexOf("FBAN") > -1 || ua.indexOf("FBAV") > -1 || ua.indexOf("Instagram") > -1) {
+      const isAppBrowser = ua.indexOf("FBAN") > -1 || ua.indexOf("FBAV") > -1 || ua.indexOf("Instagram") > -1;
+      
+      // Detect if visitor came from a Facebook Ad
+      const urlParams = new URLSearchParams(window.location.search);
+      const isFromAd = urlParams.has('fbclid');
+
+      if (isAppBrowser || isFromAd) {
         setIsInAppBrowser(true);
       }
     }

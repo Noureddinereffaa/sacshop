@@ -189,6 +189,13 @@ export default function OrderForm({
 
   const validateSelections = () => {
     if (!product) return true;
+
+    // Check Quantity Tier
+    const hasTiers = product.quantity_tiers && product.quantity_tiers.length > 0;
+    if (hasTiers && (!quantity || quantity <= 0)) {
+      showError("📦 يرجى اختيار كمية الطلب المطلوبة أولاً.");
+      return false;
+    }
     
     // Check Size
     if (product.sizes && product.sizes.length > 0 && !selectedSize) {
@@ -608,7 +615,7 @@ export default function OrderForm({
             )}
             <div className="flex justify-between items-center text-gray-900">
               <span className="font-bold text-sm">المجموع الإجمالي:</span>
-              <span className="text-2xl font-black text-[#25D366]">{productPrice.toLocaleString()} د.ج</span>
+              <span className="text-2xl font-black text-[#25D366]">{productPrice === 0 ? "—" : productPrice.toLocaleString()} د.ج</span>
             </div>
           </div>
 

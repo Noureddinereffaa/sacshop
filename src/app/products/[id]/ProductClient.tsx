@@ -42,7 +42,7 @@ export default function ProductClient({ initialProduct }: { initialProduct: Prod
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
-  const [quantity, setQuantity] = useState<number>(200); 
+  const [quantity, setQuantity] = useState<number>(0); 
   const [numColors, setNumColors] = useState<number>(1);
   const [isDoubleSided, setIsDoubleSided] = useState<boolean>(false);
   const [showToast, setShowToast] = useState(false);
@@ -83,13 +83,11 @@ export default function ProductClient({ initialProduct }: { initialProduct: Prod
 
   useEffect(() => {
     if (product) {
-      // Auto-set initial quantity based on standard or matrix logic
-      let initialTiers = product.quantity_tiers;
-      if (initialTiers && initialTiers.length > 0) {
-         if (initialTiers[0].tiers) {
-           initialTiers = initialTiers[0].tiers;
-         }
-         setQuantity(initialTiers?.[0]?.min_qty || 1);
+      const hasTiers = product.quantity_tiers && product.quantity_tiers.length > 0;
+      if (!hasTiers) {
+        setQuantity(1);
+      } else {
+        setQuantity(0);
       }
     }
   }, [product]);
@@ -515,9 +513,9 @@ export default function ProductClient({ initialProduct }: { initialProduct: Prod
                    )}
                    <div className="flex items-end gap-3">
                     <span className="text-4xl font-black text-gray-950">
-                      {effectivePrice.toLocaleString()} <span className="text-xl text-primary">د.ج</span>
+                      {quantity === 0 ? "—" : effectivePrice.toLocaleString()} <span className="text-xl text-primary">د.ج</span>
                     </span>
-                    {(originalPrice || hasVipDiscount) && (
+                    {quantity > 0 && (originalPrice || hasVipDiscount) && (
                       <span className="text-xl text-gray-400 line-through mb-1">
                         {(hasVipDiscount ? basePrice : originalPrice!).toLocaleString()} د.ج
                       </span>
@@ -841,7 +839,7 @@ export default function ProductClient({ initialProduct }: { initialProduct: Prod
         <div className="flex flex-col">
           <span className="text-xs font-bold text-gray-500 uppercase">السعر الإجمالي</span>
           <span className="text-xl font-black text-gray-900 leading-none">
-            {effectivePrice.toLocaleString()} <span className="text-sm text-primary">د.ج</span>
+            {quantity === 0 ? "—" : effectivePrice.toLocaleString()} <span className="text-sm text-primary">د.ج</span>
           </span>
         </div>
         <button

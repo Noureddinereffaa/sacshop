@@ -26,11 +26,7 @@ export default function QuickAddModal() {
   // Reset states when product changes
   useEffect(() => {
     if (product) {
-      if (product.sizes && product.sizes.length > 0) {
-        setSelectedSize(product.sizes[0]);
-      } else {
-        setSelectedSize("");
-      }
+      setSelectedSize("");
       setSelectedColor("");
       setNumColors(1);
       setIsDoubleSided(false);

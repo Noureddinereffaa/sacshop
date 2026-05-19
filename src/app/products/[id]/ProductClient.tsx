@@ -82,12 +82,7 @@ export default function ProductClient({ initialProduct }: { initialProduct: Prod
   const router = useRouter();
 
   useEffect(() => {
-    // Auto-set the first size if available
-    if (product && !selectedSize) {
-      if (product.sizes && product.sizes.length > 0) {
-        setSelectedSize(product.sizes[0]);
-      }
-      
+    if (product) {
       // Auto-set initial quantity based on standard or matrix logic
       let initialTiers = product.quantity_tiers;
       if (initialTiers && initialTiers.length > 0) {

@@ -24,6 +24,14 @@ const nextConfig: NextConfig = {
         hostname: "195.201.119.89",
       },
       {
+        protocol: "http",
+        hostname: "**.sslip.io",
+      },
+      {
+        protocol: "https",
+        hostname: "**.sslip.io",
+      },
+      {
         protocol: "https",
         hostname: "195.201.119.89",
       },

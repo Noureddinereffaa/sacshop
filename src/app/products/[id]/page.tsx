@@ -29,32 +29,53 @@ const DEMO_PRODUCT: Product = {
   is_featured: false,
 };
 
+// 🚀 Pre-generate all product pages at build time (SSG) → 0ms TTFB
+export async function generateStaticParams() {
+  const supabase = getSupabase();
+  if (!supabase) return [];
+
+  const { data } = await supabase
+    .from("products")
+    .select("id")
+    .eq("is_published", true);
+
+  return (data || []).map((p: { id: string }) => ({ id: p.id }));
+}
+
+// Single DB fetch reused by both metadata and page render
+async function getProduct(id: string): Promise<Product | null> {
+  const supabase = getSupabase();
+  if (!supabase || !id) return null;
+
+  const { data } = await supabase
+    .from("products")
+    .select("*")
+    .eq("id", id)
+    .eq("is_published", true)
+    .single();
+
+  return data || null;
+}
+
 // Dynamic Metadata Generation for SEO
 export async function generateMetadata(
   { params }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
   const { id } = await params;
-  const supabase = getSupabase();
-  
-  if (!supabase || !id) {
+  const product = await getProduct(id);
+
+  if (!product) {
     return {
       title: DEMO_PRODUCT.name,
       description: DEMO_PRODUCT.short_description,
     };
   }
 
-  const { data } = await supabase
-    .from("products")
-    .select("name, short_description, description, image_url")
-    .eq("id", id)
-    .single();
-
-  const product = data || DEMO_PRODUCT;
-
   return {
     title: `${product.name} | Service Serigraphie`,
     description: product.short_description || product.description?.slice(0, 150),
+    metadataBase: new URL("https://serviceserigraphie.com"),
     openGraph: {
       title: product.name,
       description: product.short_description || product.description?.slice(0, 150),
@@ -72,28 +93,8 @@ export async function generateMetadata(
 // Server Component for fast initial load
 export default async function ProductPage({ params }: Props) {
   const { id } = await params;
-  const supabase = getSupabase();
-  let initialProduct: Product | null = null;
-
-  if (supabase && id) {
-    const { data } = await supabase
-      .from("products")
-      .select("*")
-      .eq("id", id)
-      .eq("is_published", true)
-      .single();
-    
-    if (data) {
-      initialProduct = data;
-    }
-  }
-
-  // If not found in DB or supabase is down, fallback to DEMO or null
-  if (!initialProduct) {
-    initialProduct = DEMO_PRODUCT;
-  }
+  const product = await getProduct(id);
+  const initialProduct = product || DEMO_PRODUCT;
 
   return <ProductClient initialProduct={initialProduct} />;
 }
-
-

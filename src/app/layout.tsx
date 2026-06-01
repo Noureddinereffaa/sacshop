@@ -4,16 +4,20 @@ import "./globals.css";
 import MarketingPixels from "@/components/MarketingPixels";
 import SettingsProvider from "@/components/SettingsProvider";
 import dynamic from "next/dynamic";
-import WhatsAppButton from "@/components/WhatsAppButton";
 import GlobalNavigation from "@/components/GlobalNavigation";
 import Footer from "@/components/Footer";
-import OfferPopup from "@/components/OfferPopup";
-import ScrollToTop from "@/components/ScrollToTop";
+
+// Lazy-load non-critical components (code-split into separate chunks)
+const OfferPopup = dynamic(() => import("@/components/OfferPopup"));
+const ScrollToTop = dynamic(() => import("@/components/ScrollToTop"));
+const WhatsAppButton = dynamic(() => import("@/components/WhatsAppButton"));
 
 const tajawal = Tajawal({
   subsets: ["arabic"],
-  weight: ["200", "300", "400", "500", "700", "800", "900"],
+  // Only load weights actually used - cuts font download by ~40%
+  weight: ["400", "500", "700", "800"],
   variable: "--font-tajawal",
+  display: "swap", // Show text immediately with fallback font
 });
 
 const QuickAddModal = dynamic(() => import("@/components/QuickAddModal"));

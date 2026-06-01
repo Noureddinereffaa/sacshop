@@ -95,7 +95,7 @@ export default function MarketingPixels() {
         <>
           <Script
             id="fb-pixel"
-            strategy="afterInteractive"
+            strategy="lazyOnload"
             dangerouslySetInnerHTML={{
               __html: `
                 !function(f,b,e,v,n,t,s)
@@ -125,7 +125,7 @@ export default function MarketingPixels() {
       {tiktokId && (
         <Script
           id="tiktok-pixel"
-          strategy="afterInteractive"
+          strategy="lazyOnload"
           dangerouslySetInnerHTML={{
             __html: `
               !function (w, d, t) {
@@ -140,10 +140,10 @@ export default function MarketingPixels() {
 
       {gaId && (
         <>
-          <Script id="ga-base" strategy="afterInteractive" src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} />
+          <Script id="ga-base" strategy="lazyOnload" src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} />
           <Script
             id="ga-config"
-            strategy="afterInteractive"
+            strategy="lazyOnload"
             dangerouslySetInnerHTML={{
               __html: `
                 window.dataLayer = window.dataLayer || [];

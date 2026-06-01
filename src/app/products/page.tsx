@@ -4,6 +4,8 @@ import { Product } from "@/types";
 import { Loader2 } from "lucide-react";
 import ProductsClient from "./ProductsClient";
 
+export const revalidate = 60;
+
 // Fallback static products when Supabase not connected
 const STATIC_PRODUCTS: Product[] = [
   { id: "1", name: "أكياس ورقية كرافت (Kraft Bags)", price: 35.00, image_url: "https://placehold.co/800x800/d2b48c/ffffff.png?text=Kraft+Bag", category: "أكياس ورقية", description: "", short_description: "", compare_price: null, sizes: [], colors: [], stock: 0, is_published: true, is_featured: false },

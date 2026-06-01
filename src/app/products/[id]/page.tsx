@@ -3,6 +3,8 @@ import { getSupabase } from "@/lib/supabase";
 import ProductClient from "./ProductClient";
 import { Product } from "@/types";
 
+export const revalidate = 60;
+
 type Props = {
   params: Promise<{ id: string }>
 };

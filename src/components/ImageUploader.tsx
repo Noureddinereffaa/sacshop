@@ -31,11 +31,6 @@ export default function ImageUploader({
   };
 
   const uploadFile = async (file: File) => {
-    if (!supabase) {
-      setError("لا يوجد اتصال بقاعدة البيانات");
-      return;
-    }
-    
     // Validate file type
     if (!file.type.startsWith('image/')) {
       setError("الرجاء رفع صورة صالحة");
@@ -52,24 +47,31 @@ export default function ImageUploader({
       setIsUploading(true);
       setError(null);
 
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
-      const filePath = `${fileName}`;
+      // 🔑 Use server-side API route with service_role key (bypasses RLS)
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("bucket", bucket);
 
-      const { error: uploadError, data } = await supabase.storage
-        .from(bucket)
-        .upload(filePath, file, {
-           cacheControl: '3600',
-           upsert: false
-        });
+      // Get admin password from session storage (set during admin login)
+      const adminPassword = sessionStorage.getItem("admin_password") || 
+                            localStorage.getItem("admin_password") || 
+                            "";
 
-      if (uploadError) throw uploadError;
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        headers: {
+          "x-admin-password": adminPassword,
+        },
+        body: formData,
+      });
 
-      const { data: publicUrlData } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(filePath);
+      const result = await response.json();
 
-      onChange(publicUrlData.publicUrl);
+      if (!response.ok || result.error) {
+        throw new Error(result.error || "فشل الرفع");
+      }
+
+      onChange(result.url);
     } catch (err: any) {
       setError(err?.message || "فشل الرفع");
       console.error("Upload error:", err);
@@ -80,6 +82,7 @@ export default function ImageUploader({
       }
     }
   };
+
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();

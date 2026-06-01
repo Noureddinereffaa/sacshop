@@ -4,8 +4,9 @@ import { cookies } from "next/headers";
 
 // Server-side route uses SERVICE_ROLE key → bypasses RLS completely
 const getAdminSupabase = () => {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  // Sanitize the URL and Key to prevent "Invalid Compact JWS" if there are spaces or quotes
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim().replace(/['"]/g, '');
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim().replace(/['"]/g, '');
   if (!url || !key) return null;
   return createClient(url, key, {
     auth: { persistSession: false },

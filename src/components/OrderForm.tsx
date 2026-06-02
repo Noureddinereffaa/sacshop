@@ -243,9 +243,9 @@ export default function OrderForm({
     try {
       // Direct order creation — no passwords, no extra steps
       await createOrderAndGetWaLink();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert("حدث خطأ أثناء معالجة الطلب. حاول مرة أخرى.");
+      alert(`حدث خطأ أثناء معالجة الطلب: ${err.message || JSON.stringify(err)}`);
     } finally {
       setIsLoading(false);
     }

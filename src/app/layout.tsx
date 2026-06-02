@@ -10,7 +10,7 @@ import Footer from "@/components/Footer";
 // Lazy-load non-critical components (code-split into separate chunks)
 const OfferPopup = dynamic(() => import("@/components/OfferPopup"));
 const ScrollToTop = dynamic(() => import("@/components/ScrollToTop"));
-const WhatsAppButton = dynamic(() => import("@/components/WhatsAppButton"));
+
 
 const tajawal = Tajawal({
   subsets: ["arabic"],
@@ -166,7 +166,6 @@ export default async function RootLayout({
           <Footer />
           <QuickAddModal />
           <OfferPopup />
-          <WhatsAppButton />
         </SettingsProvider>
       </body>
     </html>

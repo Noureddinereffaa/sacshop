@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { CartItem, Product } from "@/types";
-import { generateAndUploadOrderPDF } from "@/utils/generateOrderPDF";
+
 import { useCartStore } from "@/store/cartStore";
 
 interface OrderFormProps {
@@ -52,7 +52,7 @@ export default function OrderForm({
 }: OrderFormProps) {
   const [step, setStep] = useState<Step>("info");
   const [isLoading, setIsLoading] = useState(false);
-  const [isPdfGenerating, setIsPdfGenerating] = useState(false);
+
 
   const router = useRouter();
   const successRef = useRef<HTMLDivElement>(null);
@@ -225,7 +225,7 @@ export default function OrderForm({
   // ─── STEP 1: Validate form and check if user exists ────────────────────────
   const handleInfoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isLoading || isPdfGenerating || step === "success") return;
+    if (isLoading || step === "success") return;
     
     // Validate selections before showing details form
     if (!validateSelections()) return;
@@ -332,81 +332,20 @@ export default function OrderForm({
       }
     }
 
-    // ── Generate PDF and upload to Supabase Storage ───────────────────────────
-    setIsPdfGenerating(true);
-    let pdfUrl: string | null = null;
-    try {
-      pdfUrl = await generateAndUploadOrderPDF({
-        orderId,
-        customerName: formData.name.trim(),
-        customerPhone: formData.phone.trim(),
-        productName,
-        quantity,
-        productPrice,
-        discountAmount,
-        selectedSize,
-        selectedColor,
-        notes: formData.notes.trim() || undefined,
-        cartItems: isCartOrder ? cartItems : undefined,
-        numColors,
-        isDoubleSided,
-        customVariantSelections,
-      });
-
-      // Also save PDF URL in order record (avoiding extra select to bypass RLS issues)
-      const currentNotes = formData.notes.trim();
-      const updatedNotes = (currentNotes ? currentNotes + "\n" : "") + `pdf_url:${pdfUrl}`;
-      await supabase.from("orders").update({ admin_notes: updatedNotes }).eq("id", orderId);
-    } catch (pdfErr) {
-      console.error("PDF Generation Error:", pdfErr);
-    } finally {
-      setIsPdfGenerating(false);
-    }
-
     // ── Build WhatsApp message ────────────────────────────────────────────────
-    let waMessage: string;
-    if (pdfUrl) {
-      waMessage = [
-        `✅ *طلب جديد من Service Serigraphie*`,
-        `👤 الاسم: ${formData.name.trim()}`,
-        `📱 الهاتف: ${formData.phone.trim()}`,
-        ``,
-        `📄 *وصل الطلب الرسمي (PDF):*`,
-        pdfUrl,
-        ``,
-        `🏷️ رقم الطلب: #${shortId}`,
-      ].join("\n");
-    } else {
-      const cartItemsSummary = isCartOrder ? cartItems.map((item, idx) => {
-        const itemVariants = [
-          item.size ? (item.sizeLabel ? `▫️ ${item.sizeLabel}: ${item.size}` : `📐 ${item.size}`) : '',
-          item.color ? (item.colorLabel ? `▫️ ${item.colorLabel}: ${item.color}` : `🎨 ${item.color}`) : '',
-          item.num_colors ? `✨ ${item.num_colors} ألوان ${item.is_double_sided ? '(جهتين)' : '(جهة)'}` : '',
-          item.custom_variant_selections ? Object.entries(item.custom_variant_selections).filter(([_, v]) => v).map(([k, v]) => `▫️ ${k}: ${v}`).join(", ") : ''
-        ].filter(Boolean).join(" | ");
-        
-        return `${idx + 1}. *${item.name}* (x${item.quantity})\n   ${itemVariants}`;
-      }).join("\n\n") : "";
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://serviceserigraphie.com';
+    const receiptUrl = `${baseUrl}/receipt/${orderId}`;
 
-      const variantText = !isCartOrder ? Object.entries(customVariantSelections)
-        .filter(([_, val]) => val)
-        .map(([key, val]) => `▫️ ${key}: ${val}`)
-        .join("\n") : "";
-
-      waMessage = [
-        `✅ *طلب جديد من Service Serigraphie*`,
-        `👤 الاسم: ${formData.name.trim()}`,
-        `📱 الهاتف: ${formData.phone.trim()}`,
-        ``,
-        isCartOrder ? `🛒 *محتويات السلة:*` : `📦 المنتج: ${productName}`,
-        isCartOrder ? cartItemsSummary : `${variantText ? `✨ الخيارات:\n${variantText}\n` : ''}🎨 الطباعة: ${numColors} ألوان ${isDoubleSided ? '(جهتين)' : ''}`,
-        ``,
-        `💰 المجموع الإجمالي: ${productPrice.toLocaleString()} د.ج`,
-        ``,
-        `⚠️ (الوصل متاح في حسابك الشخصي)`,
-        `🏷️ رقم الطلب: #${shortId}`,
-      ].filter(Boolean).join("\n");
-    }
+    const waMessage = [
+      `✅ *طلب جديد من Service Serigraphie*`,
+      `👤 الاسم: ${formData.name.trim()}`,
+      `📱 الهاتف: ${formData.phone.trim()}`,
+      ``,
+      `📄 *وصل الطلب الرسمي:*`,
+      receiptUrl,
+      ``,
+      `🏷️ رقم الطلب: #${shortId}`,
+    ].join("\n");
 
     // ── Marketing tracking ────────────────────────────────────────────────────
     try {
@@ -761,13 +700,11 @@ export default function OrderForm({
               className="w-full bg-[#25D366] text-white rounded-2xl py-5 font-black text-xl flex items-center justify-center gap-3 shadow-lg active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed select-none"
               style={{ WebkitTapHighlightColor: "transparent", minHeight: "64px" }}
             >
-            {(isLoading || isPdfGenerating) ? (
-              <div className="flex flex-col items-center gap-2">
-                <Loader2 className="animate-spin" size={26} />
-                <span className="text-[10px] font-black opacity-70">
-                  {isPdfGenerating ? "جاري تجهيز وصل الطلب (PDF)..." : "جاري المعالجة..."}
-                </span>
-              </div>
+            {isLoading ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="animate-spin" size={20} />
+                جاري إرسال الطلب...
+              </span>
             ) : (
               <>
                 <MessageCircle size={24} />

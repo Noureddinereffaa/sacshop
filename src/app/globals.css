@@ -66,13 +66,6 @@
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-/* Professional fix for WhatsApp overlap */
-@media (max-width: 1024px) {
-  body.has-sticky-cta .whatsapp-btn {
-    bottom: 100px !important;
-  }
-}
-
 /* Hide Facebook Injected Chat/WhatsApp plugins */
 #fb-root, 
 .fb_dialog, 

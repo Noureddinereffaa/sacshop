@@ -7,7 +7,7 @@ import Footer from "@/components/Footer";
 import OrderForm from "@/components/OrderForm";
 import { ShoppingBag, ArrowRight, Minus, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
+import OptimizedImage from "@/components/OptimizedImage";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Tag, Star, Crown } from "lucide-react";
@@ -140,7 +140,7 @@ export default function CheckoutPage() {
              <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-xl relative overflow-hidden">
                 {/* Brand watermark */}
                 <div className="absolute -left-10 -top-10 opacity-[0.03] w-64 h-64 pointer-events-none">
-                   <Image src="/brand/logo-mark.png" alt="watermark" fill className="object-contain" />
+                   <OptimizedImage src="/favicon.ico" alt="watermark" fill className="object-contain" />
                 </div>
                 
                 <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-6 relative z-10">

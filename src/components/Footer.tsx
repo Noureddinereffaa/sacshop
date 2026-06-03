@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Phone, Mail, MapPin } from "lucide-react";
 import { useSettingsStore } from "@/store/settingsStore";
-import Image from "next/image";
+import OptimizedImage from "@/components/OptimizedImage";
 
 import { usePathname } from "next/navigation";
 
@@ -13,7 +13,7 @@ export default function Footer() {
 
   if (pathname?.startsWith("/admin")) return null;
 
-  const footerLogoSrc = branding.footerLogo || branding.logo || "/brand/logo-mark.png";
+  const footerLogoSrc = branding.footerLogo || branding.logo || "/favicon.ico";
   const waNumber = branding.whatsappNumber?.replace(/[^0-9]/g, "") || "213";
 
   return (
@@ -24,7 +24,7 @@ export default function Footer() {
         <div className="space-y-6">
           <Link href="/" className="flex items-center gap-3">
             <div className="relative w-36 h-10 overflow-hidden">
-              <Image
+              <OptimizedImage
                 src={footerLogoSrc}
                 alt={branding.storeName}
                 fill

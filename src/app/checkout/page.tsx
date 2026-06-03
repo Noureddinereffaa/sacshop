@@ -150,7 +150,7 @@ export default function CheckoutPage() {
                    </div>
                    <div className="relative w-28 h-10 sm:w-36 sm:h-12 hidden xs:block">
                       {branding?.logo ? (
-                         <Image src={branding.logo} alt="Brand" fill className="object-contain object-left" />
+                         <OptimizedImage src={branding.logo} alt="Brand" fill className="object-contain object-left" />
                       ) : (
                          <div className="w-full h-full flex flex-col items-end justify-center">
                             <span className="font-black text-gray-900 text-sm">{branding?.storeName}</span>
@@ -164,7 +164,7 @@ export default function CheckoutPage() {
                     <div key={item.id} className="flex gap-4 p-3 bg-gray-50 rounded-2xl">
                       <div className="w-16 h-16 bg-white rounded-xl overflow-hidden relative flex-shrink-0 border border-gray-100">
                         {item.image_url ? (
-                          <Image src={item.image_url} alt={item.name} fill className="object-cover" />
+                          <OptimizedImage src={item.image_url} alt={item.name} fill className="object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-gray-200"><ShoppingBag size={20} /></div>
                         )}

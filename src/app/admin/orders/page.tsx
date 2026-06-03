@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { formatDistanceToNow } from "date-fns";
+import { arDZ } from "date-fns/locale";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { 
   Search, Filter, Eye, CheckCircle2, 
@@ -484,6 +487,10 @@ export default function AdminOrders() {
                               ترقية <ChevronDown size={14} className="rotate-90 hidden lg:block" />
                             </button>
                          )}
+                         <Link href={`/receipt/${order.id}`} target="_blank" onClick={(e) => e.stopPropagation()} className="px-4 py-2.5 lg:p-2.5 text-white bg-gray-800 hover:bg-black rounded-xl transition-all shadow-md flex items-center gap-2" title="عرض الفاتورة">
+                            <Eye size={18} />
+                            <span className="lg:hidden text-xs font-bold">الفاتورة</span>
+                         </Link>
                          <button onClick={() => openWhatsApp(order.customer_phone, order.order_number)} className="px-4 py-2.5 lg:p-2.5 text-white bg-[#25D366] hover:bg-[#20b858] rounded-xl transition-all shadow-md hover:shadow-lg flex items-center gap-2" title="مراسلة العميل عبر واتساب">
                             <MessageCircle size={18} />
                             <span className="lg:hidden text-xs font-bold">مراسلة</span>
@@ -541,18 +548,25 @@ export default function AdminOrders() {
                    <p className="text-gray-600 text-sm font-medium flex items-center gap-2 mb-2" dir="ltr">
                      <PhoneCall size={14} className="text-gray-400" /> {selectedOrder.customer_phone}
                    </p>
-                   {selectedOrder.admin_notes?.includes("pdf_url:") && (
-                     <div className="mt-4 pt-4 border-t border-gray-100">
-                        <a 
-                          href={selectedOrder.admin_notes.split("pdf_url:")[1].split("\n")[0]} 
+                     <div className="mt-4 pt-4 border-t border-gray-100 flex flex-col gap-2">
+                        <Link 
+                          href={`/receipt/${selectedOrder.id}`} 
                           target="_blank" 
-                          rel="noreferrer"
-                          className="flex items-center justify-center gap-2 w-full py-2 bg-primary/10 text-primary rounded-xl font-black text-xs hover:bg-primary/20 transition-all"
+                          className="flex items-center justify-center gap-2 w-full py-2.5 bg-gray-900 text-white rounded-xl font-black text-xs hover:bg-black shadow-md hover:shadow-lg transition-all"
                         >
-                          <Eye size={14} /> عرض وصل الطلب (PDF)
-                        </a>
+                          <Eye size={16} /> فتح الفاتورة الذكية (Receipt)
+                        </Link>
+                        {selectedOrder.admin_notes?.includes("pdf_url:") && (
+                          <a 
+                            href={selectedOrder.admin_notes.split("pdf_url:")[1].split("\n")[0]} 
+                            target="_blank" 
+                            rel="noreferrer"
+                            className="flex items-center justify-center gap-2 w-full py-2 bg-primary/10 text-primary rounded-xl font-bold text-xs hover:bg-primary/20 transition-all"
+                          >
+                            ملف الـ PDF القديم
+                          </a>
+                        )}
                      </div>
-                   )}
                 </div>
 
                 {/* Items Section */}

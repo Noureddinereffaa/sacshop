@@ -6,7 +6,7 @@ import {
   Plus, Search, Edit2, Trash2, Eye, EyeOff, Star,
   Package, Loader2, GripVertical, Save, X
 } from "lucide-react";
-import Image from "next/image";
+import OptimizedImage from "@/components/OptimizedImage";
 import Link from "next/link";
 import { Product } from "@/types";
 import {
@@ -63,7 +63,7 @@ function SortableProductRow({ product, togglePublish, toggleFeatured, deleteProd
           )}
           <div className="w-14 h-14 bg-gray-100 rounded-xl overflow-hidden shrink-0 relative">
             {product.image_url && product.image_url.startsWith('http') ? (
-              <Image src={product.image_url} alt={product.name} fill className="object-cover" />
+              <OptimizedImage src={product.image_url} alt={product.name} fill className="object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-gray-300">
                 <Package size={24} />

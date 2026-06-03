@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { UploadCloud, X, Loader2, Image as ImageIcon } from "lucide-react";
-import Image from "next/image";
+import OptimizedImage from "@/components/OptimizedImage";
 
 interface ImageUploaderProps {
   value: string;
@@ -100,12 +100,11 @@ export default function ImageUploader({
       
       {value ? (
         <div className="relative group rounded-2xl overflow-hidden border-2 border-gray-100 bg-gray-50 flex items-center justify-center p-2 aspect-square">
-          <Image 
+          <OptimizedImage 
             src={value} 
             alt="Uploaded" 
-            layout="fill" 
-            objectFit="contain"
-            className="rounded-xl"
+            fill
+            className="object-contain rounded-xl"
           />
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
              <button

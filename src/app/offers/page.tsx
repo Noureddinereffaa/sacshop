@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { Tag, Crown, Gift, ArrowLeft, ShoppingBag, Percent, Star, Zap, Clock, CheckCircle2, DollarSign, Loader2, Flame, Sparkles } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
+import OptimizedImage from "@/components/OptimizedImage";
 import { useCartStore } from "@/store/cartStore";
 import { useSettingsStore } from "@/store/settingsStore";
 import { useState, useEffect, useMemo } from "react";
@@ -238,7 +238,7 @@ export default function OffersPage() {
 
                             {/* Product Image */}
                             <div className="aspect-[4/3] relative overflow-hidden bg-gray-50">
-                              <Image
+                              <OptimizedImage
                                 src={product.image_url || "/placeholder.png"}
                                 alt={product.name}
                                 fill

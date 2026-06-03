@@ -6,7 +6,8 @@ import { supabase } from "@/lib/supabase";
 import { Loader2, Save, X, Plus, Image as ImageIcon, ArrowRight, Zap, Tag, Sliders } from "lucide-react";
 import ImageUploader from "@/components/ImageUploader";
 import Link from "next/link";
-import Image from "next/image";
+
+
 import { Product, CustomVariantGroup } from "@/types";
 
 const EMPTY_PRODUCT: Partial<Product> = {

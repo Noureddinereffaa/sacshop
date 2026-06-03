@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, ArrowRight, Sparkles } from "lucide-react";
 import { useSettingsStore } from "@/store/settingsStore";
 import Link from "next/link";
-import Image from "next/image";
+
 
 export default function OfferPopup() {
   const { popup, isLoaded } = useSettingsStore();

@@ -3,7 +3,7 @@
 import { useCartStore } from "@/store/cartStore";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, Gift } from "lucide-react";
-import Image from "next/image";
+import OptimizedImage from "@/components/OptimizedImage";
 import Link from "next/link";
 import { CartItem } from "@/types";
 import { useState, useEffect } from "react";
@@ -116,7 +116,7 @@ export default function CartDrawer() {
                       {/* Image */}
                       <div className="w-20 h-20 bg-gray-50 rounded-xl overflow-hidden relative flex-shrink-0">
                         {item.image_url ? (
-                          <Image src={item.image_url} alt={item.name} fill className="object-cover" />
+                          <OptimizedImage src={item.image_url} alt={item.name} fill className="object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-gray-300"><ShoppingBag size={24} /></div>
                         )}

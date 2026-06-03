@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useCartStore } from "@/store/cartStore";
 import { useSettingsStore } from "@/store/settingsStore";
 import { ShoppingCart } from "lucide-react";
-import Image from "next/image";
+import OptimizedImage from "@/components/OptimizedImage";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -46,11 +46,10 @@ export default function Header() {
         <Link href="/" className="flex items-center gap-2 sm:gap-3 group">
           {branding.logo ? (
             <div className="relative w-24 h-6 sm:w-32 sm:h-8 overflow-hidden flex-shrink-0 hover:scale-[1.02] transition-transform">
-              <Image 
+              <OptimizedImage 
                 src={branding.logo} 
                 alt={branding.storeName} 
                 fill 
-                priority
                 sizes="(max-width: 640px) 96px, 128px"
                 className="object-contain object-right" 
               />

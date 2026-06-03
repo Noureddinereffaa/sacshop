@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { formatDistanceToNow } from "date-fns";
-import { arDZ } from "date-fns/locale";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { 

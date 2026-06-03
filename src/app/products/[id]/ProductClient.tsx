@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase";
 import OrderForm from "@/components/OrderForm";
 
 import { useCartStore } from "@/store/cartStore";
-import Image from "next/image";
+import OptimizedImage from "@/components/OptimizedImage";
 import Link from "next/link";
 import {
   Star, ShieldCheck, Truck, RefreshCcw, ChevronRight,
@@ -435,15 +435,13 @@ export default function ProductClient({ initialProduct }: { initialProduct: Prod
               className="aspect-square bg-white rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-xl relative"
             >
               {allImages[selectedImage] ? (
-                <Image
+                <OptimizedImage
                   src={allImages[selectedImage]}
                   alt={product.name}
                   fill
                   sizes="(max-width: 1024px) 100vw, 50vw"
                   className="object-cover"
                   priority
-                  placeholder="blur"
-                  blurDataURL="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iODAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PC9zdmc+"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-gray-200">
@@ -468,14 +466,12 @@ export default function ProductClient({ initialProduct }: { initialProduct: Prod
                       selectedImage === i ? "border-primary shadow-lg shadow-primary/20" : "border-gray-200 hover:border-gray-400"
                     }`}
                   >
-                    <Image
+                    <OptimizedImage
                       src={img}
                       alt=""
                       fill
                       sizes="80px"
                       className="object-cover"
-                      placeholder="blur"
-                      blurDataURL="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSI4MCI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI2YzZjRmNiIvPjwvc3ZnPg=="
                     />
                   </button>
                 ))}

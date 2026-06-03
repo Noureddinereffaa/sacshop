@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
-import Image from "next/image";
+import OptimizedImage from "@/components/OptimizedImage";
 import Link from "next/link";
 import { useSettingsStore } from "@/store/settingsStore";
 
@@ -75,7 +75,7 @@ export default function Hero() {
             animate={{ scale: 1 }}
             transition={{ duration: 7, ease: "easeOut" }}
           >
-            <Image
+            <OptimizedImage
               src={slides[current].image}
               alt={slides[current].title}
               fill

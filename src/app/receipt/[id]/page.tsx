@@ -1,19 +1,21 @@
 import { getSupabase } from "@/lib/supabase";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { CheckCircle2, Printer, ArrowRight } from "lucide-react";
+import ReceiptActions from "./ReceiptActions";
 
 export const revalidate = 0; // Always fetch fresh data
 
-export default async function ReceiptPage({ params }: { params: { id: string } }) {
+export default async function ReceiptPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  
   const supabase = getSupabase();
   if (!supabase) return <div className="p-8 text-center text-red-500 font-bold">حدث خطأ في الاتصال بقاعدة البيانات</div>;
 
   // 1. Fetch Order Data
   const { data: order, error: orderError } = await supabase
     .from("orders")
-    .select("*, products(name, images)")
-    .eq("id", params.id)
+    .select("*, products(name, image_url)")
+    .eq("id", id)
     .single();
 
   if (orderError || !order) {
@@ -25,7 +27,6 @@ export default async function ReceiptPage({ params }: { params: { id: string } }
     storeName: "Service Serigraphie",
     logo: "",
     primaryColor: "#00AEEF",
-    whatsappNumber: "213"
   };
 
   const { data: settingsData } = await supabase
@@ -46,23 +47,15 @@ export default async function ReceiptPage({ params }: { params: { id: string } }
   const metadata = order.metadata || {};
   const customVariantSelections = metadata.custom_variants || {};
 
-  // Print function (client-side script logic via button onclick)
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center py-6 px-4 sm:px-6 lg:px-8 print:bg-white print:py-0 print:px-0">
       
       {/* ── Top Bar (Hidden in Print) ── */}
       <div className="w-full max-w-3xl flex justify-between items-center mb-6 print:hidden">
         <Link href="/" className="flex items-center gap-2 text-gray-600 hover:text-black font-bold transition-colors">
-          <ArrowRight size={20} />
-          العودة للمتجر
+          ← العودة للمتجر
         </Link>
-        <button 
-          onClick={() => { if(typeof window !== 'undefined') window.print(); }}
-          className="flex items-center gap-2 bg-black text-white px-5 py-2.5 rounded-xl font-bold shadow-md hover:-translate-y-1 hover:shadow-lg transition-all"
-        >
-          <Printer size={18} />
-          طباعة الوصل
-        </button>
+        <ReceiptActions />
       </div>
 
       {/* ── Receipt Container ── */}
@@ -90,7 +83,7 @@ export default async function ReceiptPage({ params }: { params: { id: string } }
                 <div className="text-2xl font-black tracking-wider font-sans">#{shortId}</div>
               </div>
               <div className="flex items-center gap-1.5 mt-3 text-green-600 font-bold bg-green-50 px-3 py-1 rounded-full text-sm">
-                <CheckCircle2 size={16} /> تم التسجيل
+                ✓ تم التسجيل
               </div>
             </div>
           </div>
@@ -106,7 +99,7 @@ export default async function ReceiptPage({ params }: { params: { id: string } }
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-500 font-bold text-sm">رقم الهاتف:</span>
-                  <span className="font-black text-gray-900 dir-ltr">{order.customer_phone}</span>
+                  <span className="font-black text-gray-900" dir="ltr">{order.customer_phone}</span>
                 </div>
               </div>
             </div>
@@ -164,7 +157,7 @@ export default async function ReceiptPage({ params }: { params: { id: string } }
                         {order.size && <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-md font-bold">المقاس: {order.size}</span>}
                         {order.color && <span className="text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded-md font-bold">اللون: {order.color}</span>}
                         {metadata.num_colors && <span className="text-xs bg-emerald-50 text-emerald-700 px-2 py-1 rounded-md font-bold">طباعة: {metadata.num_colors} ألوان {metadata.is_double_sided ? '(جهتين)' : '(جهة)'}</span>}
-                        {Object.entries(customVariantSelections).filter(([_, v]) => v).map(([k, v]: any, i) => (
+                        {Object.entries(customVariantSelections).filter(([_, v]) => v).map(([k, v]: any, i: number) => (
                           <span key={i} className="text-[10px] bg-gray-100 text-gray-700 border border-gray-200 px-2 py-1 rounded-md font-bold">
                             {k}: {v}
                           </span>

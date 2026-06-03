@@ -4,7 +4,7 @@ import { useQuickAddStore } from "@/store/quickAddStore";
 import { useCartStore } from "@/store/cartStore";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ShoppingCart, Star, CheckCircle2, Package } from "lucide-react";
-import Image from "next/image";
+import OptimizedImage from "@/components/OptimizedImage";
 import { useRouter, usePathname } from "next/navigation";
 import { useState, useMemo, useEffect } from "react";
 

@@ -11,48 +11,17 @@ const nextConfig: NextConfig = {
     // Optimized for Algerian mobile users (most traffic is mobile)
     deviceSizes: [640, 750, 828, 1080, 1200],
     imageSizes: [16, 32, 48, 64, 96, 128, 256],
+    qualities: [50, 75, 80, 90, 100],
     // Cache optimized images for 1 year (they have unique URLs)
     minimumCacheTTL: 31536000,
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "images.unsplash.com",
-      },
-      {
-        protocol: "https",
-        hostname: "**.supabase.co",
-      },
-      {
-        protocol: "https",
-        hostname: "placehold.co",
-      },
-      {
-        protocol: "https",
-        hostname: "**.supabase.in",
+        hostname: "**",
       },
       {
         protocol: "http",
-        hostname: "195.201.119.89",
-      },
-      {
-        protocol: "http",
-        hostname: "**.sslip.io",
-      },
-      {
-        protocol: "https",
-        hostname: "**.sslip.io",
-      },
-      {
-        protocol: "https",
-        hostname: "195.201.119.89",
-      },
-      {
-        protocol: "http",
-        hostname: "**.serviceserigraphie.com",
-      },
-      {
-        protocol: "https",
-        hostname: "**.serviceserigraphie.com",
+        hostname: "**",
       },
     ],
   },

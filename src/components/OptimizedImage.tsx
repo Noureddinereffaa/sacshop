@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
+import Image from "next/image";
 
 interface OptimizedImageProps {
   src: string;
@@ -18,9 +19,8 @@ interface OptimizedImageProps {
 }
 
 /**
- * High-performance image component that bypasses Next.js Image Optimizer
- * for external Supabase Storage images. Uses native lazy loading,
- * CSS object-fit, and a smooth fade-in animation for a premium feel.
+ * High-performance image component powered by Next.js Image Optimizer.
+ * Uses native WebP/AVIF generation, edge caching, and a smooth fade-in animation.
  */
 export default function OptimizedImage({
   src,
@@ -31,30 +31,15 @@ export default function OptimizedImage({
   fill = false,
   sizes,
   priority = false,
-  quality,
+  quality = 80,
   style,
   onClick,
   onError,
 }: OptimizedImageProps) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
-  const imgRef = useRef<HTMLImageElement>(null);
 
-  // If the image is already cached by the browser, mark as loaded immediately
-  useEffect(() => {
-    if (imgRef.current?.complete && imgRef.current?.naturalWidth > 0) {
-      setLoaded(true);
-    }
-  }, []);
-
-  const handleLoad = () => setLoaded(true);
-  const handleError = () => {
-    setError(true);
-    onError?.();
-  };
-
-  // Build the direct URL (bypass Next.js optimizer)
-  // For Supabase storage URLs, ensure we use the URL as-is
+  // Build the direct URL
   let imgSrc = src || "";
 
   // Fallback placeholder for broken images
@@ -81,7 +66,11 @@ export default function OptimizedImage({
 
   const containerStyle: React.CSSProperties = fill
     ? { position: "absolute", inset: 0, ...style }
-    : { width, height, ...style };
+    : { width, height, position: "relative", ...style };
+
+  // Next.js Image requires width/height if fill is false
+  const imgWidth = fill ? undefined : (width || 800);
+  const imgHeight = fill ? undefined : (height || 800);
 
   return (
     <div
@@ -98,25 +87,24 @@ export default function OptimizedImage({
       )}
 
       {/* Actual image */}
-      <img
-        ref={imgRef}
+      <Image
         src={imgSrc}
-        alt={alt}
-        width={fill ? undefined : width}
-        height={fill ? undefined : height}
-        loading={priority ? "eager" : "lazy"}
-        decoding={priority ? "sync" : "async"}
-        fetchPriority={priority ? "high" : "auto"}
-        onLoad={handleLoad}
-        onError={handleError}
-        sizes={sizes}
+        alt={alt || ""}
+        width={imgWidth}
+        height={imgHeight}
+        fill={fill}
+        sizes={sizes || (fill ? "100vw" : undefined)}
+        priority={priority}
+        quality={quality}
+        onLoad={() => setLoaded(true)}
+        onError={() => {
+          setError(true);
+          onError?.();
+        }}
         className={`transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
         style={{
           objectFit: "cover",
-          width: fill ? "100%" : undefined,
-          height: fill ? "100%" : undefined,
-          position: fill ? "absolute" : undefined,
-          inset: fill ? 0 : undefined,
+          ...(fill ? {} : { width: "100%", height: "100%" })
         }}
       />
     </div>

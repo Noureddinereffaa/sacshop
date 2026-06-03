@@ -39,10 +39,11 @@ export default async function ReceiptPage({ params }: { params: Promise<{ id: st
     branding = { ...branding, ...settingsData.value };
   }
 
-  const isCartOrder = order.cart_items && order.cart_items.length > 0;
-  const shortId = order.id.split("-")[0].toUpperCase();
-  const finalTotal = order.total_price;
-  const productPrice = order.product_price || finalTotal;
+  const cartItems = Array.isArray(order.cart_items) ? order.cart_items : (typeof order.cart_items === 'string' ? JSON.parse(order.cart_items) : []);
+  const isCartOrder = cartItems && cartItems.length > 0;
+  const shortId = order.id ? order.id.split("-")[0].toUpperCase() : "UNKNOWN";
+  const finalTotal = order.total_price || 0;
+  const productPrice = order.product_price || finalTotal || 0;
   const discountAmount = order.discount_amount || 0;
   const metadata = order.metadata || {};
   const customVariantSelections = metadata.custom_variants || {};
@@ -132,7 +133,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ id: st
               </thead>
               <tbody className="divide-y divide-gray-100 bg-white">
                 {isCartOrder ? (
-                  order.cart_items.map((item: any, i: number) => (
+                  cartItems.map((item: any, i: number) => (
                     <tr key={i} className="hover:bg-gray-50 transition-colors">
                       <td className="py-5 px-5">
                         <div className="font-black text-gray-900 text-base mb-1">{i + 1}. {item.name}</div>

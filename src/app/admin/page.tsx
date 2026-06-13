@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { Package, TrendingUp, Users, ShoppingBag, Crown, ArrowLeft, Clock, CheckCircle2, Truck, Bell } from "lucide-react";
 import { motion } from "framer-motion";
@@ -47,36 +46,38 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     async function fetchData() {
-      if (!supabase) { setIsLoading(false); return; }
-      const [ordersRes, productsRes, customersRes] = await Promise.all([
-        supabase.from("orders").select("*"),
-        supabase.from("products").select("id").eq("is_published", true),
-        supabase.from("customers").select("id, is_vip"),
-      ]);
+      try {
+        const res = await fetch("/api/admin-stats");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const { orders, products, customers } = await res.json();
 
-      if (ordersRes.error) console.error("Admin Dashboard: Error fetching orders:", ordersRes.error);
-      if (productsRes.error) console.error("Admin Dashboard: Error fetching products:", productsRes.error);
-      if (customersRes.error) console.error("Admin Dashboard: Error fetching customers:", customersRes.error);
+        const activeStatuses = ['confirmed', 'processing', 'shipped', 'delivered'];
+        const sorted = [...orders].sort((a: RecentOrder, b: RecentOrder) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
 
-      const orders = ordersRes.data || [];
-      const activeStatuses = ['confirmed', 'processing', 'shipped', 'delivered'];
-      const sorted = [...orders].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-      
-      setStats({
-        totalOrders: orders.length,
-        newOrders: orders.filter(o => o.status === "new").length,
-        deliveredOrders: orders.filter(o => o.status === "delivered").length,
-        cancelledOrders: orders.filter(o => o.status === "cancelled").length,
-        totalRevenue: orders.filter(o => activeStatuses.includes(o.status)).reduce((a, o) => a + (o.total_price || 0), 0),
-        totalProducts: productsRes.data?.length || 0,
-        totalCustomers: customersRes.data?.length || 0,
-        vipCustomers: customersRes.data?.filter(c => c.is_vip).length || 0,
-      });
-      setRecentOrders(sorted.slice(0, 5) as RecentOrder[]);
-      setIsLoading(false);
+        setStats({
+          totalOrders: orders.length,
+          newOrders: orders.filter((o: RecentOrder) => o.status === "new").length,
+          deliveredOrders: orders.filter((o: RecentOrder) => o.status === "delivered").length,
+          cancelledOrders: orders.filter((o: RecentOrder) => o.status === "cancelled").length,
+          totalRevenue: orders
+            .filter((o: RecentOrder) => activeStatuses.includes(o.status))
+            .reduce((a: number, o: RecentOrder) => a + (o.total_price || 0), 0),
+          totalProducts: products.length,
+          totalCustomers: customers.length,
+          vipCustomers: customers.filter((c: { is_vip: boolean }) => c.is_vip).length,
+        });
+        setRecentOrders(sorted.slice(0, 5));
+      } catch (err) {
+        console.error("[Admin Dashboard] Failed to load stats:", err);
+      } finally {
+        setIsLoading(false);
+      }
     }
     fetchData();
   }, []);
+
 
   const STAT_CARDS = [
     { label: "إجمالي الطلبات", value: stats.totalOrders, icon: ShoppingBag, color: "bg-blue-50 text-blue-600", href: "/admin/orders" },

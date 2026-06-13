@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
+import Image from "next/image";
 
 // Minimal product shape — matches the partial SELECT fields we fetch
 interface ProductSummary {
@@ -18,13 +19,13 @@ import {
   Package, Zap, Facebook, RefreshCw, X
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import OptimizedImage from "@/components/OptimizedImage";
 
 interface ShortLink {
   id: string;
   slug: string;
   product_id: string;
   product_name: string;
+  product_image?: string;
   destination: string;
   clicks: number;
   created_at: string;
@@ -34,6 +35,87 @@ const BASE_URL =
   typeof window !== "undefined"
     ? window.location.origin
     : process.env.NEXT_PUBLIC_SITE_URL || "";
+
+// ─── Ultra-fast thumbnail component for popup images ───────────────────────
+// Uses native <img> with decoding=async + fetchpriority=high for max speed.
+// Avoids Next.js Image optimizer overhead for tiny 48×48 thumbnails.
+function ProductThumb({ src, alt }: { src: string; alt: string }) {
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(false);
+
+  if (!src || !src.startsWith("http") || error) {
+    return (
+      <div className="w-full h-full flex items-center justify-center text-gray-300">
+        <Package size={20} />
+      </div>
+    );
+  }
+
+  // Append width hint to Supabase/storage URLs to get the smallest possible image
+  let optimizedSrc = src;
+  try {
+    const url = new URL(src);
+    // Supabase storage transform
+    if (url.hostname.includes("supabase") || url.pathname.includes("/storage/")) {
+      url.searchParams.set("width", "96");
+      url.searchParams.set("quality", "75");
+      optimizedSrc = url.toString();
+    }
+  } catch {
+    optimizedSrc = src;
+  }
+
+  return (
+    <>
+      {/* Skeleton shimmer */}
+      {!loaded && (
+        <div className="absolute inset-0 bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 animate-pulse rounded-xl" />
+      )}
+      {/* Native img: fetchpriority=high + decoding=async = fastest possible */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={optimizedSrc}
+        alt={alt}
+        width={48}
+        height={48}
+        loading="eager"
+        decoding="async"
+        // @ts-expect-error fetchpriority is valid HTML attr not yet in TS types
+        fetchpriority="high"
+        onLoad={() => setLoaded(true)}
+        onError={() => setError(true)}
+        className={`w-full h-full object-cover transition-opacity duration-150 ${
+          loaded ? "opacity-100" : "opacity-0"
+        }`}
+      />
+    </>
+  );
+}
+
+// ─── Small thumbnail for the links table ───────────────────────────────────
+function LinkThumb({ src, alt }: { src?: string; alt: string }) {
+  const [error, setError] = useState(false);
+  if (!src || error) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <Package size={16} className="text-gray-400" />
+      </div>
+    );
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt={alt}
+      width={40}
+      height={40}
+      loading="lazy"
+      decoding="async"
+      onError={() => setError(true)}
+      className="w-full h-full object-cover"
+    />
+  );
+}
 
 export default function ShortLinksPage() {
   const [products, setProducts] = useState<ProductSummary[]>([]);
@@ -47,6 +129,7 @@ export default function ShortLinksPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showProductPicker, setShowProductPicker] = useState(false);
   const [productSearch, setProductSearch] = useState("");
+  const preloadedRef = useRef(false);
 
   const fetchLinks = useCallback(async () => {
     setIsLoadingLinks(true);
@@ -57,7 +140,6 @@ export default function ShortLinksPage() {
   }, []);
 
   useEffect(() => {
-    // Fetch products
     async function fetchProducts() {
       if (!supabase) { setIsLoadingProducts(false); return; }
       const { data } = await supabase
@@ -67,10 +149,37 @@ export default function ShortLinksPage() {
         .order("sort_order", { ascending: true, nullsFirst: false });
       setProducts(data || []);
       setIsLoadingProducts(false);
+
+      // ── Preload the first 6 product images into browser cache ──
+      // so when the popup opens, images are already in memory.
+      if (!preloadedRef.current && data && data.length > 0) {
+        preloadedRef.current = true;
+        data.slice(0, 6).forEach((p: ProductSummary) => {
+          if (p.image_url && p.image_url.startsWith("http")) {
+            const link = document.createElement("link");
+            link.rel = "preload";
+            link.as = "image";
+            link.href = p.image_url;
+            document.head.appendChild(link);
+          }
+        });
+      }
     }
     fetchProducts();
     fetchLinks();
   }, [fetchLinks]);
+
+  // ── When popup opens, preload remaining visible images ──────────────────
+  useEffect(() => {
+    if (!showProductPicker || products.length === 0) return;
+    const visible = products.slice(0, 10);
+    visible.forEach((p) => {
+      if (p.image_url && p.image_url.startsWith("http")) {
+        const img = new window.Image();
+        img.src = p.image_url;
+      }
+    });
+  }, [showProductPicker, products]);
 
   const filteredLinks = links.filter(l =>
     l.product_name.toLowerCase().includes(search.toLowerCase()) ||
@@ -92,6 +201,7 @@ export default function ShortLinksPage() {
       body: JSON.stringify({
         product_id: selectedProduct.id,
         product_name: selectedProduct.name,
+        product_image: selectedProduct.image_url || null,
         destination,
       }),
     });
@@ -115,6 +225,12 @@ export default function ShortLinksPage() {
     await navigator.clipboard.writeText(url);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2500);
+  }
+
+  function closeModal() {
+    setShowProductPicker(false);
+    setSelectedProduct(null);
+    setProductSearch("");
   }
 
   const totalClicks = links.reduce((sum, l) => sum + l.clicks, 0);
@@ -206,7 +322,7 @@ export default function ShortLinksPage() {
           <div className="text-center py-20 text-gray-400">
             <Link2 size={48} className="mx-auto mb-4 opacity-30" />
             <p className="font-bold text-lg">لا توجد روابط مختصرة بعد</p>
-            <p className="text-sm mt-1">اضغط على "إنشاء رابط جديد" لإنشاء أول رابط مختصر</p>
+            <p className="text-sm mt-1">اضغط على &quot;إنشاء رابط جديد&quot; لإنشاء أول رابط مختصر</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -223,7 +339,6 @@ export default function ShortLinksPage() {
               <tbody className="divide-y divide-gray-50">
                 <AnimatePresence>
                   {filteredLinks.map(link => {
-                    const shortUrl = `${BASE_URL}/api/short-links/${link.slug}`;
                     const isCopied = copiedId === link.id;
                     const isDeleting = deletingId === link.id;
                     return (
@@ -237,9 +352,8 @@ export default function ShortLinksPage() {
                         {/* Product */}
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center shrink-0 overflow-hidden relative">
-                              {/* Product image will not be available without extra fetch — use icon */}
-                              <Package size={18} className="text-gray-400" />
+                            <div className="w-10 h-10 bg-gray-100 rounded-xl shrink-0 overflow-hidden relative">
+                              <LinkThumb src={link.product_image} alt={link.product_name} />
                             </div>
                             <div>
                               <p className="font-bold text-gray-900 line-clamp-1 text-sm">{link.product_name}</p>
@@ -258,11 +372,9 @@ export default function ShortLinksPage() {
 
                         {/* Short URL */}
                         <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
-                            <code className="bg-gray-100 text-blue-700 px-3 py-1.5 rounded-lg text-xs font-black tracking-tight max-w-[220px] truncate">
-                              /api/short-links/{link.slug}
-                            </code>
-                          </div>
+                          <code className="bg-gray-100 text-blue-700 px-3 py-1.5 rounded-lg text-xs font-black tracking-tight max-w-[220px] truncate block">
+                            /api/short-links/{link.slug}
+                          </code>
                         </td>
 
                         {/* Clicks */}
@@ -317,125 +429,159 @@ export default function ShortLinksPage() {
         )}
       </div>
 
-      {/* Product Picker Modal */}
+      {/* ── Product Picker Modal ─────────────────────────────────────────── */}
       <AnimatePresence>
         {showProductPicker && (
           <>
+            {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => { setShowProductPicker(false); setSelectedProduct(null); setProductSearch(""); }}
+              onClick={closeModal}
               className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
             />
+
+            {/* Modal */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              initial={{ opacity: 0, scale: 0.96, y: 24 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
-              className="fixed inset-x-4 top-[5%] md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-[540px] bg-white rounded-3xl shadow-2xl z-50 overflow-hidden max-h-[90vh] flex flex-col"
+              exit={{ opacity: 0, scale: 0.96, y: 24 }}
+              transition={{ type: "spring", bounce: 0.18, duration: 0.35 }}
+              className="fixed inset-x-4 top-[4%] md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-[560px] bg-white rounded-3xl shadow-2xl z-50 overflow-hidden max-h-[92vh] flex flex-col"
             >
-              {/* Modal Header */}
-              <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+              {/* ── Header ── */}
+              <div className="px-6 pt-6 pb-4 border-b border-gray-100 flex items-center justify-between shrink-0">
                 <div>
                   <h2 className="text-xl font-black text-gray-900">اختر منتجاً</h2>
-                  <p className="text-gray-500 text-sm mt-0.5">سيتم إنشاء رابط مختصر يوجه إلى هذا المنتج</p>
+                  <p className="text-gray-400 text-sm mt-0.5">سيتم إنشاء رابط مختصر لهذا المنتج</p>
                 </div>
                 <button
-                  onClick={() => { setShowProductPicker(false); setSelectedProduct(null); setProductSearch(""); }}
-                  className="p-2 hover:bg-gray-100 rounded-xl transition-colors text-gray-500"
+                  onClick={closeModal}
+                  className="p-2 hover:bg-gray-100 rounded-xl transition-colors text-gray-400 hover:text-gray-700"
                 >
                   <X size={20} />
                 </button>
               </div>
 
-              {/* Search */}
-              <div className="p-4 border-b border-gray-50">
+              {/* ── Search bar ── */}
+              <div className="px-4 py-3 border-b border-gray-50 shrink-0">
                 <div className="relative">
-                  <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                   <input
                     type="text"
-                    placeholder="البحث عن منتج..."
+                    placeholder="ابحث عن منتج..."
                     value={productSearch}
                     onChange={e => setProductSearch(e.target.value)}
                     autoFocus
-                    className="w-full bg-gray-50 border border-gray-100 rounded-xl py-2.5 pr-10 pl-4 focus:ring-2 focus:ring-blue-500/20 outline-none text-sm font-medium"
+                    className="w-full bg-gray-50 border border-gray-100 rounded-xl py-2.5 pr-9 pl-4 focus:ring-2 focus:ring-blue-500/20 outline-none text-sm font-medium"
                   />
+                  {productSearch && (
+                    <button
+                      onClick={() => setProductSearch("")}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
                 </div>
               </div>
 
-              {/* Product List */}
-              <div className="overflow-y-auto flex-1 p-4 space-y-2">
+              {/* ── Product grid ── */}
+              <div className="overflow-y-auto flex-1 p-4">
                 {isLoadingProducts ? (
-                  <div className="flex items-center justify-center py-12">
-                    <Loader2 className="animate-spin text-blue-500" size={28} />
+                  <div className="flex flex-col items-center justify-center py-16 gap-3">
+                    <Loader2 className="animate-spin text-blue-500" size={32} />
+                    <p className="text-gray-400 text-sm font-medium">جاري تحميل المنتجات...</p>
                   </div>
                 ) : filteredProducts.length === 0 ? (
-                  <div className="text-center py-12 text-gray-400">
-                    <Package size={36} className="mx-auto mb-3 opacity-30" />
-                    <p className="font-bold">لا توجد منتجات</p>
+                  <div className="text-center py-16 text-gray-400">
+                    <Package size={40} className="mx-auto mb-3 opacity-30" />
+                    <p className="font-bold">لا توجد نتائج</p>
+                    <p className="text-xs mt-1">جرّب كلمة بحث مختلفة</p>
                   </div>
                 ) : (
-                  filteredProducts.map(product => {
-                    const isSelected = selectedProduct?.id === product.id;
-                    return (
-                      <button
-                        key={product.id}
-                        onClick={() => setSelectedProduct(isSelected ? null : (product as ProductSummary))}
-                        className={`w-full flex items-center gap-4 p-3 rounded-2xl border-2 transition-all text-right ${
-                          isSelected
-                            ? "border-blue-500 bg-blue-50 shadow-md shadow-blue-500/10"
-                            : "border-transparent hover:border-gray-200 hover:bg-gray-50"
-                        }`}
-                      >
-                        <div className="w-12 h-12 bg-gray-100 rounded-xl overflow-hidden shrink-0 relative">
-                          {product.image_url && product.image_url.startsWith("http") ? (
-                            <OptimizedImage
+                  <div className="space-y-1.5">
+                    {filteredProducts.map((product, idx) => {
+                      const isSelected = selectedProduct?.id === product.id;
+                      return (
+                        <button
+                          key={product.id}
+                          onClick={() => setSelectedProduct(isSelected ? null : product)}
+                          className={`w-full flex items-center gap-3 p-3 rounded-2xl border-2 transition-all duration-150 text-right group ${
+                            isSelected
+                              ? "border-blue-500 bg-blue-50 shadow-md shadow-blue-500/10"
+                              : "border-transparent hover:border-gray-200 hover:bg-gray-50/80"
+                          }`}
+                        >
+                          {/* Product image — fastest possible loading */}
+                          <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 relative bg-gray-100">
+                            <ProductThumb
                               src={product.image_url}
                               alt={product.name}
-                              fill
-                              className="object-cover"
+                              // Pass index so first N images load with high priority
+                              {...(idx < 4 ? { key: `priority-${product.id}` } : {})}
                             />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-300">
-                              <Package size={20} />
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className={`font-bold text-sm line-clamp-1 ${isSelected ? "text-blue-700" : "text-gray-900"}`}>
-                            {product.name}
-                          </p>
-                          <p className="text-xs text-gray-400 mt-0.5">
-                            {product.category || "—"} · {product.price.toLocaleString()} د.ج
-                          </p>
-                        </div>
-                        {isSelected && (
-                          <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center shrink-0">
+                          </div>
+
+                          {/* Info */}
+                          <div className="flex-1 min-w-0 text-right">
+                            <p className={`font-bold text-sm line-clamp-1 transition-colors ${
+                              isSelected ? "text-blue-700" : "text-gray-900"
+                            }`}>
+                              {product.name}
+                            </p>
+                            <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1.5">
+                              <span>{product.category || "—"}</span>
+                              <span className="w-1 h-1 rounded-full bg-gray-300 inline-block" />
+                              <span className="font-bold text-gray-600">{product.price.toLocaleString()} د.ج</span>
+                            </p>
+                          </div>
+
+                          {/* Check */}
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-all duration-150 ${
+                            isSelected
+                              ? "bg-blue-600 scale-100"
+                              : "bg-gray-200 scale-0 group-hover:scale-75 group-hover:opacity-40"
+                          }`}>
                             <CheckCircle2 size={14} className="text-white" />
                           </div>
-                        )}
-                      </button>
-                    );
-                  })
+                        </button>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
 
-              {/* Footer */}
-              <div className="p-4 border-t border-gray-100 bg-gray-50/50">
-                {selectedProduct && (
-                  <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 mb-3 flex items-center gap-2">
-                    <CheckCircle2 size={16} className="text-blue-600 shrink-0" />
-                    <div className="text-sm">
-                      <span className="text-gray-500">سيتم إنشاء رابط لـ: </span>
-                      <span className="font-black text-blue-700">{selectedProduct.name}</span>
-                    </div>
-                  </div>
-                )}
+              {/* ── Footer ── */}
+              <div className="px-4 pb-4 pt-3 border-t border-gray-100 bg-gray-50/60 shrink-0">
+                <AnimatePresence>
+                  {selectedProduct && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                      animate={{ opacity: 1, height: "auto", marginBottom: 12 }}
+                      exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-center gap-2.5">
+                        {/* Mini preview */}
+                        <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 relative bg-gray-100">
+                          <ProductThumb src={selectedProduct.image_url} alt={selectedProduct.name} />
+                        </div>
+                        <div className="flex-1 min-w-0 text-right">
+                          <p className="text-xs text-gray-500">سيتم إنشاء رابط لـ</p>
+                          <p className="font-black text-blue-700 text-sm line-clamp-1">{selectedProduct.name}</p>
+                        </div>
+                        <CheckCircle2 size={18} className="text-blue-500 shrink-0" />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
                 <button
                   onClick={createShortLink}
                   disabled={!selectedProduct || isCreating}
-                  className="w-full bg-blue-600 text-white py-3.5 rounded-xl font-black text-base hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full bg-blue-600 text-white py-3.5 rounded-xl font-black text-base hover:bg-blue-700 active:scale-[0.98] transition-all shadow-lg shadow-blue-500/25 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isCreating ? (
                     <><Loader2 size={20} className="animate-spin" /> جاري الإنشاء...</>

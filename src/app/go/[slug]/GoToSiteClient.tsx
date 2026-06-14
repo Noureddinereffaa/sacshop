@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Globe, ArrowRight, ExternalLink, Smartphone } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { Globe, ArrowRight, Smartphone, ExternalLink } from "lucide-react";
 import { useSettingsStore } from "@/store/settingsStore";
 
 interface GoToSiteProps {
@@ -18,27 +18,83 @@ export default function GoToSiteClient({
   destination,
 }: GoToSiteProps) {
   const { branding } = useSettingsStore();
-  const [showFallback, setShowFallback] = useState(false);
+  const [isFacebook, setIsFacebook] = useState(false);
   const [isAndroid, setIsAndroid] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(false);
+  const [breakoutAttempted, setBreakoutAttempted] = useState(false);
+  const hasAutoBroken = useRef(false);
 
   useEffect(() => {
     const ua = navigator.userAgent;
+    const fb = /FBAN|FBAV|Instagram|Mobile\/FB/i.test(ua);
     const android = /Android/i.test(ua);
-    setIsAndroid(android);
+    const ios = /iPhone|iPad|iPod/i.test(ua);
 
-    if (android) {
-      // Auto breakout for Android: try to open in Chrome
+    setIsFacebook(fb);
+    setIsAndroid(android);
+    setIsIOS(ios);
+
+    // Auto breakout on Android when in Facebook
+    if (fb && android && !hasAutoBroken.current) {
+      hasAutoBroken.current = true;
+      // Try to open in external browser
       const cleanUrl = destination.replace(/^https?:\/\//, "");
-      const intentUrl = `intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(destination)};end`;
-      window.location.replace(intentUrl);
-    } else {
-      // iOS / other: show fallback button after 2s
-      const timer = setTimeout(() => setShowFallback(true), 2000);
-      return () => clearTimeout(timer);
+      const intentUrl = `intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;end`;
+      
+      // Attempt breakout, show instructions if it fails
+      try {
+        window.location.href = intentUrl;
+      } catch {
+        setShowInstructions(true);
+      }
+      
+      // If still on page after 3s, show fallback
+      setTimeout(() => {
+        setBreakoutAttempted(true);
+        setShowInstructions(true);
+      }, 3000);
+    }
+
+    // iOS: show instructions immediately
+    if (fb && ios) {
+      setShowInstructions(true);
     }
   }, [destination]);
+
+  // Handle "Go to Website" click - try to break out of WebView
+  function handleGoToSite(e: React.MouseEvent) {
+    e.preventDefault();
+
+    if (isAndroid) {
+      // Android: try Chrome intent first
+      const cleanUrl = destination.replace(/^https?:\/\//, "");
+      try {
+        window.location.href = `intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(destination)};end`;
+      } catch {
+        // Fallback: open in new window
+        window.open(destination, "_blank");
+      }
+    } else if (isFacebook) {
+      // iOS/other FB: try window.open which may break out
+      window.open(destination, "_blank", "noopener,noreferrer");
+    } else {
+      // Normal browser: just navigate
+      window.location.href = destination;
+    }
+  }
+
+  // Handle "Return to Facebook"
+  function handleReturnToFacebook() {
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      // Fallback: go to Facebook mobile
+      window.location.href = "https://m.facebook.com";
+    }
+  }
 
   return (
     <div
@@ -50,7 +106,6 @@ export default function GoToSiteClient({
       {/* Decorative background circles */}
       <div className="absolute top-0 right-0 w-72 h-72 bg-primary/5 rounded-full -translate-y-1/3 translate-x-1/3 blur-3xl" />
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-pink-500/5 rounded-full translate-y-1/3 -translate-x-1/3 blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-yellow-400/5 rounded-full -translate-x-1/2 -translate-y-1/2 blur-2xl" />
 
       {/* Main Card */}
       <div className="relative z-10 w-full max-w-md">
@@ -116,25 +171,18 @@ export default function GoToSiteClient({
           {/* Buttons */}
           <div className="px-6 pb-6 pt-2 space-y-3">
             {/* Primary: Go to Website */}
-            <a
-              href={destination}
+            <button
+              onClick={handleGoToSite}
               className="flex items-center justify-center gap-3 w-full bg-primary hover:bg-primary/90 text-white py-4 rounded-2xl font-black text-lg transition-all active:scale-[0.97] shadow-lg shadow-primary/25"
             >
               <Globe size={22} />
               <span>الذهاب إلى الموقع</span>
-              <ArrowRight size={20} className="rotate-180" />
-            </a>
+              <ExternalLink size={18} />
+            </button>
 
             {/* Secondary: Return to Facebook */}
             <button
-              onClick={() => {
-                // Try to go back, or close the tab
-                if (window.history.length > 1) {
-                  window.history.back();
-                } else {
-                  window.close();
-                }
-              }}
+              onClick={handleReturnToFacebook}
               className="flex items-center justify-center gap-3 w-full bg-gray-900 hover:bg-gray-800 text-white py-4 rounded-2xl font-black text-base transition-all active:scale-[0.97]"
             >
               <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
@@ -143,21 +191,31 @@ export default function GoToSiteClient({
               <span>العودة إلى فيسبوك</span>
             </button>
 
-            {/* Fallback instruction (iOS) */}
-            {showFallback && (
+            {/* Instructions for Facebook users */}
+            {isFacebook && showInstructions && (
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mt-2">
-                <p className="text-amber-800 text-sm font-bold text-center leading-relaxed">
-                  اضغط على النقاط الثلاث
-                  <span className="inline-block mx-1 bg-amber-200/60 px-2 py-0.5 rounded-md font-black">•••</span>
-                  في الأعلى، ثم اختر
-                  <strong className="text-amber-900"> &quot;فتح في المتصفح&quot;</strong>
+                <p className="text-amber-800 text-sm font-bold text-center leading-relaxed mb-3">
+                  للمتابعة في المتصفح الأساسي:
                 </p>
+                <ol className="text-amber-800 text-sm space-y-2">
+                  <li className="flex items-start gap-2">
+                    <span className="bg-amber-200 text-amber-900 w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shrink-0">1</span>
+                    <span>اضغط على النقاط الثلاث
+                      <span className="inline-block mx-1 bg-amber-200/60 px-2 py-0.5 rounded-md font-black">•••</span>
+                      في الأعلى
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="bg-amber-200 text-amber-900 w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shrink-0">2</span>
+                    <span>اختر <strong className="text-amber-900">&quot;فتح في المتصفح&quot;</strong></span>
+                  </li>
+                </ol>
               </div>
             )}
           </div>
         </div>
 
-        {/* Footer branding */}
+        {/* Footer */}
         <p className="text-center text-xs text-gray-400 mt-6 font-bold">
           {branding?.storeName || "Service Serigraphie"} &copy; {new Date().getFullYear()}
         </p>

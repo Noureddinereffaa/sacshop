@@ -33,7 +33,9 @@ interface ShortLink {
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ||
-  (typeof window !== "undefined" ? window.location.origin : "");
+  (typeof window !== "undefined" && !window.location.origin.includes("localhost")
+    ? window.location.origin
+    : "https://serviceserigraphie.com");
 
 // ─── Ultra-fast thumbnail component for popup images ───────────────────────
 // Uses native <img> with decoding=async + fetchpriority=high for max speed.

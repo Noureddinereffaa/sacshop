@@ -53,6 +53,9 @@ export async function POST(req: NextRequest) {
   const productId = product_id;
   const finalDestination = `${SITE_URL}/products/${productId}`;
 
+  // Force HTTPS on product image - browsers block HTTP images on HTTPS pages
+  const safeImage = product_image ? product_image.replace(/^http:\/\//, "https://") : null;
+
   let slug = "";
   for (let attempt = 0; attempt < 5; attempt++) {
     slug = generateSlug();
@@ -66,7 +69,7 @@ export async function POST(req: NextRequest) {
 
   const { data, error } = await sb
     .from("short_links")
-    .insert({ slug, product_id, product_name, product_image: product_image || null, destination: finalDestination })
+    .insert({ slug, product_id, product_name, product_image: safeImage, destination: finalDestination })
     .select()
     .single();
 

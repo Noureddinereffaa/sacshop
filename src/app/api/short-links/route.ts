@@ -10,19 +10,14 @@ function getAdminSupabase() {
   return createClient(url, key);
 }
 
-function generateSlug(): string {
+function generateSlug(type: string): string {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-  let slug = "p-";
+  const prefix = type === "category" ? "c-" : "p-";
+  let slug = prefix;
   for (let i = 0; i < 5; i++) {
     slug += chars[Math.floor(Math.random() * chars.length)];
   }
   return slug;
-}
-
-function sanitizeDestination(dest: string): string {
-  // Always force production URL - never allow localhost
-  const path = dest.replace(/^https?:\/\/[^\/]+/, "");
-  return SITE_URL + path;
 }
 
 export async function GET() {
@@ -43,22 +38,27 @@ export async function POST(req: NextRequest) {
   if (!sb) return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
 
   const body = await req.json();
-  const { product_id, product_name, product_image, destination } = body;
+  const { product_id, product_name, product_image, destination, type, category_name } = body;
 
   if (!product_id || !product_name) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
-  // ALWAYS build destination server-side using SITE_URL - never trust client
-  const productId = product_id;
-  const finalDestination = `${SITE_URL}/products/${productId}`;
+  const linkType = type === "category" ? "category" : "product";
 
-  // Force HTTPS on product image - browsers block HTTP images on HTTPS pages
+  // Build destination server-side - never trust client
+  let finalDestination: string;
+  if (linkType === "category") {
+    finalDestination = `${SITE_URL}/products?category=${encodeURIComponent(category_name || product_name)}`;
+  } else {
+    finalDestination = `${SITE_URL}/products/${product_id}`;
+  }
+
   const safeImage = product_image ? product_image.replace(/^http:\/\//, "https://") : null;
 
   let slug = "";
   for (let attempt = 0; attempt < 5; attempt++) {
-    slug = generateSlug();
+    slug = generateSlug(linkType);
     const { data: existing } = await sb
       .from("short_links")
       .select("id")
@@ -69,7 +69,14 @@ export async function POST(req: NextRequest) {
 
   const { data, error } = await sb
     .from("short_links")
-    .insert({ slug, product_id, product_name, product_image: safeImage, destination: finalDestination })
+    .insert({
+      slug,
+      product_id,
+      product_name,
+      product_image: safeImage,
+      destination: finalDestination,
+      type: linkType,
+    })
     .select()
     .single();
 

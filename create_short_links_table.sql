@@ -41,3 +41,16 @@ BEGIN
     ALTER TABLE public.short_links ADD COLUMN product_image TEXT;
   END IF;
 END $$;
+
+-- ============================================================
+-- MIGRATION: Add type column for product vs category links
+-- ============================================================
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'short_links' AND column_name = 'type'
+  ) THEN
+    ALTER TABLE public.short_links ADD COLUMN type TEXT NOT NULL DEFAULT 'product';
+  END IF;
+END $$;

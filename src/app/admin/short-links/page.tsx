@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+type LinkType = "product" | "category";
+
 interface ShortLink {
   id: string;
   slug: string;
@@ -29,6 +31,7 @@ interface ShortLink {
   destination: string;
   clicks: number;
   created_at: string;
+  type: string;
 }
 
 const BASE_URL =
@@ -128,8 +131,12 @@ export default function ShortLinksPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [linkType, setLinkType] = useState<LinkType>("product");
   const [showProductPicker, setShowProductPicker] = useState(false);
   const [productSearch, setProductSearch] = useState("");
+  const [showCategoryForm, setShowCategoryForm] = useState(false);
+  const [categoryName, setCategoryName] = useState("");
+  const [categoryImage, setCategoryImage] = useState("");
   const preloadedRef = useRef(false);
 
   const fetchLinks = useCallback(async () => {
@@ -195,7 +202,6 @@ export default function ShortLinksPage() {
   async function createShortLink() {
     if (!selectedProduct) return;
     setIsCreating(true);
-    const destination = `${BASE_URL}/products/${selectedProduct.id}`;
     await fetch("/api/short-links", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -203,13 +209,34 @@ export default function ShortLinksPage() {
         product_id: selectedProduct.id,
         product_name: selectedProduct.name,
         product_image: selectedProduct.image_url || null,
-        destination,
+        type: "product",
       }),
     });
     await fetchLinks();
     setSelectedProduct(null);
     setShowProductPicker(false);
     setProductSearch("");
+    setIsCreating(false);
+  }
+
+  async function createCategoryLink() {
+    if (!categoryName.trim()) return;
+    setIsCreating(true);
+    await fetch("/api/short-links", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        product_id: categoryName.trim().toLowerCase().replace(/\s+/g, "-"),
+        product_name: categoryName.trim(),
+        product_image: categoryImage?.trim() ? categoryImage.trim().replace(/^http:\/\//, "https://") : null,
+        type: "category",
+        category_name: categoryName.trim(),
+      }),
+    });
+    await fetchLinks();
+    setCategoryName("");
+    setCategoryImage("");
+    setShowCategoryForm(false);
     setIsCreating(false);
   }
 
@@ -251,13 +278,46 @@ export default function ShortLinksPage() {
             أنشئ روابط احترافية مختصرة من دومينك الخاص لاستخدامها في إعلانات فيسبوك
           </p>
         </div>
-        <button
-          onClick={() => setShowProductPicker(true)}
-          className="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/25 flex items-center gap-2 w-full md:w-auto justify-center"
-        >
-          <Plus size={20} />
-          إنشاء رابط جديد
-        </button>
+        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full md:w-auto">
+          {/* Link Type Toggle */}
+          <div className="bg-gray-100 rounded-xl p-1 flex self-stretch md:self-auto">
+            <button
+              onClick={() => setLinkType("product")}
+              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                linkType === "product"
+                  ? "bg-white text-blue-600 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <Package size={16} className="inline-block ml-1.5" />
+              منتج
+            </button>
+            <button
+              onClick={() => setLinkType("category")}
+              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                linkType === "category"
+                  ? "bg-white text-purple-600 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <Link2 size={16} className="inline-block ml-1.5" />
+              تصنيف
+            </button>
+          </div>
+          <button
+            onClick={() => {
+              if (linkType === "category") {
+                setShowCategoryForm(true);
+              } else {
+                setShowProductPicker(true);
+              }
+            }}
+            className="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/25 flex items-center gap-2 w-full md:w-auto justify-center"
+          >
+            <Plus size={20} />
+            إنشاء رابط {linkType === "category" ? "تصنيف" : "جديد"}
+          </button>
+        </div>
       </div>
 
       {/* Stats Row */}
@@ -331,6 +391,7 @@ export default function ShortLinksPage() {
               <thead>
                 <tr className="bg-gray-50 text-gray-400 text-xs font-black uppercase tracking-widest border-b border-gray-100">
                   <th className="px-6 py-5">المنتج</th>
+                  <th className="px-6 py-5">النوع</th>
                   <th className="px-6 py-5">الرابط المختصر</th>
                   <th className="px-6 py-5 text-center">النقرات</th>
                   <th className="px-6 py-5">التاريخ</th>
@@ -369,6 +430,17 @@ export default function ShortLinksPage() {
                               </a>
                             </div>
                           </div>
+                        </td>
+
+                        {/* Type */}
+                        <td className="px-6 py-4">
+                          <span className={`inline-block px-2.5 py-1 rounded-lg text-xs font-black ${
+                            link.type === "category"
+                              ? "bg-purple-50 text-purple-700"
+                              : "bg-blue-50 text-blue-700"
+                          }`}>
+                            {link.type === "category" ? "تصنيف" : "منتج"}
+                          </span>
                         </td>
 
                         {/* Short URL */}
@@ -597,6 +669,92 @@ export default function ShortLinksPage() {
                     <><Loader2 size={20} className="animate-spin" /> جاري الإنشاء...</>
                   ) : (
                     <><Zap size={20} /> إنشاء الرابط المختصر</>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ── Category Form Modal ───────────────────────────────────────────── */}
+      <AnimatePresence>
+        {showCategoryForm && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => { if (!isCreating) { setShowCategoryForm(false); } }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: 24 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 24 }}
+              transition={{ type: "spring", bounce: 0.18, duration: 0.35 }}
+              className="fixed inset-x-4 top-[20%] md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-[480px] bg-white rounded-3xl shadow-2xl z-50 overflow-hidden"
+            >
+              <div className="px-6 pt-6 pb-4 border-b border-gray-100 flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-black text-gray-900">رابط مختصر لتصنيف</h2>
+                  <p className="text-gray-400 text-sm mt-0.5">سيتم إنشاء رابط مختصر لجميع منتجات هذا التصنيف</p>
+                </div>
+                <button
+                  onClick={() => { if (!isCreating) { setShowCategoryForm(false); } }}
+                  className="p-2 hover:bg-gray-100 rounded-xl transition-colors text-gray-400 hover:text-gray-700"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1.5">اسم التصنيف</label>
+                  <input
+                    type="text"
+                    value={categoryName}
+                    onChange={e => setCategoryName(e.target.value)}
+                    placeholder="مثال: طباعة على التيشيرتات"
+                    autoFocus
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-purple-500/20 outline-none font-medium"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1.5">صورة التصنيف (اختياري)</label>
+                  <input
+                    type="text"
+                    value={categoryImage}
+                    onChange={e => setCategoryImage(e.target.value)}
+                    placeholder="رابط الصورة (اختياري)"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-purple-500/20 outline-none font-medium"
+                  />
+                </div>
+                <div className="bg-gradient-to-l from-purple-50 to-blue-50 border border-purple-200 rounded-xl p-4">
+                  <p className="text-sm font-bold text-purple-700 mb-1">سيتم التوجيه إلى:</p>
+                  <code className="text-xs text-gray-600 break-all">
+                    {BASE_URL}/products?category={categoryName ? encodeURIComponent(categoryName) : "(اسم التصنيف)"}
+                  </code>
+                </div>
+              </div>
+
+              <div className="px-6 pb-6 pt-3 border-t border-gray-100 bg-gray-50/60 flex gap-3">
+                <button
+                  onClick={() => setShowCategoryForm(false)}
+                  disabled={isCreating}
+                  className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-300 transition-all disabled:opacity-40"
+                >
+                  إلغاء
+                </button>
+                <button
+                  onClick={createCategoryLink}
+                  disabled={!categoryName.trim() || isCreating}
+                  className="flex-[2] bg-purple-600 text-white py-3 rounded-xl font-bold hover:bg-purple-700 active:scale-[0.98] transition-all shadow-lg shadow-purple-500/25 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isCreating ? (
+                    <><Loader2 size={20} className="animate-spin" /> جاري الإنشاء...</>
+                  ) : (
+                    <><Zap size={20} /> إنشاء رابط التصنيف</>
                   )}
                 </button>
               </div>

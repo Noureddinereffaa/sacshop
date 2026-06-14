@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://serviceserigraphie.com").replace(/\/+$/, "");
+
 function getAdminSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim().replace(/['"]/g, "");
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim().replace(/['"]/g, "");
@@ -8,7 +10,6 @@ function getAdminSupabase() {
   return createClient(url, key);
 }
 
-/** Generate a short random slug like "p-a3k9" */
 function generateSlug(): string {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
   let slug = "p-";
@@ -18,7 +19,12 @@ function generateSlug(): string {
   return slug;
 }
 
-// GET  /api/short-links  → list all short links
+function sanitizeDestination(dest: string): string {
+  // Always force production URL - never allow localhost
+  const path = dest.replace(/^https?:\/\/[^\/]+/, "");
+  return SITE_URL + path;
+}
+
 export async function GET() {
   const sb = getAdminSupabase();
   if (!sb) return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
@@ -32,7 +38,6 @@ export async function GET() {
   return NextResponse.json({ data });
 }
 
-// POST /api/short-links  → create a new short link
 export async function POST(req: NextRequest) {
   const sb = getAdminSupabase();
   if (!sb) return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
@@ -40,11 +45,14 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const { product_id, product_name, product_image, destination } = body;
 
-  if (!product_id || !product_name || !destination) {
+  if (!product_id || !product_name) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
-  // Generate a unique slug (retry up to 5 times on collision)
+  // ALWAYS build destination server-side using SITE_URL - never trust client
+  const productId = product_id;
+  const finalDestination = `${SITE_URL}/products/${productId}`;
+
   let slug = "";
   for (let attempt = 0; attempt < 5; attempt++) {
     slug = generateSlug();
@@ -58,7 +66,7 @@ export async function POST(req: NextRequest) {
 
   const { data, error } = await sb
     .from("short_links")
-    .insert({ slug, product_id, product_name, product_image: product_image || null, destination })
+    .insert({ slug, product_id, product_name, product_image: product_image || null, destination: finalDestination })
     .select()
     .single();
 
@@ -66,7 +74,6 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ data });
 }
 
-// DELETE /api/short-links?id=xxx  → delete a short link
 export async function DELETE(req: NextRequest) {
   const sb = getAdminSupabase();
   if (!sb) return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });

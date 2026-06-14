@@ -22,8 +22,9 @@ export default function GoToSiteClient({
   const [showPage, setShowPage] = useState(false);
   const [isAndroid, setIsAndroid] = useState(false);
   const [isFacebook, setIsFacebook] = useState(false);
-  const [imgLoaded, setImgLoaded] = useState(false);
-  const [imgError, setImgError] = useState(false);
+
+  // Always ensure HTTPS
+  const imageUrl = productImage ? productImage.replace(/^http:\/\//, "https://") : null;
 
   useEffect(() => {
     const ua = navigator.userAgent;
@@ -67,23 +68,21 @@ export default function GoToSiteClient({
       <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full -translate-y-1/4 translate-x-1/4" />
       <div className="absolute top-10 right-10 w-20 h-20 bg-pink-400/20 rounded-full" />
       <div className="absolute top-20 right-32 w-3 h-3 bg-white/30 rounded-full" />
-      <div className="absolute top-32 right-16 w-2 h-2 bg-yellow-300/40 rounded-full" />
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-400/10 rounded-full translate-y-1/3 -translate-x-1/3" />
 
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-5 py-8">
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-5 py-6">
         <div className="w-full max-w-sm">
 
           {/* Logo */}
-          <div className="text-center mb-6">
+          <div className="text-center mb-4">
             {branding?.logo ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={branding.logo} alt={branding.storeName} className="h-20 w-auto mx-auto" />
+              <img src={branding.logo} alt={branding.storeName} className="h-16 w-auto mx-auto" />
             ) : (
               <>
-                <div className="flex items-center justify-center gap-1 mb-1">
-                  <span className="text-3xl font-black text-white tracking-tight">SERVICE</span>
-                </div>
-                <span className="text-sm font-bold text-white/70 tracking-[0.3em]">SERIGRAPHIE</span>
+                <span className="text-2xl font-black text-white tracking-tight">SERVICE</span>
+                <br />
+                <span className="text-xs font-bold text-white/70 tracking-[0.3em]">SERIGRAPHIE</span>
               </>
             )}
           </div>
@@ -92,26 +91,19 @@ export default function GoToSiteClient({
           <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
 
             {/* Product Image */}
-            {productImage && !imgError && (
-              <div className="relative w-full aspect-square bg-gray-100">
+            {imageUrl && (
+              <div style={{ width: "100%", height: "auto", maxHeight: "350px", overflow: "hidden", backgroundColor: "#f3f4f6" }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={productImage.replace(/^http:\/\//, "https://")}
+                  src={imageUrl}
                   alt={productName}
-                  className={`w-full h-full object-cover transition-opacity duration-300 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
-                  onLoad={() => setImgLoaded(true)}
-                  onError={() => setImgError(true)}
+                  style={{ width: "100%", height: "auto", display: "block", objectFit: "cover" }}
                 />
-                {!imgLoaded && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-10 h-10 border-3 border-primary/20 border-t-primary rounded-full animate-spin" />
-                  </div>
-                )}
               </div>
             )}
 
             {/* Welcome */}
-            <div className="pt-6 pb-2 px-6 text-center">
+            <div className="pt-5 pb-2 px-6 text-center">
               <div className="text-4xl mb-2">👋</div>
               <h1 className="text-2xl font-black text-gray-900 mb-1">مرحباً بك!</h1>
               <div className="w-20 h-1 mx-auto bg-gradient-to-r from-yellow-400 via-primary to-pink-500 rounded-full mt-2" />
@@ -127,7 +119,7 @@ export default function GoToSiteClient({
             </div>
 
             {/* Instructions */}
-            <div className="mx-5 mb-5 bg-blue-50/80 rounded-2xl p-4 border border-blue-100/50">
+            <div className="mx-5 mb-4 bg-blue-50/80 rounded-2xl p-4 border border-blue-100/50">
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-lg">💡</span>
                 <span className="text-blue-600 font-black text-sm">خطوة بسيطة:</span>
@@ -153,7 +145,7 @@ export default function GoToSiteClient({
             </div>
 
             {/* Buttons */}
-            <div className="px-5 pb-6 flex gap-3">
+            <div className="px-5 pb-5 flex gap-3">
               {/* Return to Facebook Page */}
               <a
                 href={FACEBOOK_PAGE}

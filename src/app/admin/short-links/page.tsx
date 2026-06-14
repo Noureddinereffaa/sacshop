@@ -228,7 +228,7 @@ export default function ShortLinksPage() {
   async function createShortLink() {
     if (!selectedProduct) return;
     setIsCreating(true);
-    await fetch("/api/short-links", {
+    const res = await fetch("/api/short-links", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -238,6 +238,12 @@ export default function ShortLinksPage() {
         type: "product",
       }),
     });
+    const json = await res.json();
+    if (!res.ok) {
+      alert("خطأ في إنشاء الرابط: " + (json.error || "حاول مرة أخرى"));
+      setIsCreating(false);
+      return;
+    }
     await fetchLinks();
     setSelectedProduct(null);
     setShowProductPicker(false);
@@ -265,7 +271,7 @@ export default function ShortLinksPage() {
     const catName = selectedCategory.label.trim();
     const productId = catName.toLowerCase().replace(/\s+/g, "-");
     const image = await fetchCategoryImage(catName);
-    await fetch("/api/short-links", {
+    const res = await fetch("/api/short-links", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -276,6 +282,12 @@ export default function ShortLinksPage() {
         category_name: catName,
       }),
     });
+    const json = await res.json();
+    if (!res.ok) {
+      alert("خطأ في إنشاء الرابط: " + (json.error || "حاول مرة أخرى"));
+      setIsCreating(false);
+      return;
+    }
     await fetchLinks();
     setSelectedCategory(null);
     setShowCategoryPicker(false);

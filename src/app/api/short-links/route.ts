@@ -67,16 +67,21 @@ export async function POST(req: NextRequest) {
     if (!existing) break;
   }
 
+  // Build insert data - only include 'type' if it's category (for backward compat)
+  const insertData: Record<string, unknown> = {
+    slug,
+    product_id,
+    product_name,
+    product_image: safeImage,
+    destination: finalDestination,
+  };
+  if (linkType === "category") {
+    insertData.type = linkType;
+  }
+
   const { data, error } = await sb
     .from("short_links")
-    .insert({
-      slug,
-      product_id,
-      product_name,
-      product_image: safeImage,
-      destination: finalDestination,
-      type: linkType,
-    })
+    .insert(insertData)
     .select()
     .single();
 

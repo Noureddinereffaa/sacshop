@@ -116,6 +116,12 @@ export default async function ReceiptPage({ params }: { params: Promise<{ id: st
                   <span className="text-gray-500 font-bold text-sm">وقت الطلب:</span>
                   <span className="font-black text-gray-900">{new Date(order.created_at).toLocaleTimeString("ar-DZ", { hour: "2-digit", minute: "2-digit" })}</span>
                 </div>
+                {metadata.popup_source && (
+                  <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                    <span className="text-gray-500 font-bold text-sm">مصدر الطلب:</span>
+                    <span className="font-black text-pink-600 text-sm flex items-center gap-1">🎯 عرض منبثق</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

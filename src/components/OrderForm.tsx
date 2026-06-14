@@ -280,7 +280,7 @@ export default function OrderForm({
       if (storedUtms) utms = JSON.parse(storedUtms);
     } catch (e) {}
 
-    const orderMetadata = {
+    const orderMetadata: Record<string, unknown> = {
       ...(!isCartOrder ? { 
         num_colors: numColors, 
         is_double_sided: isDoubleSided,
@@ -288,6 +288,19 @@ export default function OrderForm({
       } : {}),
       utms: utms
     };
+
+    // Check if user came from popup offer
+    const popupClicked = typeof window !== "undefined" && localStorage.getItem("servseri_popup_clicked");
+    if (popupClicked) {
+      orderMetadata.popup_source = true;
+      orderMetadata.popup_clicked_at = popupClicked;
+      localStorage.removeItem("servseri_popup_clicked");
+    }
+
+    // Remove null/undefined values
+    Object.keys(orderMetadata).forEach(k => {
+      if (orderMetadata[k] === undefined || orderMetadata[k] === null) delete orderMetadata[k];
+    });
 
     // ── Save order to database first ─────────────────────────────────────────
     const { error } = await supabase.from("orders").insert({

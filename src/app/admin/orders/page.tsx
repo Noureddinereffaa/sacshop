@@ -45,6 +45,8 @@ interface Order {
     capi_sync_status?: 'success' | 'failed';
     capi_last_error?: string;
     capi_event_id?: string;
+    popup_source?: boolean;
+    popup_clicked_at?: string;
     utms?: {
       utm_source?: string;
       utm_medium?: string;
@@ -471,6 +473,7 @@ export default function AdminOrders() {
                           <StatusIcon size={14} /> {st.label}
                         </span>
                         {order.is_fake && <span className="inline-block px-2 py-1 bg-red-100 text-red-600 rounded text-[10px] font-bold shadow-sm">وهمي</span>}
+                        {order.metadata?.popup_source && <span className="inline-block px-2 py-1 bg-pink-100 text-pink-600 rounded text-[10px] font-bold shadow-sm">عرض منبثق</span>}
                       </div>
                     </td>
                     <td className="px-4 py-3 lg:px-6 lg:py-5 block lg:table-cell flex items-center justify-between lg:justify-end lg:text-left mt-2 lg:mt-0">
@@ -646,6 +649,24 @@ export default function AdminOrders() {
                           <p className="font-black text-primary">{value}</p>
                         </div>
                       ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Order Source Section */}
+                {selectedOrder.metadata?.popup_source && (
+                  <div className="mb-8">
+                    <p className="text-[10px] uppercase font-black tracking-widest text-gray-400 mb-3">مصدر الطلب</p>
+                    <div className="bg-gradient-to-l from-pink-50 to-rose-50 border border-pink-200 rounded-2xl p-4 flex items-center gap-3">
+                      <div className="w-10 h-10 bg-pink-100 rounded-xl flex items-center justify-center shrink-0">
+                        <Megaphone size={18} className="text-pink-600" />
+                      </div>
+                      <div>
+                        <p className="font-black text-pink-700 text-sm">عرض منبثق</p>
+                        <p className="text-xs text-pink-500 font-medium mt-0.5">
+                          العميل قام بالنقر على العرض المنبثق وقدّم طلباً
+                        </p>
+                      </div>
                     </div>
                   </div>
                 )}

@@ -93,7 +93,14 @@ export default function OfferPopup() {
             )}
 
             <div className="p-4 sm:p-6 bg-white w-full flex flex-col gap-3 z-10">
-              <Link href={popup.buttonLink || "/products"} onClick={closePopup} className="w-full">
+              <Link
+                href={popup.buttonLink || "/products"}
+                onClick={() => {
+                  localStorage.setItem("servseri_popup_clicked", "true");
+                  closePopup();
+                }}
+                className="w-full"
+              >
                 <button className="w-full bg-primary hover:bg-primary/90 text-white py-4 rounded-2xl font-black shadow-xl shadow-primary/20 flex items-center justify-center gap-3 group transition-all">
                   <span>{popup.buttonText || "اطلب الآن"}</span>
                   <ArrowRight size={20} className="rotate-180 group-hover:-translate-x-1 transition-transform" />

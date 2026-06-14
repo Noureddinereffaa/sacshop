@@ -16,7 +16,7 @@ interface ProductSummary {
 import {
   Link2, Copy, Trash2, Search, Plus, ExternalLink,
   Loader2, CheckCircle2, TrendingUp, MousePointerClick,
-  Package, Zap, Facebook, RefreshCw, X
+  Package, Zap, Facebook, RefreshCw, X, Eye
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -25,7 +25,7 @@ interface ShortLink {
   slug: string;
   product_id: string;
   product_name: string;
-  product_image?: string;
+  product_image?: string | null;
   destination: string;
   clicks: number;
   created_at: string;
@@ -284,9 +284,9 @@ export default function ShortLinksPage() {
           <Zap size={22} className="text-white" />
         </div>
         <div>
-          <p className="font-black text-lg">إعادة توجيه فورية &lt; 2 ثانية</p>
+          <p className="font-black text-lg">صفحة هبوط احترافية + إعادة توجيه فورية</p>
           <p className="text-blue-100 text-sm mt-0.5">
-            الروابط المختصرة تعيد التوجيه بشكل فوري إلى صفحة المنتج — مثالي لإعلانات فيسبوك وإنستغرام
+            عند فتح الرابط من فيسبوك، تظهر صفحة هبوط احترافية بصورة المنتج وزرين &quot;الذهاب للموقع&quot; و&quot;العودة لفيسبوك&quot;
           </p>
         </div>
       </div>
@@ -353,7 +353,7 @@ export default function ShortLinksPage() {
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-gray-100 rounded-xl shrink-0 overflow-hidden relative">
-                              <LinkThumb src={link.product_image} alt={link.product_name} />
+                              <LinkThumb src={link.product_image || undefined} alt={link.product_name} />
                             </div>
                             <div>
                               <p className="font-bold text-gray-900 line-clamp-1 text-sm">{link.product_name}</p>
@@ -395,6 +395,15 @@ export default function ShortLinksPage() {
                         {/* Actions */}
                         <td className="px-6 py-4">
                           <div className="flex items-center justify-center gap-2">
+                            <a
+                              href={`/go/${link.slug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-2 text-purple-500 hover:bg-purple-50 rounded-xl transition-colors"
+                              title="معاينة صفحة الهبوط"
+                            >
+                              <Eye size={16} />
+                            </a>
                             <button
                               onClick={() => copyLink(link.slug, link.id)}
                               className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black transition-all ${

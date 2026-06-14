@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
   if (!sb) return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
 
   const body = await req.json();
-  const { product_id, product_name, destination } = body;
+  const { product_id, product_name, product_image, destination } = body;
 
   if (!product_id || !product_name || !destination) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
 
   const { data, error } = await sb
     .from("short_links")
-    .insert({ slug, product_id, product_name, destination })
+    .insert({ slug, product_id, product_name, product_image: product_image || null, destination })
     .select()
     .single();
 

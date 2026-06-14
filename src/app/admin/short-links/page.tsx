@@ -2,9 +2,18 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
-import Image from "next/image";
+import {
+  Link2, Copy, Trash2, Search, Plus, ExternalLink,
+  Loader2, CheckCircle2, TrendingUp, MousePointerClick,
+  Package, Zap, Facebook, RefreshCw, X, Eye, Tags
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
-// Minimal product shape — matches the partial SELECT fields we fetch
+interface NavigationItem {
+  label: string;
+  href: string;
+}
+
 interface ProductSummary {
   id: string;
   name: string;
@@ -13,12 +22,6 @@ interface ProductSummary {
   price: number;
   is_published: boolean;
 }
-import {
-  Link2, Copy, Trash2, Search, Plus, ExternalLink,
-  Loader2, CheckCircle2, TrendingUp, MousePointerClick,
-  Package, Zap, Facebook, RefreshCw, X, Eye
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 
 type LinkType = "product" | "category";
 
@@ -134,9 +137,11 @@ export default function ShortLinksPage() {
   const [linkType, setLinkType] = useState<LinkType>("product");
   const [showProductPicker, setShowProductPicker] = useState(false);
   const [productSearch, setProductSearch] = useState("");
-  const [showCategoryForm, setShowCategoryForm] = useState(false);
-  const [categoryName, setCategoryName] = useState("");
-  const [categoryImage, setCategoryImage] = useState("");
+  const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+  const [categorySearch, setCategorySearch] = useState("");
+  const [categories, setCategories] = useState<NavigationItem[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<NavigationItem | null>(null);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const preloadedRef = useRef(false);
 
   const fetchLinks = useCallback(async () => {
@@ -177,6 +182,23 @@ export default function ShortLinksPage() {
     fetchLinks();
   }, [fetchLinks]);
 
+  // ── Fetch categories from navigation settings ───────────────────────────
+  useEffect(() => {
+    async function fetchCategories() {
+      if (!supabase) { setIsLoadingCategories(false); return; }
+      const { data } = await supabase
+        .from("settings")
+        .select("value")
+        .eq("key", "navigation")
+        .maybeSingle();
+      if (data?.value && Array.isArray(data.value)) {
+        setCategories(data.value as NavigationItem[]);
+      }
+      setIsLoadingCategories(false);
+    }
+    fetchCategories();
+  }, []);
+
   // ── When popup opens, preload remaining visible images ──────────────────
   useEffect(() => {
     if (!showProductPicker || products.length === 0) return;
@@ -199,6 +221,10 @@ export default function ShortLinksPage() {
     p.category?.toLowerCase().includes(productSearch.toLowerCase())
   );
 
+  const filteredCategories = categories.filter(c =>
+    c.label.toLowerCase().includes(categorySearch.toLowerCase())
+  );
+
   async function createShortLink() {
     if (!selectedProduct) return;
     setIsCreating(true);
@@ -219,24 +245,41 @@ export default function ShortLinksPage() {
     setIsCreating(false);
   }
 
+  async function fetchCategoryImage(categoryName: string): Promise<string | null> {
+    if (!supabase) return null;
+    const { data } = await supabase
+      .from("products")
+      .select("image_url")
+      .eq("is_published", true)
+      .neq("image_url", "")
+      .not("image_url", "is", null)
+      .filter("category", "ilike", `%${categoryName}%`)
+      .limit(1)
+      .maybeSingle();
+    return data?.image_url?.replace(/^http:\/\//, "https://") || null;
+  }
+
   async function createCategoryLink() {
-    if (!categoryName.trim()) return;
+    if (!selectedCategory) return;
     setIsCreating(true);
+    const catName = selectedCategory.label.trim();
+    const productId = catName.toLowerCase().replace(/\s+/g, "-");
+    const image = await fetchCategoryImage(catName);
     await fetch("/api/short-links", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        product_id: categoryName.trim().toLowerCase().replace(/\s+/g, "-"),
-        product_name: categoryName.trim(),
-        product_image: categoryImage?.trim() ? categoryImage.trim().replace(/^http:\/\//, "https://") : null,
+        product_id: productId,
+        product_name: catName,
+        product_image: image,
         type: "category",
-        category_name: categoryName.trim(),
+        category_name: catName,
       }),
     });
     await fetchLinks();
-    setCategoryName("");
-    setCategoryImage("");
-    setShowCategoryForm(false);
+    setSelectedCategory(null);
+    setShowCategoryPicker(false);
+    setCategorySearch("");
     setIsCreating(false);
   }
 
@@ -307,7 +350,7 @@ export default function ShortLinksPage() {
           <button
             onClick={() => {
               if (linkType === "category") {
-                setShowCategoryForm(true);
+                setShowCategoryPicker(true);
               } else {
                 setShowProductPicker(true);
               }
@@ -677,15 +720,15 @@ export default function ShortLinksPage() {
         )}
       </AnimatePresence>
 
-      {/* ── Category Form Modal ───────────────────────────────────────────── */}
+      {/* ── Category Picker Modal ────────────────────────────────────────── */}
       <AnimatePresence>
-        {showCategoryForm && (
+        {showCategoryPicker && (
           <>
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => { if (!isCreating) { setShowCategoryForm(false); } }}
+              onClick={() => { if (!isCreating) { setShowCategoryPicker(false); setSelectedCategory(null); setCategorySearch(""); } }}
               className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
             />
             <motion.div
@@ -693,63 +736,127 @@ export default function ShortLinksPage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 24 }}
               transition={{ type: "spring", bounce: 0.18, duration: 0.35 }}
-              className="fixed inset-x-4 top-[20%] md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-[480px] bg-white rounded-3xl shadow-2xl z-50 overflow-hidden"
+              className="fixed inset-x-4 top-[4%] md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-[560px] bg-white rounded-3xl shadow-2xl z-50 overflow-hidden max-h-[92vh] flex flex-col"
             >
-              <div className="px-6 pt-6 pb-4 border-b border-gray-100 flex items-center justify-between">
+              <div className="px-6 pt-6 pb-4 border-b border-gray-100 flex items-center justify-between shrink-0">
                 <div>
-                  <h2 className="text-xl font-black text-gray-900">رابط مختصر لتصنيف</h2>
+                  <h2 className="text-xl font-black text-gray-900">اختر تصنيفاً</h2>
                   <p className="text-gray-400 text-sm mt-0.5">سيتم إنشاء رابط مختصر لجميع منتجات هذا التصنيف</p>
                 </div>
                 <button
-                  onClick={() => { if (!isCreating) { setShowCategoryForm(false); } }}
+                  onClick={() => { if (!isCreating) { setShowCategoryPicker(false); setSelectedCategory(null); setCategorySearch(""); } }}
                   className="p-2 hover:bg-gray-100 rounded-xl transition-colors text-gray-400 hover:text-gray-700"
                 >
                   <X size={20} />
                 </button>
               </div>
 
-              <div className="p-6 space-y-4">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1.5">اسم التصنيف</label>
+              <div className="px-4 py-3 border-b border-gray-50 shrink-0">
+                <div className="relative">
+                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                   <input
                     type="text"
-                    value={categoryName}
-                    onChange={e => setCategoryName(e.target.value)}
-                    placeholder="مثال: طباعة على التيشيرتات"
+                    placeholder="ابحث عن تصنيف..."
+                    value={categorySearch}
+                    onChange={e => setCategorySearch(e.target.value)}
                     autoFocus
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-purple-500/20 outline-none font-medium"
+                    className="w-full bg-gray-50 border border-gray-100 rounded-xl py-2.5 pr-9 pl-4 focus:ring-2 focus:ring-purple-500/20 outline-none text-sm font-medium"
                   />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1.5">صورة التصنيف (اختياري)</label>
-                  <input
-                    type="text"
-                    value={categoryImage}
-                    onChange={e => setCategoryImage(e.target.value)}
-                    placeholder="رابط الصورة (اختياري)"
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-purple-500/20 outline-none font-medium"
-                  />
-                </div>
-                <div className="bg-gradient-to-l from-purple-50 to-blue-50 border border-purple-200 rounded-xl p-4">
-                  <p className="text-sm font-bold text-purple-700 mb-1">سيتم التوجيه إلى:</p>
-                  <code className="text-xs text-gray-600 break-all">
-                    {BASE_URL}/products?category={categoryName ? encodeURIComponent(categoryName) : "(اسم التصنيف)"}
-                  </code>
+                  {categorySearch && (
+                    <button
+                      onClick={() => setCategorySearch("")}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
                 </div>
               </div>
 
-              <div className="px-6 pb-6 pt-3 border-t border-gray-100 bg-gray-50/60 flex gap-3">
-                <button
-                  onClick={() => setShowCategoryForm(false)}
-                  disabled={isCreating}
-                  className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-300 transition-all disabled:opacity-40"
-                >
-                  إلغاء
-                </button>
+              <div className="overflow-y-auto flex-1 p-4">
+                {isLoadingCategories ? (
+                  <div className="flex flex-col items-center justify-center py-16 gap-3">
+                    <Loader2 className="animate-spin text-purple-500" size={32} />
+                    <p className="text-gray-400 text-sm font-medium">جاري تحميل التصنيفات...</p>
+                  </div>
+                ) : filteredCategories.length === 0 ? (
+                  <div className="text-center py-16 text-gray-400">
+                    <Tags size={40} className="mx-auto mb-3 opacity-30" />
+                    <p className="font-bold">{categories.length === 0 ? "لا توجد تصنيفات في القائمة" : "لا توجد نتائج"}</p>
+                    <p className="text-xs mt-1">
+                      {categories.length === 0
+                        ? "أضف تصنيفات من لوحة التحكم &gt; الإعدادات &gt; قائمة الخدمات"
+                        : "جرّب كلمة بحث مختلفة"}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    {filteredCategories.map((cat) => {
+                      const isSelected = selectedCategory?.label === cat.label;
+                      return (
+                        <button
+                          key={cat.label}
+                          onClick={() => setSelectedCategory(isSelected ? null : cat)}
+                          className={`w-full flex items-center gap-3 p-3 rounded-2xl border-2 transition-all duration-150 text-right group ${
+                            isSelected
+                              ? "border-purple-500 bg-purple-50 shadow-md shadow-purple-500/10"
+                              : "border-transparent hover:border-purple-200 hover:bg-purple-50/50"
+                          }`}
+                        >
+                          <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-purple-100 flex items-center justify-center">
+                            <Tags size={20} className={isSelected ? "text-purple-600" : "text-purple-400"} />
+                          </div>
+                          <div className="flex-1 min-w-0 text-right">
+                            <p className={`font-bold text-sm transition-colors ${
+                              isSelected ? "text-purple-700" : "text-gray-900"
+                            }`}>
+                              {cat.label}
+                            </p>
+                            <p className="text-xs text-gray-400 mt-0.5">
+                              الرابط: /products?category={encodeURIComponent(cat.label)}
+                            </p>
+                          </div>
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-all duration-150 ${
+                            isSelected
+                              ? "bg-purple-600 scale-100"
+                              : "bg-gray-200 scale-0 group-hover:scale-75 group-hover:opacity-40"
+                          }`}>
+                            <CheckCircle2 size={14} className="text-white" />
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <div className="px-4 pb-4 pt-3 border-t border-gray-100 bg-gray-50/60 shrink-0">
+                <AnimatePresence>
+                  {selectedCategory && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                      animate={{ opacity: 1, height: "auto", marginBottom: 12 }}
+                      exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="bg-purple-50 border border-purple-200 rounded-xl p-3 flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 bg-purple-100 flex items-center justify-center">
+                          <Tags size={16} className="text-purple-600" />
+                        </div>
+                        <div className="flex-1 min-w-0 text-right">
+                          <p className="text-xs text-gray-500">سيتم إنشاء رابط لتصنيف</p>
+                          <p className="font-black text-purple-700 text-sm line-clamp-1">{selectedCategory.label}</p>
+                        </div>
+                        <CheckCircle2 size={18} className="text-purple-500 shrink-0" />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
                 <button
                   onClick={createCategoryLink}
-                  disabled={!categoryName.trim() || isCreating}
-                  className="flex-[2] bg-purple-600 text-white py-3 rounded-xl font-bold hover:bg-purple-700 active:scale-[0.98] transition-all shadow-lg shadow-purple-500/25 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  disabled={!selectedCategory || isCreating}
+                  className="w-full bg-purple-600 text-white py-3.5 rounded-xl font-black text-base hover:bg-purple-700 active:scale-[0.98] transition-all shadow-lg shadow-purple-500/25 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isCreating ? (
                     <><Loader2 size={20} className="animate-spin" /> جاري الإنشاء...</>

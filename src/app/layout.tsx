@@ -32,6 +32,7 @@ export const revalidate = 60; // Revalidate settings every 60 seconds
 
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://serviceserigraphie.com"),
   title: "Service Serigraphie | طباعة أكياس، ملصقات، وتغليف في الجزائر",
   description: "Service Serigraphie - شريكك الأول في الجزائر للطباعة الاحترافية. نحن متخصصون في طباعة الأكياس الورقية والقماشية، الملصقات (Stickers)، وحلول التغليف المخصصة. جودة عالية وتوصيل لـ 58 ولاية.",
   keywords: ["طباعة", "أكياس ورقية", "ملصقات", "تغليف", "سيريغرافي", "الجزائر", "أكياس قماشية", "Service Serigraphie", "printing algeria"],

@@ -1,0 +1,789 @@
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  Phone, User, Loader2, Edit3, MessageCircle, 
+  ShoppingCart, Lock, Eye, EyeOff, CheckCircle2, 
+  Gift, Package, Crown, Sparkles, Star, RefreshCcw, ShieldCheck
+} from "lucide-react";
+import Link from "next/link";
+import { CartItem, Product } from "@/types";
+
+import { useCartStore } from "@/store/cartStore";
+
+interface OrderFormProps {
+  productId: string;
+  productName: string;
+  productPrice: number;
+  selectedSize?: string;
+  selectedColor?: string;
+  appliedOfferId?: string;
+  cartItems?: CartItem[];
+  quantity?: number;
+  product?: Product;
+  discountAmount?: number;
+  numColors?: number;
+  isDoubleSided?: boolean;
+  customVariantSelections?: Record<string, string>;
+  onAddToCart?: () => void;
+}
+
+// step: "info" → "success"
+type Step = "info" | "success";
+
+export default function OrderForm({ 
+  productId, 
+  productName, 
+  productPrice, 
+  selectedSize, 
+  selectedColor, 
+  appliedOfferId, 
+  cartItems = [], 
+  quantity = 1, 
+  discountAmount = 0, 
+  numColors,
+  isDoubleSided,
+  customVariantSelections = {},
+  product,
+  onAddToCart 
+}: OrderFormProps) {
+  const [step, setStep] = useState<Step>("info");
+  const [isLoading, setIsLoading] = useState(false);
+
+
+  const router = useRouter();
+  const successRef = useRef<HTMLDivElement>(null);
+  const errorRef = useRef<HTMLDivElement>(null);
+
+  const { customerStatus, customer, items, discountConfig } = useCartStore();
+  const [justAdded, setJustAdded] = useState(false);
+
+  // Reset justAdded if the user changes product configuration so they can add again
+  useEffect(() => {
+    setJustAdded(false);
+  }, [selectedSize, selectedColor, numColors, isDoubleSided, quantity, customVariantSelections]);
+
+  const [formError, setFormError] = useState<string | null>(null);
+  const showError = (msg: string) => {
+    setFormError(msg);
+    setTimeout(() => setFormError(null), 4000);
+  };
+
+  // Auto-scroll to success card when order is completed
+  useEffect(() => {
+    if (step === "success" && successRef.current) {
+      successRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [step]);
+
+  // Auto-scroll to error message when it appears
+  useEffect(() => {
+    if (formError) {
+      // Use a small timeout to ensure the DOM element is rendered before scrolling
+      const timer = setTimeout(() => {
+        errorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [formError]);
+  const [pendingWaLink, setPendingWaLink] = useState<string>("");
+  const [pendingOrderId, setPendingOrderId] = useState<string>("");
+  const [whatsappNumber, setWhatsappNumber] = useState<string>("213000000000");
+
+  const [formData, setFormData] = useState({ name: "", phone: "", notes: "" });
+
+  // Auto-fill form if session exists
+  useEffect(() => {
+    const storedPhone = sessionStorage.getItem("servseri_phone");
+    const storedName = sessionStorage.getItem("servseri_name");
+    
+    setFormData(prev => ({ 
+      ...prev, 
+      phone: storedPhone || prev.phone, 
+      name: storedName || prev.name 
+    }));
+  }, []);
+
+  // Auto-save form data to session storage as they type
+  // This ensures if they navigate to another product, their info is pre-filled automatically
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if (formData.name.trim()) sessionStorage.setItem("servseri_name", formData.name.trim());
+      if (formData.phone.trim()) sessionStorage.setItem("servseri_phone", formData.phone.trim());
+    }
+  }, [formData.name, formData.phone]);
+
+  // Fetch WhatsApp number from Settings
+  useEffect(() => {
+    async function fetchSettings() {
+      if (!supabase) return;
+      const { data } = await supabase.from("settings").select("*");
+      if (data) {
+        const map = data.reduce((acc: any, s: any) => ({ ...acc, [s.key]: s.value }), {});
+        if (map.branding?.whatsappNumber) setWhatsappNumber(map.branding.whatsappNumber);
+      }
+    }
+    fetchSettings();
+  }, []);
+
+  // ─── Debounced Customer Check ────────────────────────────────────────────────
+  useEffect(() => {
+    const phone = formData.phone.trim();
+    // Algerian numbers (9-10 digits without code) or full number
+    if (phone.length < 9) {
+      // If cleared, reset to guest
+      if (phone === "" && typeof window !== "undefined") {
+        const { setCustomerStatus } = useCartStore.getState();
+        setCustomerStatus('guest');
+      }
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch("/api/customer", {
+          method: "POST",
+          body: JSON.stringify({ phone, name: formData.name.trim() }),
+        });
+        const data = await res.json();
+        
+        const { setCustomerStatus, setAppliedVipOffer, setDiscountConfig } = useCartStore.getState();
+        
+        if (data.customer) {
+          const status = (data.customer.total_orders || 0) === 0 ? 'new' : 'vip';
+          setCustomerStatus(status, data.customer);
+          
+          if (data.discountConfig) {
+            setDiscountConfig({
+              enabled: data.discountConfig.newCustomerDiscountEnabled,
+              percentage: data.discountConfig.newCustomerDiscountPercent,
+              discountType: data.discountConfig.newCustomerDiscountType || 'percentage',
+              minItems: data.discountConfig.newCustomerMinItems,
+            });
+          }
+          
+          if (status === 'vip' && data.vipOffers?.length > 0) {
+            setAppliedVipOffer(data.vipOffers[0]);
+          } else if (status === 'new') {
+            setAppliedVipOffer(null);
+          }
+        }
+      } catch (err) {
+        console.log("Error auto-checking user:", err);
+      }
+    }, 1000); // 1s debounce
+
+    return () => clearTimeout(timer);
+  }, [formData.phone]);
+
+  // Track ViewContent
+  useEffect(() => {
+    try {
+      window.trackMarketingEvent?.("ViewContent", { content_name: productName, value: productPrice, currency: "DZD" });
+    } catch { /* non-critical */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productName]);
+
+  const validateSelections = () => {
+    if (!product) return true;
+
+    // Check Quantity Tier
+    const hasTiers = product.quantity_tiers && product.quantity_tiers.length > 0;
+    if (hasTiers && (!quantity || quantity <= 0)) {
+      showError("📦 يرجى اختيار كمية الطلب المطلوبة أولاً.");
+      return false;
+    }
+    
+    // Check Size
+    if (product.sizes && product.sizes.length > 0 && !selectedSize) {
+      showError("📐 يرجى تحديد مقاس المنتج أولاً ليتم تخصيص السعر وحساب خيارات الطباعة بدقة.");
+      return false;
+    }
+    
+    // Check Color
+    if (product.colors && product.colors.length > 0 && !selectedColor) {
+      showError("🎨 يرجى اختيار اللون المطلوب لضمان توفر المنتج ومعالجة طلبك بشكل صحيح.");
+      return false;
+    }
+    
+    // Check Custom Variants
+    if (product.custom_variants && product.custom_variants.length > 0) {
+      for (const group of product.custom_variants) {
+        if (group.required && !customVariantSelections[group.label]) {
+          showError(`✨ يرجى إكمال خيار (${group.label}) فهو ضروري لتخصيص طلبك بشكل احترافي.`);
+          return false;
+        }
+      }
+    }
+    
+    return true;
+  };
+
+  // ─── STEP 1: Validate form and check if user exists ────────────────────────
+  const handleInfoSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isLoading || step === "success") return;
+    
+    // Validate selections before showing details form
+    if (!validateSelections()) return;
+
+    if (!formData.name.trim()) {
+      showError("👤 يرجى إدخال اسمك الكريم لإتمام الطلب.");
+      return;
+    }
+    if (!formData.phone.trim() || formData.phone.trim().length < 9) {
+      showError("📞 يرجى التأكد من إدخال رقم هاتف صحيح لنتمكن من التواصل معك.");
+      return;
+    }
+    setIsLoading(true);
+
+    try {
+      // Direct order creation — no passwords, no extra steps
+      await createOrderAndGetWaLink();
+    } catch (err: any) {
+      console.error(err);
+      alert(`حدث خطأ أثناء معالجة الطلب: ${err.message || JSON.stringify(err)}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // ─── Build order + WhatsApp message ────────────────────────────────────────
+  const createOrderAndGetWaLink = async () => {
+    if (!supabase) throw new Error("Supabase not configured");
+
+    const isCartOrder = cartItems && cartItems.length > 0;
+    
+    // Robust UUID fallback for non-HTTPS environments
+    const generateUUID = () => {
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return crypto.randomUUID();
+      }
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    };
+
+    const orderId = generateUUID();
+    const waNumber = whatsappNumber.replace(/[^0-9]/g, "");
+    const shortId = orderId.split("-")[0].toUpperCase();
+
+    // ── Extract UTMs if present ──────────────────────────────────────────────
+    let utms = null;
+    try {
+      const storedUtms = localStorage.getItem('marketing_utms');
+      if (storedUtms) utms = JSON.parse(storedUtms);
+    } catch (e) {}
+
+    const orderMetadata: Record<string, unknown> = {
+      ...(!isCartOrder ? { 
+        num_colors: numColors, 
+        is_double_sided: isDoubleSided,
+        custom_variants: customVariantSelections
+      } : {}),
+      utms: utms
+    };
+
+    // Check if user came from popup offer
+    const popupClicked = typeof window !== "undefined" && localStorage.getItem("servseri_popup_clicked");
+    if (popupClicked) {
+      orderMetadata.popup_source = true;
+      orderMetadata.popup_clicked_at = popupClicked;
+      localStorage.removeItem("servseri_popup_clicked");
+    }
+
+    // Remove null/undefined values
+    Object.keys(orderMetadata).forEach(k => {
+      if (orderMetadata[k] === undefined || orderMetadata[k] === null) delete orderMetadata[k];
+    });
+
+    // ── Save order to database first ─────────────────────────────────────────
+    const { error } = await supabase.from("orders").insert({
+      id: orderId,
+      customer_name: formData.name.trim(),
+      customer_phone: formData.phone.trim(),
+      customer_address: "يُحدد عبر واتساب",
+      customer_id: customer?.id || null, // Link to customer directly
+      product_id: isCartOrder ? null : productId,
+      quantity: isCartOrder ? null : quantity,
+      size: isCartOrder ? null : selectedSize,
+      color: isCartOrder ? null : selectedColor,
+      product_price: isCartOrder ? 0 : productPrice,
+      total_price: productPrice,
+      applied_offer_id: appliedOfferId || null,
+      status: "new",
+      cart_items: isCartOrder ? cartItems : [],
+      admin_notes: formData.notes.trim() || null,
+      metadata: Object.keys(orderMetadata).length > 0 ? orderMetadata : null
+    });
+    if (error) throw new Error(error.message);
+
+    // ── Increment Offer Usage Count ───────────────────────────────────────────
+    if (appliedOfferId) {
+      // We use a simple update to increment. In high-concurrency, an RPC is better,
+      // but for this scale, we'll fetch and increment or just use the current known state.
+      try {
+        const { data: offerData } = await supabase
+          .from("vip_offers")
+          .select("uses_count")
+          .eq("id", appliedOfferId)
+          .single();
+        
+        if (offerData) {
+          await supabase
+            .from("vip_offers")
+            .update({ uses_count: (offerData.uses_count || 0) + 1 })
+            .eq("id", appliedOfferId);
+        }
+      } catch (err) {
+        console.error("Error incrementing offer usage:", err);
+      }
+    }
+
+    // ── Build WhatsApp message ────────────────────────────────────────────────
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== 'undefined' && !window.location.origin.includes("localhost") ? window.location.origin : 'https://serviceserigraphie.com');
+    const receiptUrl = `${baseUrl}/receipt/${orderId}`;
+
+    const waMessage = [
+      `✅ *طلب جديد من Service Serigraphie*`,
+      `👤 الاسم: ${formData.name.trim()}`,
+      `📱 الهاتف: ${formData.phone.trim()}`,
+      ``,
+      `📄 *وصل الطلب الرسمي:*`,
+      receiptUrl,
+      ``,
+      `🏷️ رقم الطلب: #${shortId}`,
+    ].join("\n");
+
+    // ── Marketing tracking ────────────────────────────────────────────────────
+    try {
+      const trackingData = {
+        content_name: isCartOrder ? "Cart Order" : productName,
+        value: productPrice,
+        currency: "DZD",
+        num_items: isCartOrder ? cartItems.length : 1,
+        content_ids: isCartOrder ? cartItems.map(i => i.productId) : [productId],
+        order_id: shortId,
+      };
+
+      // Track as Lead (not Purchase) — Purchase fires only when admin confirms
+      // This is critical for COD: Facebook should optimize for leads, not fake purchases
+      window.trackMarketingEvent?.("SubmitOrder", trackingData);
+      
+    } catch { /* non-critical */ }
+
+    setPendingOrderId(orderId);
+    const waLink = `https://wa.me/${waNumber}?text=${encodeURIComponent(waMessage)}`;
+    setPendingWaLink(waLink);
+    setStep("success");
+
+    // ── Save session for automatic login ──
+    sessionStorage.setItem("servseri_phone", formData.phone.trim());
+    sessionStorage.setItem("servseri_name", formData.name.trim());
+
+    // Cart will be cleared when they manually navigate via the success buttons
+  };
+
+  // ─── SUCCESS SCREEN ─────────────────────────────────────────────────────────
+  if (step === "success") {
+    return (
+      <motion.div
+        ref={successRef}
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-white p-8 rounded-3xl border-2 border-[#25D366]/40 shadow-xl text-center space-y-5"
+      >
+        <div className="w-20 h-20 bg-[#25D366]/15 rounded-full flex items-center justify-center text-[#25D366] mx-auto">
+          <CheckCircle2 size={44} />
+        </div>
+        <div>
+          <h2 className="text-2xl font-black text-gray-900">تفاصيل طلبك جاهزة! ✅</h2>
+          <p className="text-primary font-bold text-sm mt-1">بانتظار تأكيدك النهائي عبر واتساب لإتمام التسجيل</p>
+          {discountAmount > 0 && (
+            <div className="mt-1 flex items-center justify-center gap-1.5 text-primary font-black text-sm bg-primary/10 px-4 py-1.5 rounded-full w-max mx-auto border border-primary/20">
+               <Gift size={16} />
+               <span>لقد وفرت {discountAmount.toLocaleString()} د.ج في هذا الطلب!</span>
+            </div>
+          )}
+          <p className="text-gray-500 mt-2 text-sm leading-relaxed">
+            اضغط على الزر أدناه لفتح واتساب وإتمام التأكيد مع فريقنا.
+          </p>
+        </div>
+        <div className="flex flex-col gap-3">
+          {pendingWaLink && (
+            <button
+              onClick={() => {
+                try {
+                  window.trackMarketingEvent?.("Contact", {
+                    content_name: (cartItems && cartItems.length > 0) ? "Cart Order" : productName,
+                    value: productPrice,
+                    currency: "DZD",
+                    order_id: pendingOrderId.split("-")[0].toUpperCase()
+                  });
+                } catch { /* ignore */ }
+                window.open(pendingWaLink, "_blank");
+                if (cartItems && cartItems.length > 0) {
+                  useCartStore.getState().clearCart();
+                }
+                router.push("/account");
+              }}
+              className="group flex flex-col items-center justify-center gap-2 w-full bg-[#25D366] text-white rounded-[2rem] py-8 px-6 font-black shadow-xl shadow-green-200 active:scale-95 transition-all hover:bg-[#20bd5b]"
+              style={{ WebkitTapHighlightColor: "transparent" }}
+            >
+              <div className="flex items-center gap-3 text-2xl">
+                <MessageCircle size={32} className="animate-bounce" />
+                تأكيد الطلب عبر واتساب
+              </div>
+              <p className="text-xs opacity-80 font-bold">(سيتم فتح واتساب في نافذة جديدة)</p>
+            </button>
+          )}
+          <button 
+            type="button"
+            onClick={() => {
+              if (cartItems && cartItems.length > 0) {
+                useCartStore.getState().clearCart();
+              }
+              router.push("/account");
+            }}
+            className="flex items-center justify-center gap-2 text-sm font-black text-gray-500 hover:text-primary transition-colors py-4 bg-gray-50 rounded-2xl border border-dashed border-gray-200 w-full"
+          >
+            <Package size={16} />
+            عرض طلباتي في لوحة التحكم
+          </button>
+        </div>
+        <p className="text-xs text-gray-400">
+          رقم الطلب: #{pendingOrderId.split("-")[0].toUpperCase()}
+        </p>
+      </motion.div>
+    );
+  }
+
+
+
+  // ─── STEP 1: INFO FORM ──────────────────────────────────────────────────────
+  return (
+    <div className="bg-white rounded-3xl p-5 sm:p-8 border border-gray-100 shadow-xl">
+      <div className="relative z-10">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-11 h-11 bg-[#25D366]/10 rounded-2xl flex items-center justify-center text-[#25D366] shrink-0">
+            <MessageCircle size={22} />
+          </div>
+          <div>
+            <h2 className="text-lg sm:text-xl font-black text-gray-950">الطلب عبر واتساب</h2>
+            <p className="text-gray-400 font-semibold text-xs">أدخل بياناتك ليتم تأكيد طلبك</p>
+          </div>
+        </div>
+
+
+
+        <form onSubmit={handleInfoSubmit} className="space-y-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-gray-700 block">الاسم الكامل *</label>
+              <div className="relative">
+                <User className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <input
+                  type="text"
+                  placeholder="الاسم..."
+                  className="w-full bg-gray-50 border-none rounded-2xl py-4 pr-12 pl-4 focus:ring-2 focus:ring-primary/20 outline-none font-medium text-base"
+                  value={formData.name}
+                  onChange={e => setFormData({ ...formData, name: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-gray-700 block">رقم الهاتف (واتساب) *</label>
+              <div className="relative">
+                <Phone className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <input
+                  type="tel"
+                  inputMode="tel"
+                  placeholder="05 / 06 / 07 ..."
+                  dir="ltr"
+                  className="w-full bg-gray-50 border-none rounded-2xl py-4 pr-12 pl-4 focus:ring-2 focus:ring-primary/20 outline-none font-bold text-left text-base"
+                  value={formData.phone}
+                  onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-gray-700 block">ملاحظات إضافية (اختياري)</label>
+            <div className="relative">
+              <Edit3 className="absolute right-4 top-4 text-gray-400" size={18} />
+              <textarea
+                placeholder="أي تفاصيل إضافية حول طلبك..."
+                className="w-full bg-gray-50 border-none rounded-2xl py-4 pr-12 pl-4 focus:ring-2 focus:ring-primary/20 outline-none font-medium text-base h-28 resize-none"
+                value={formData.notes}
+                onChange={e => setFormData({ ...formData, notes: e.target.value })}
+              />
+            </div>
+          </div>
+
+          {/* ── VIP Greeting (Relocated under notes) ── */}
+          <AnimatePresence>
+            {customerStatus === 'vip' && customer && (
+              <motion.div
+                initial={{ opacity: 0, y: -10, height: 0 }}
+                animate={{ opacity: 1, y: 0, height: 'auto' }}
+                exit={{ opacity: 0, y: -10, height: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 flex items-center gap-4 relative overflow-hidden group">
+                   {/* Background Decorative Icon */}
+                   <Crown size={60} className="absolute -bottom-4 -right-4 opacity-[0.03] rotate-12 group-hover:scale-110 transition-transform" />
+                   
+                   <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-primary/20">
+                      <Sparkles size={18} />
+                   </div>
+                   
+                   <div className="relative z-10">
+                      <p className="text-sm font-black text-gray-900 leading-tight">
+                        مرحباً بعودتك، {customer.name}! ✨
+                      </p>
+                      <p className="text-[10px] font-bold text-primary leading-tight mt-0.5">
+                        نسعد برؤيتك مجدداً؛ لقد قمنا بتفعيل رتبة الـ VIP الخاصة بك وتطبيق أسعارك الحصرية تلقائياً.
+                      </p>
+                   </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Pricing Summary */}
+          <div className="bg-[#25D366]/5 p-4 rounded-2xl border border-[#25D366]/15">
+            {discountAmount > 0 && (
+              <div className="flex justify-between items-center text-green-600 font-bold text-sm mb-2">
+                <span>خصم مطبّق:</span>
+                <span>- {discountAmount.toLocaleString()} د.ج</span>
+              </div>
+            )}
+            <div className="flex justify-between items-center text-gray-900">
+              <span className="font-bold text-sm">المجموع الإجمالي:</span>
+              <span className="text-2xl font-black text-[#25D366]">{productPrice === 0 ? "—" : productPrice.toLocaleString()} د.ج</span>
+            </div>
+          </div>
+
+          {/* Welcome Upsell Alert */}
+          {customerStatus !== 'vip' && discountConfig?.enabled && productId !== 'cart-order' && (
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`border rounded-2xl p-4 flex items-center gap-3 shadow-sm mb-2 transition-colors ${
+                items.length >= discountConfig.minItems 
+                  ? "bg-green-50 border-green-200" 
+                  : "bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-200"
+              }`}
+            >
+              {items.length >= discountConfig.minItems ? (
+                <div className="flex flex-col gap-3 w-full">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-green-500/20">
+                      <CheckCircle2 size={20} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-black text-green-800">مبارك! أنت مؤهل للخصم الترحيبي 🎉</p>
+                      <p className="text-[10px] font-bold text-green-700/80 leading-tight mt-0.5">
+                        لقد استوفيت الشروط ({items.length} منتجات في السلة). قم بإنهاء الطلب الآن لتطبيق الخصم فوراً!
+                      </p>
+                    </div>
+                  </div>
+                  <div className="pt-1 w-full">
+                    <Link href="/checkout" className="block w-full">
+                      <button
+                        type="button"
+                        className="w-full bg-green-600 text-white py-3.5 rounded-xl font-black text-sm hover:bg-green-700 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-lg shadow-green-600/30"
+                      >
+                        <ShoppingCart size={18} />
+                        تطبيق الخصم وإنهاء الطلب ({items.length})
+                      </button>
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="w-10 h-10 bg-yellow-400 rounded-xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-yellow-400/20 animate-bounce">
+                    <Gift size={20} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-black text-yellow-800">هدية ترحيبية للزبائن الجدد! 🎁</p>
+                    <p className="text-[10px] font-bold text-yellow-700/70 leading-tight mt-0.5">
+                      أهلاً بك في أول طلب لك! أضف {discountConfig.minItems} منتجات أو أكثر واحصل على تخفيض {discountConfig.discountType === 'percentage' ? `${discountConfig.percentage}%` : `${discountConfig.percentage} د.ج`} فوري. (أضفت {items.length})
+                    </p>
+                  </div>
+                </>
+              )}
+            </motion.div>
+          )}
+
+          <div className="space-y-3">
+            {onAddToCart && (
+              (justAdded && items.length < (discountConfig?.minItems || 0) && customerStatus !== 'vip' && discountConfig?.enabled) ? (
+                <button
+                  type="button"
+                  onClick={() => router.push('/products')}
+                  className="w-full bg-yellow-50 border-2 border-yellow-400 text-yellow-700 py-3.5 rounded-xl font-black text-base hover:bg-yellow-100 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-lg shadow-yellow-100 animate-in zoom-in duration-300"
+                  style={{ WebkitTapHighlightColor: "transparent" }}
+                >
+                  <Gift size={20} className="animate-bounce" />
+                  أضف منتجات أخرى لتفعيل الخصم 🚀
+                </button>
+              ) : (justAdded && items.length >= (discountConfig?.minItems || 0) && customerStatus !== 'vip' && discountConfig?.enabled) ? (
+                <button
+                  type="button"
+                  disabled
+                  className="w-full bg-green-50 border-2 border-green-500 text-green-600 py-3.5 rounded-xl font-black text-base flex items-center justify-center gap-2 animate-in zoom-in duration-300"
+                >
+                  <CheckCircle2 size={20} />
+                  مؤهل للخصم! أكمل طلبك أدناه 👇
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!formData.phone || formData.phone.trim().length < 9) {
+                      showError("📞 عذراً! يرجى إدخال رقم هاتفك أولاً لنتمكن من حفظ سلتك وتأمين أي خصومات خاصة بك كزبون لدينا.");
+                      return;
+                    }
+                    if (validateSelections()) {
+                      const phoneToSave = formData.phone.trim();
+                      const nameToSave = formData.name.trim();
+                      if (typeof window !== "undefined") {
+                        sessionStorage.setItem("servseri_phone", phoneToSave);
+                        if (nameToSave) sessionStorage.setItem("servseri_name", nameToSave);
+                        localStorage.setItem("servseri_guest_phone", phoneToSave);
+                      }
+                      
+                      try {
+                        const res = await fetch("/api/customer", {
+                          method: "POST",
+                          body: JSON.stringify({ 
+                            phone: phoneToSave, 
+                            name: formData.name.trim() 
+                          }),
+                        });
+                        const data = await res.json();
+                        const { setCustomerStatus, setAppliedVipOffer, setDiscountConfig } = useCartStore.getState();
+                        
+                        if (data.customer) {
+                          const status = (data.customer.total_orders || 0) === 0 ? 'new' : 'vip';
+                          setCustomerStatus(status, data.customer);
+                          
+                          if (data.discountConfig) {
+                            setDiscountConfig({
+                              enabled: data.discountConfig.newCustomerDiscountEnabled,
+                              percentage: data.discountConfig.newCustomerDiscountPercent,
+                              discountType: data.discountConfig.newCustomerDiscountType || 'percentage',
+                              minItems: data.discountConfig.newCustomerMinItems,
+                            });
+                          }
+                          
+                          if (status === 'vip' && data.vipOffers?.length > 0) {
+                            setAppliedVipOffer(data.vipOffers[0]);
+                          }
+                        } else {
+                          setCustomerStatus('new');
+                        }
+                      } catch (err) {
+                        console.log("Error checking user:", err);
+                      }
+
+                      onAddToCart();
+                      setJustAdded(true);
+                    }
+                  }}
+                  className="w-full bg-white border-2 border-primary text-primary py-3.5 rounded-xl font-bold text-base hover:bg-primary/5 active:scale-95 transition-all flex items-center justify-center gap-2"
+                  style={{ WebkitTapHighlightColor: "transparent" }}
+                >
+                  <ShoppingCart size={20} />
+                  أضف إلى السلة
+                </button>
+              )
+            )}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-[#25D366] text-white rounded-2xl py-5 font-black text-xl flex items-center justify-center gap-3 shadow-lg active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed select-none"
+              style={{ WebkitTapHighlightColor: "transparent", minHeight: "64px" }}
+            >
+            {isLoading ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="animate-spin" size={20} />
+                جاري إرسال الطلب...
+              </span>
+            ) : (
+              <>
+                <MessageCircle size={24} />
+                <span>تأكيد الطلب عبر واتساب</span>
+              </>
+            )}
+            </button>
+            
+            {/* View Cart Button (Appears when items added, hidden if shown in the success alert above) */}
+            <AnimatePresence>
+              {items.length > 0 && !(customerStatus !== 'vip' && discountConfig?.enabled && items.length >= discountConfig.minItems) && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  className="overflow-hidden"
+                >
+                  <Link href="/checkout" className="block mt-2">
+                    <button
+                      type="button"
+                      className="w-full bg-gray-100 text-gray-700 py-3.5 rounded-xl font-black text-sm hover:bg-gray-200 transition-all flex items-center justify-center gap-2 border border-gray-200"
+                    >
+                      <ShoppingCart size={18} />
+                      إنهاء الطلبات المضافة في السلة ({items.length})
+                    </button>
+                  </Link>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Trust Badges */}
+          <div className="grid grid-cols-2 gap-3 pt-4 border-t border-gray-100">
+            {[
+              { icon: Star, text: "تصميم مخصص" },
+              { icon: RefreshCcw, text: "ضمان الاستبدال" },
+              { icon: ShieldCheck, text: "منتج أصلي 100%" },
+              { icon: CheckCircle2, text: "جودة مضمونة 100%" },
+            ].map(badge => (
+              <div key={badge.text} className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl">
+                <badge.icon size={16} className="text-primary shrink-0" />
+                <span className="text-xs font-bold text-gray-600">{badge.text}</span>
+              </div>
+            ))}
+          </div>
+
+          <AnimatePresence>
+            {formError && (
+              <motion.div
+                ref={errorRef}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="mt-4 p-4 bg-red-50 border border-red-100 rounded-2xl flex items-start gap-3 shadow-sm"
+              >
+                <div className="w-8 h-8 bg-red-500 text-white rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-red-500/20 animate-pulse">
+                   <Lock size={16} />
+                </div>
+                <div>
+                   <p className="text-red-600 font-black text-sm mb-0.5">خطأ في الطلب!</p>
+                   <p className="text-red-500/80 text-xs font-bold leading-relaxed">{formError}</p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </form>
+      </div>
+    </div>
+  );
+}

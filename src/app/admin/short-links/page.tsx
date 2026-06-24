@@ -251,31 +251,50 @@ export default function ShortLinksPage() {
     setIsCreating(false);
   }
 
-  async function fetchCategoryImage(categoryName: string): Promise<string | null> {
+  // New function: fetch a product ID and image for a given category
+  async function fetchCategoryProductInfo(categoryName: string): Promise<{ id: string; image_url: string } | null> {
     if (!supabase) return null;
     const { data } = await supabase
       .from("products")
-      .select("image_url")
+      .select("id, image_url") // Select both ID and image_url
       .eq("is_published", true)
       .neq("image_url", "")
       .not("image_url", "is", null)
       .filter("category", "ilike", `%${categoryName}%`)
       .limit(1)
-      .maybeSingle();
-    return data?.image_url?.replace(/^http:\/\//, "https://") || null;
+      .maybeSingle(); // Get a single product
+
+    if (data && data.id && data.image_url) {
+      return {
+        id: data.id,
+        image_url: data.image_url.replace(/^http:\/\//, "https://")
+      };
+    }
+    return null;
   }
 
   async function createCategoryLink() {
     if (!selectedCategory) return;
     setIsCreating(true);
     const catName = selectedCategory.label.trim();
-    const productId = catName.toLowerCase().replace(/\s+/g, "-");
-    const image = await fetchCategoryImage(catName);
+    
+    // Fetch product ID and image
+    const productInfo = await fetchCategoryProductInfo(catName);
+    
+    if (!productInfo) {
+      alert(`لا يمكن إنشاء رابط تصنيف لـ "${catName}". لا يوجد منتج منشور ومرتبط بصورة في هذا التصنيف.`);
+      setIsCreating(false);
+      return;
+    }
+
+    const productId = productInfo.id;
+    const image = productInfo.image_url;
+
     const res = await fetch("/api/short-links", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        product_id: productId,
+        product_id: productId, // Use the actual product ID
         product_name: catName,
         product_image: image,
         type: "category",

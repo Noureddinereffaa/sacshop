@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
 import {
   Plus, Trash2, Edit2, X, Save, Loader2, CheckCircle2,
   Crown, Percent, DollarSign, Clock, Users, Tag, ToggleLeft, ToggleRight, Star
@@ -48,37 +47,32 @@ export default function AdminOffersPage() {
 
   async function fetchOffers() {
     setIsLoading(true);
-    if (!supabase) { setIsLoading(false); return; }
-    const { data } = await supabase.from("vip_offers").select("*").order("created_at", { ascending: false });
-    setOffers(data || []);
-    setIsLoading(false);
+    try {
+      const res = await fetch("/api/vip-offers");
+      const data = await res.json();
+      setOffers(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Error fetching offers:", err);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   async function saveOffer() {
-    if (!supabase || !editingOffer.title) return;
+    if (!editingOffer.title) return;
     setIsSaving(true);
     try {
-      if (isEditMode && editingOffer.id) {
-        // Edit mode: exclude id and uses_count from the update payload
-        const { id, uses_count, ...rest } = editingOffer as VipOffer;
-        const { error } = await supabase.from("vip_offers").update(rest).eq("id", id);
-        if (error) { console.error("Error updating offer:", error); setIsSaving(false); return; }
-      } else {
-        // Create mode: build a clean payload with only the required fields
-        const insertPayload = {
-          title: editingOffer.title,
-          description: editingOffer.description || "",
-          discount_type: editingOffer.discount_type || "percentage",
-          discount_value: editingOffer.discount_value || 10,
-          min_orders: editingOffer.min_orders ?? 0,
-          min_spent: editingOffer.min_spent ?? 0,
-          is_active: editingOffer.is_active ?? true,
-          starts_at: editingOffer.starts_at || new Date().toISOString().split("T")[0],
-          expires_at: editingOffer.expires_at || null,
-          max_uses: editingOffer.max_uses || null,
-        };
-        const { error } = await supabase.from("vip_offers").insert([insertPayload]);
-        if (error) { console.error("Error creating offer:", error); setIsSaving(false); return; }
+      const method = isEditMode && editingOffer.id ? "PATCH" : "POST";
+      const res = await fetch("/api/vip-offers", {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editingOffer),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        console.error("Error saving offer:", data.error);
+        setIsSaving(false);
+        return;
       }
       setSaveSuccess(true);
       setTimeout(() => { setSaveSuccess(false); setIsModalOpen(false); fetchOffers(); }, 1500);
@@ -90,14 +84,17 @@ export default function AdminOffersPage() {
   }
 
   async function toggleActive(id: string, current: boolean) {
-    if (!supabase) return;
-    await supabase.from("vip_offers").update({ is_active: !current }).eq("id", id);
+    await fetch("/api/vip-offers", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, is_active: !current }),
+    });
     fetchOffers();
   }
 
   async function deleteOffer(id: string) {
-    if (!supabase || !confirm("هل أنت متأكد من حذف هذا العرض؟")) return;
-    await supabase.from("vip_offers").delete().eq("id", id);
+    if (!confirm("هل أنت متأكد من حذف هذا العرض؟")) return;
+    await fetch(`/api/vip-offers?id=${id}`, { method: "DELETE" });
     fetchOffers();
   }
 

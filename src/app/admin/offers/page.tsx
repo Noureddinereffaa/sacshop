@@ -59,14 +59,31 @@ export default function AdminOffersPage() {
     setIsSaving(true);
     try {
       if (isEditMode && editingOffer.id) {
+        // Edit mode: exclude id and uses_count from the update payload
         const { id, uses_count, ...rest } = editingOffer as VipOffer;
-        await supabase.from("vip_offers").update(rest).eq("id", id);
+        const { error } = await supabase.from("vip_offers").update(rest).eq("id", id);
+        if (error) { console.error("Error updating offer:", error); setIsSaving(false); return; }
       } else {
-        const { id, uses_count, ...rest } = editingOffer as VipOffer;
-        await supabase.from("vip_offers").insert([rest]);
+        // Create mode: build a clean payload with only the required fields
+        const insertPayload = {
+          title: editingOffer.title,
+          description: editingOffer.description || "",
+          discount_type: editingOffer.discount_type || "percentage",
+          discount_value: editingOffer.discount_value || 10,
+          min_orders: editingOffer.min_orders ?? 0,
+          min_spent: editingOffer.min_spent ?? 0,
+          is_active: editingOffer.is_active ?? true,
+          starts_at: editingOffer.starts_at || new Date().toISOString().split("T")[0],
+          expires_at: editingOffer.expires_at || null,
+          max_uses: editingOffer.max_uses || null,
+        };
+        const { error } = await supabase.from("vip_offers").insert([insertPayload]);
+        if (error) { console.error("Error creating offer:", error); setIsSaving(false); return; }
       }
       setSaveSuccess(true);
       setTimeout(() => { setSaveSuccess(false); setIsModalOpen(false); fetchOffers(); }, 1500);
+    } catch (err) {
+      console.error("Unexpected error saving offer:", err);
     } finally {
       setIsSaving(false);
     }

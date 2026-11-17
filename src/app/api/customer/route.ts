@@ -1,12 +1,8 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 import { rateLimitMiddleware } from '@/lib/rateLimit';
 import { cache } from '@/lib/redis';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!;
-
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
 
 interface VipOffer {
   id: string;
@@ -65,7 +61,7 @@ export async function POST(request: Request) {
     }
 
     // 1. Fetch customer by phone
-    let { data: customerData, error: customerError } = await supabaseAdmin
+    let { data: customerData, error: customerError } = await getSupabaseAdmin()
       .from('customers')
       .select('*')
       .eq('phone', phone)
@@ -73,7 +69,7 @@ export async function POST(request: Request) {
 
     // If not found, create automatically (Auto-Registration)
     if (!customerData) {
-       const { data: newCustomer, error: createError } = await supabaseAdmin
+       const { data: newCustomer, error: createError } = await getSupabaseAdmin()
          .from('customers')
          .insert({
            phone: phone,
@@ -89,7 +85,7 @@ export async function POST(request: Request) {
     }
 
     // 2. Fetch their past orders — by phone (reliable) since orders may not always have customer_id
-    const { data: ordersData } = await supabaseAdmin
+    const { data: ordersData } = await getSupabaseAdmin()
       .from('orders')
       .select('*')
       .eq('customer_phone', phone)
@@ -103,7 +99,7 @@ export async function POST(request: Request) {
       if (orphanedIds.length > 0) {
         (async () => {
           try {
-            await supabaseAdmin
+            await getSupabaseAdmin()
               .from('orders')
               .update({ customer_id: customerData.id })
               .in('id', orphanedIds);
@@ -113,7 +109,7 @@ export async function POST(request: Request) {
     }
 
     // 3. Fetch all active VIP offers and filter by customer eligibility
-    const { data: allOffers } = await supabaseAdmin
+    const { data: allOffers } = await getSupabaseAdmin()
       .from('vip_offers')
       .select('*')
       .eq('is_active', true);
@@ -129,7 +125,7 @@ export async function POST(request: Request) {
     const starLevel = calculateStarLevel(customerData.total_orders || 0);
 
     // 4. Fetch Discount Settings
-    const { data: discountSettings } = await supabaseAdmin
+    const { data: discountSettings } = await getSupabaseAdmin()
       .from('settings')
       .select('value')
       .eq('key', 'discounts')

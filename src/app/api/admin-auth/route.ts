@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { randomBytes } from "crypto";
 import { rateLimitMiddleware } from "@/lib/rateLimit";
 
 export async function POST(request: NextRequest) {
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
     if (password === adminPassword) {
       // Generate a secure session token with cryptographic randomness
       const token = Buffer.from(
-        `admin_${Date.now()}_${crypto.randomBytes(32).toString("hex")}`
+        `admin_${Date.now()}_${randomBytes(32).toString("hex")}`
       ).toString("base64");
 
       const response = NextResponse.json({ success: true });
@@ -73,7 +74,8 @@ export async function GET(request: NextRequest) {
 // Logout endpoint
 export async function DELETE() {
   const response = NextResponse.json({ success: true });
-  response.cookies.delete("admin_session", {
+  response.cookies.delete({
+    name: "admin_session",
     path: "/admin",
     sameSite: "strict",
     secure: process.env.NODE_ENV === "production",

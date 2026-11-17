@@ -100,8 +100,8 @@ export class Cache {
   async get(key: string): Promise<any> {
     if (redisClient) {
       try {
-        const value = await redisClient.get(this.getKey(key));
-        return value !== null ? JSON.parse(value) : null;
+        const value = await redisClient.get<string>(this.getKey(key));
+        return value != null ? JSON.parse(value) : null;
       } catch (error) {
         console.error("[Redis] Get error:", error);
         return inMemoryCache.get(this.getKey(key));

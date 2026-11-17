@@ -94,7 +94,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   marketing: {},
   slider: [],
   partners: [],
-  popup: { enabled: false, title: "", description: "", image: "", buttonText: "اطلب الآن", buttonLink: "/products", delay: 2000 },
+  popup: { enabled: false, title: "", description: "", image: "", buttonText: "اطلب الآن", buttonLink: "/products", delay: 1500 },
   largeOrderCta: {
     enabled: true,
     title: "هل لديك طلبية كبيرة جداً؟",
@@ -114,7 +114,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
       marketing: marketing || {},
       slider: slider || [],
       partners: partners || [],
-      popup: popup || { enabled: false, title: "", description: "", image: "", buttonText: "اطلب الآن", buttonLink: "/products", delay: 2000 },
+      popup: popup || { enabled: false, title: "", description: "", image: "", buttonText: "اطلب الآن", buttonLink: "/products", delay: 1500 },
       largeOrderCta: largeOrderCta || {
         enabled: true,
         title: "هل لديك طلبية كبيرة جداً؟",

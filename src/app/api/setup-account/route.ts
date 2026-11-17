@@ -1,10 +1,6 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!
-);
 
 export async function POST(request: Request) {
   try {
@@ -17,15 +13,15 @@ export async function POST(request: Request) {
     const email = `${phone.replace(/\s+/g, '')}@serigraphie.dz`;
 
     // Check if auth user already exists
-    const { data: { users } } = await supabaseAdmin.auth.admin.listUsers();
+    const { data: { users } } = await getSupabaseAdmin().auth.admin.listUsers();
     const existing = users.find(u => u.email === email);
 
     if (existing) {
       // Update existing user's password
-      await supabaseAdmin.auth.admin.updateUserById(existing.id, { password });
+      await getSupabaseAdmin().auth.admin.updateUserById(existing.id, { password });
     } else {
       // Create new Supabase Auth user
-      const { error: createError } = await supabaseAdmin.auth.admin.createUser({
+      const { error: createError } = await getSupabaseAdmin().auth.admin.createUser({
         email,
         password,
         email_confirm: true,

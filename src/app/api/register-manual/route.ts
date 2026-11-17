@@ -1,10 +1,6 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!
-);
 
 export async function POST(request: Request) {
   try {
@@ -17,7 +13,7 @@ export async function POST(request: Request) {
     const email = `${phone.replace(/\s+/g, '')}@serigraphie.dz`;
 
     // 1. Check if auth user already exists
-    const { data: { users } } = await supabaseAdmin.auth.admin.listUsers();
+    const { data: { users } } = await getSupabaseAdmin().auth.admin.listUsers();
     const existing = users.find(u => u.email === email);
 
     if (existing) {
@@ -25,7 +21,7 @@ export async function POST(request: Request) {
     }
 
     // 2. Create new Supabase Auth user
-    const { error: createError, data: authData } = await supabaseAdmin.auth.admin.createUser({
+    const { error: createError, data: authData } = await getSupabaseAdmin().auth.admin.createUser({
       email,
       password,
       email_confirm: true,
@@ -34,7 +30,7 @@ export async function POST(request: Request) {
     if (createError) throw createError;
 
     // 3. Ensure the customer exists in the customers table
-    const { error: customerError } = await supabaseAdmin.from('customers').upsert({
+    const { error: customerError } = await getSupabaseAdmin().from('customers').upsert({
       phone,
       name,
       total_orders: 0,

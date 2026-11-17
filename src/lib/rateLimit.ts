@@ -109,7 +109,7 @@ export function getRateLimiter(type: keyof typeof rateLimiters) {
 export function getClientIP(request: Request): string {
   const xForwardedFor = request.headers.get("x-forwarded-for");
   const xRealIP = request.headers.get("x-real-ip");
-  const ip = xForwardedFor?.split(",")[0] || xRealIP || request.ip;
+  const ip = xForwardedFor?.split(",")[0] || xRealIP;
   return ip || "127.0.0.1";
 }
 

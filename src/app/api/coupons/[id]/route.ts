@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
+import { requireAdmin } from "@/lib/adminAuth";
 
 interface CouponUpdatePayload {
   code?: string;
@@ -16,11 +17,14 @@ interface CouponUpdatePayload {
   product_ids?: string[];
 }
 
-// PATCH: update a coupon (fields and/or linked products)
+// PATCH: update a coupon (fields and/or linked products) — admin only
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const unauthorized = requireAdmin(request);
+  if (unauthorized) return unauthorized;
+
   try {
     const { id } = await params;
     const body: CouponUpdatePayload = await request.json();
@@ -105,11 +109,14 @@ export async function PATCH(
   }
 }
 
-// DELETE: remove a coupon (coupon_products rows cascade)
+// DELETE: remove a coupon (coupon_products rows cascade) — admin only
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const unauthorized = requireAdmin(request);
+  if (unauthorized) return unauthorized;
+
   try {
     const { id } = await params;
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
+import { rateLimitMiddleware } from "@/lib/rateLimit";
 
 interface ValidateBody {
   code?: string;
@@ -10,13 +11,41 @@ interface ValidateBody {
 // The coupons table is not publicly readable, so this API is the only
 // way for clients to check a code. Discount is computed here.
 export async function POST(request: NextRequest) {
+  // Brute-force protection: 20 attempts per minute per IP
+  const rateLimitResult = await rateLimitMiddleware(request, "couponValidate");
+  if (!rateLimitResult.success) {
+    return NextResponse.json(
+      { valid: false, error: "عدد محاولات كثيرة، يرجى المحاولة بعد قليل" },
+      { status: 429 }
+    );
+  }
+
   try {
     const body: ValidateBody = await request.json();
     const code = body.code?.trim().toUpperCase();
-    const cart = Array.isArray(body.cart) ? body.cart : [];
+
+    // Sanitize cart: finite non-negative prices, integer quantities >= 1
+    const cart = (Array.isArray(body.cart) ? body.cart : [])
+      .map((item) => ({
+        productId: String(item?.productId ?? ""),
+        price: Number(item?.price),
+        quantity: Math.floor(Number(item?.quantity)),
+      }))
+      .filter(
+        (item) =>
+          item.productId &&
+          Number.isFinite(item.price) &&
+          item.price >= 0 &&
+          Number.isFinite(item.quantity) &&
+          item.quantity >= 1
+      )
+      .slice(0, 100);
 
     if (!code) {
       return NextResponse.json({ valid: false, error: "أدخل كود الكوبون" }, { status: 400 });
+    }
+    if (code.length > 64) {
+      return NextResponse.json({ valid: false, error: "صيغة الكود غير صالحة" }, { status: 400 });
     }
     if (cart.length === 0) {
       return NextResponse.json({ valid: false, error: "السلة فارغة" }, { status: 400 });

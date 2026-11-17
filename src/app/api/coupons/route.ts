@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
+import { requireAdmin } from "@/lib/adminAuth";
 
 interface CouponPayload {
   code?: string;
@@ -45,8 +46,11 @@ async function attachProductIds(couponIds: string[]) {
   return map;
 }
 
-// GET: list all coupons with their linked product ids
-export async function GET() {
+// GET: list all coupons with their linked product ids (admin only)
+export async function GET(request: NextRequest) {
+  const unauthorized = requireAdmin(request);
+  if (unauthorized) return unauthorized;
+
   try {
     const { data, error } = await getSupabaseAdmin()
       .from("coupons")
@@ -68,8 +72,11 @@ export async function GET() {
   }
 }
 
-// POST: create a new coupon
+// POST: create a new coupon (admin only)
 export async function POST(request: NextRequest) {
+  const unauthorized = requireAdmin(request);
+  if (unauthorized) return unauthorized;
+
   try {
     const body: CouponPayload = await request.json();
 

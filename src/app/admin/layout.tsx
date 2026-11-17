@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import { useSettingsStore } from "@/store/settingsStore";
 import {
   LayoutDashboard, ShoppingBag, Package,
-  Settings, Users, Crown, LogOut, ChevronLeft, Menu, X, BarChart3, Link2
+  Settings, Users, Crown, LogOut, ChevronLeft, Menu, X, BarChart3, Link2, Ticket
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -17,6 +17,7 @@ const NAV_LINKS = [
   { href: "/admin/products", label: "المنتجات", icon: Package },
   { href: "/admin/inventory", label: "إدارة المخزون", icon: Package },
   { href: "/admin/offers", label: "العروض الحصرية", icon: Crown },
+  { href: "/admin/coupons", label: "كوبونات الخصم", icon: Ticket },
   { href: "/admin/customers", label: "الزبائن", icon: Users },
   { href: "/admin/analytics", label: "التقارير والإحصائيات", icon: BarChart3 },
   { href: "/admin/short-links", label: "روابط الإعلانات", icon: Link2 },

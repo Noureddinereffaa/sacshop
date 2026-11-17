@@ -15,6 +15,7 @@ const NAV_LINKS = [
   { href: "/admin", label: "لوحة المعلومات", icon: LayoutDashboard, exact: true },
   { href: "/admin/orders", label: "الطلبات", icon: ShoppingBag },
   { href: "/admin/products", label: "المنتجات", icon: Package },
+  { href: "/admin/inventory", label: "إدارة المخزون", icon: Package },
   { href: "/admin/offers", label: "العروض الحصرية", icon: Crown },
   { href: "/admin/customers", label: "الزبائن", icon: Users },
   { href: "/admin/analytics", label: "التقارير والإحصائيات", icon: BarChart3 },

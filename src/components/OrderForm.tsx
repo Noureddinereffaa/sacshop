@@ -25,6 +25,8 @@ interface OrderFormProps {
   quantity?: number;
   product?: Product;
   discountAmount?: number;
+  couponCode?: string;
+  appliedCouponId?: string;
   numColors?: number;
   isDoubleSided?: boolean;
   customVariantSelections?: Record<string, string>;
@@ -44,6 +46,8 @@ export default function OrderForm({
   cartItems = [], 
   quantity = 1, 
   discountAmount = 0, 
+  couponCode,
+  appliedCouponId,
   numColors,
   isDoubleSided,
   customVariantSelections = {},
@@ -315,6 +319,8 @@ export default function OrderForm({
       color: isCartOrder ? null : selectedColor,
       product_price: isCartOrder ? 0 : productPrice,
       total_price: productPrice,
+      discount_amount: discountAmount,
+      coupon_code: couponCode || null,
       applied_offer_id: appliedOfferId || null,
       status: "new",
       cart_items: isCartOrder ? cartItems : [],
@@ -322,6 +328,17 @@ export default function OrderForm({
       metadata: Object.keys(orderMetadata).length > 0 ? orderMetadata : null
     });
     if (error) throw new Error(error.message);
+
+    // ── Redeem Coupon (atomic, server-side) ───
+    if (appliedCouponId) {
+      try {
+        await fetch("/api/coupons/redeem", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ coupon_id: appliedCouponId, order_id: orderId }),
+        });
+      } catch { /* non-critical: order is already saved */ }
+    }
 
     // ── Increment Offer Usage Count ───────────────────────────────────────────
     if (appliedOfferId) {

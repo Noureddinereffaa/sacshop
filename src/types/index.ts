@@ -64,22 +64,46 @@ export interface Product {
     base_colors_included?: number;
     double_sided_price?: number;
   };
-  /** Custom variant groups (e.g. Finition: Matte | Glossy) — no price impact */
+  /** Custom variant groups (e.g. Finition: Matte | Glossy)  no price impact */
   custom_variants?: CustomVariantGroup[];
   /** Per-size color availability map. If empty/null = all colors available for all sizes */
   size_color_availability?: Record<string, string[]>;
   stock: number;
+  reserved_stock?: number;
+  low_stock_threshold?: number;
   is_published: boolean;
   is_featured: boolean;
   sort_order?: number;
   created_at?: string;
+  stock_updated_at?: string;
 }
 
 export interface CustomVariantGroup {
-  /** Group label shown to customer, e.g. "نوع التشطيب" */
+  /** Group label shown to customer, e.g. "" */
   label: string;
   /** Whether the customer MUST choose one option */
   required: boolean;
   /** The selectable options */
   options: string[];
+}
+
+export interface StockMovement {
+  id: string;
+  product_id: string;
+  movement_type: 'in' | 'out' | 'adjustment' | 'return';
+  quantity: number;
+  previous_stock: number;
+  new_stock: number;
+  reference_type?: string;
+  reference_id?: string;
+  notes?: string;
+  created_at: string;
+}
+
+export interface InventoryAlert {
+  product_id: string;
+  product_name: string;
+  current_stock: number;
+  low_stock_threshold: number;
+  severity: 'critical' | 'warning' | 'info';
 }

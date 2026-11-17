@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { rateLimitMiddleware } from '@/lib/rateLimit';
+import { cache } from '@/lib/redis';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!;
@@ -29,12 +31,37 @@ function calculateStarLevel(totalOrders: number): number {
   return 0;
 }
 
+// Cache customer data for 5 minutes
+const CUSTOMER_CACHE_TTL = 300;
+
 export async function POST(request: Request) {
   try {
+    // Apply rate limiting
+    const rateLimitResult = await rateLimitMiddleware(request, "customer");
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          error: "عدد الطلبات تجاوز الحد المسموح به",
+          retryAfter: rateLimitResult.reset,
+        },
+        { status: 429 }
+      );
+    }
+
     const { phone, name } = await request.json();
 
     if (!phone) {
-      return NextResponse.json({ error: "Phone number is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "رقم الهاتف مطلوب" },
+        { status: 400 }
+      );
+    }
+
+    // Check cache first
+    const cacheKey = `customer:${phone}`;
+    const cachedData = await cache.get(cacheKey);
+    if (cachedData) {
+      return NextResponse.json(cachedData);
     }
 
     // 1. Fetch customer by phone
@@ -50,7 +77,7 @@ export async function POST(request: Request) {
          .from('customers')
          .insert({
            phone: phone,
-           name: name || "زبون جديد", // Use provided name or default
+           name: name || "زبون جديد",
            total_orders: 0,
            total_spent: 0
          })
@@ -108,7 +135,7 @@ export async function POST(request: Request) {
       .eq('key', 'discounts')
       .single();
 
-    return NextResponse.json({
+    const responseData = {
       customer: {
         ...customerData,
         star_level: starLevel,
@@ -116,10 +143,18 @@ export async function POST(request: Request) {
       orders: ordersData || [],
       vipOffers: eligibleOffers,
       discountConfig: discountSettings?.value || null
-    });
+    };
+
+    // Cache the response
+    await cache.set(cacheKey, responseData, CUSTOMER_CACHE_TTL);
+
+    return NextResponse.json(responseData);
 
   } catch (error) {
-    console.error("Track API Error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    console.error("Customer API Error:", error);
+    return NextResponse.json(
+      { error: "خطأ في الخادم" },
+      { status: 500 }
+    );
   }
 }

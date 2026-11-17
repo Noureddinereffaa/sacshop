@@ -5,7 +5,7 @@ import { useSettingsStore } from "@/store/settingsStore";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import OrderForm from "@/components/OrderForm";
-import { ShoppingBag, ArrowRight, Minus, Plus, Trash2 } from "lucide-react";
+import { ShoppingBag, ArrowRight, Trash2 } from "lucide-react";
 import Link from "next/link";
 import OptimizedImage from "@/components/OptimizedImage";
 import { useEffect, useState } from "react";
@@ -24,7 +24,6 @@ export default function CheckoutPage() {
     getCartTotal, 
     getDiscountInfo, 
     clearCart, 
-    updateQuantity, 
     removeItem 
   } = useCartStore();
   
@@ -187,29 +186,8 @@ export default function CheckoutPage() {
                         <div className="flex justify-between items-center mt-3">
                            <span className="font-black text-primary">{item.price} د.ج</span>
                            
-                           <div className="flex items-center gap-1 bg-white rounded-xl border border-gray-100 p-0.5 shadow-sm">
-                             <button 
-                               onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                               className="w-7 h-7 flex items-center justify-center text-gray-600 hover:text-primary transition-colors disabled:opacity-50"
-                               disabled={item.quantity <= 1}
-                             >
-                               <Minus size={14} />
-                             </button>
-                             <input
-                               type="number"
-                               min="1"
-                               dir="ltr"
-                               inputMode="numeric"
-                               value={item.quantity}
-                               onChange={(e) => updateQuantity(item.id, Math.max(1, parseInt(e.target.value) || 1))}
-                               className="w-10 text-center font-black text-sm bg-transparent border-none focus:ring-0 outline-none appearance-none p-0"
-                             />
-                             <button 
-                               onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                               className="w-7 h-7 flex items-center justify-center text-gray-600 hover:text-primary transition-colors"
-                             >
-                               <Plus size={14} />
-                             </button>
+                           <div className="flex items-center gap-1 bg-gray-50 rounded-xl p-2 shadow-sm">
+                             <span className="font-black text-sm text-gray-700">الكمية: {item.quantity}</span>
                            </div>
                         </div>
                       </div>

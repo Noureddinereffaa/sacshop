@@ -44,6 +44,14 @@ export const rateLimiters = {
         limiter: Ratelimit.slidingWindow(20, "1 m"),
       })
     : null,
+
+  // Coupon code validation: 20 requests per minute (brute-force protection)
+  couponValidate: redis
+    ? new Ratelimit({
+        redis: redis,
+        limiter: Ratelimit.slidingWindow(20, "1 m"),
+      })
+    : null,
 };
 
 // Simple in-memory rate limiter fallback (for development)
@@ -98,6 +106,7 @@ export const fallbackRateLimiters = {
   adminAuth: new InMemoryRatelimit(5, 60 * 1000),
   customer: new InMemoryRatelimit(30, 60 * 1000),
   createOrder: new InMemoryRatelimit(20, 60 * 1000),
+  couponValidate: new InMemoryRatelimit(20, 60 * 1000),
 };
 
 // Get rate limiter (prefer Redis, fallback to in-memory)

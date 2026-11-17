@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { randomBytes } from "crypto";
+import { createSessionToken, verifySessionToken } from "@/lib/adminAuth";
 import { rateLimitMiddleware } from "@/lib/rateLimit";
 
 export async function POST(request: NextRequest) {
@@ -23,10 +23,8 @@ export async function POST(request: NextRequest) {
     const adminPassword = process.env.ADMIN_PASSWORD || "sacshopadmin";
 
     if (password === adminPassword) {
-      // Generate a secure session token with cryptographic randomness
-      const token = Buffer.from(
-        `admin_${Date.now()}_${randomBytes(32).toString("hex")}`
-      ).toString("base64");
+      // Generate a signed session token (HMAC) — cannot be forged without the secret
+      const token = createSessionToken();
 
       const response = NextResponse.json({ success: true });
 
@@ -36,7 +34,7 @@ export async function POST(request: NextRequest) {
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
         maxAge: 60 * 60 * 24, // 24 hours
-        path: "/admin",
+        path: "/",
         priority: "high",
       });
 
@@ -65,7 +63,7 @@ export async function POST(request: NextRequest) {
 // Verify session endpoint
 export async function GET(request: NextRequest) {
   const sessionCookie = request.cookies.get("admin_session");
-  if (sessionCookie?.value) {
+  if (verifySessionToken(sessionCookie?.value)) {
     return NextResponse.json({ authenticated: true });
   }
   return NextResponse.json({ authenticated: false }, { status: 401 });
@@ -76,7 +74,7 @@ export async function DELETE() {
   const response = NextResponse.json({ success: true });
   response.cookies.delete({
     name: "admin_session",
-    path: "/admin",
+    path: "/",
     sameSite: "strict",
     secure: process.env.NODE_ENV === "production",
   });

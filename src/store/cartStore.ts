@@ -17,12 +17,21 @@ export interface CartItem {
   custom_variant_selections?: Record<string, string>;
 }
 
+export interface AppliedCoupon {
+  id: string;
+  code: string;
+  discount_type: 'percentage' | 'fixed';
+  discount_value: number;
+  max_discount_amount?: number | null;
+}
+
 interface CartStore {
   items: CartItem[];
   isOpen: boolean;
   customerStatus: 'new' | 'vip' | 'guest';
   customer: any | null;
   appliedVipOffer: any | null;
+  appliedCoupon: AppliedCoupon | null;
   addItem: (item: CartItem) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
@@ -31,12 +40,14 @@ interface CartStore {
   setIsOpen: (isOpen: boolean) => void;
   setCustomerStatus: (status: 'new' | 'vip' | 'guest', customer?: any) => void;
   setAppliedVipOffer: (offer: any | null) => void;
+  setAppliedCoupon: (coupon: AppliedCoupon | null) => void;
   getCartTotal: () => number;
   getDiscountInfo: () => {
     isEligible: boolean;
     discountType: 'welcome' | 'vip' | 'none';
     subtotal: number;
     discountAmount: number;
+    couponDiscount: number;
     finalTotal: number;
     percentage: number;
     label: string;
@@ -64,11 +75,13 @@ export const useCartStore = create<CartStore>()(
       customerStatus: 'guest',
       customer: null,
       appliedVipOffer: null,
+      appliedCoupon: null,
       discountConfig: { enabled: true, percentage: 10, discountType: 'percentage', minItems: 2, advancedRules: [] },
       
       setDiscountConfig: (config) => set({ discountConfig: config }),
       setCustomerStatus: (status, customer = null) => set({ customerStatus: status, customer }),
       setAppliedVipOffer: (offer) => set({ appliedVipOffer: offer }),
+      setAppliedCoupon: (coupon) => set({ appliedCoupon: coupon }),
       
       addItem: (item) => set((state) => {
         // Generate a truly unique ID so every addition creates a new row,
@@ -175,13 +188,27 @@ export const useCartStore = create<CartStore>()(
           discountAmount = totalCalculatedDiscount;
         }
 
-        const finalTotal = subtotal - discountAmount;
+        // Coupon code applies on top of welcome/VIP discounts
+        let couponDiscount = 0;
+        if (state.appliedCoupon) {
+          const base = Math.max(0, subtotal - discountAmount);
+          couponDiscount = state.appliedCoupon.discount_type === 'percentage'
+            ? Math.round(base * (state.appliedCoupon.discount_value / 100))
+            : state.appliedCoupon.discount_value;
+          if (state.appliedCoupon.max_discount_amount) {
+            couponDiscount = Math.min(couponDiscount, state.appliedCoupon.max_discount_amount);
+          }
+          couponDiscount = Math.min(couponDiscount, base);
+        }
+
+        const finalTotal = subtotal - discountAmount - couponDiscount;
         
         return {
           isEligible,
           discountType,
           subtotal,
           discountAmount,
+          couponDiscount,
           finalTotal,
           percentage,
           label,

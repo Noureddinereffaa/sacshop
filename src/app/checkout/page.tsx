@@ -8,9 +8,9 @@ import OrderForm from "@/components/OrderForm";
 import { ShoppingBag, ArrowRight, Trash2 } from "lucide-react";
 import Link from "next/link";
 import OptimizedImage from "@/components/OptimizedImage";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Tag, Star, Crown } from "lucide-react";
+import { Tag, Star, Crown, Ticket, X, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 
 export default function CheckoutPage() {
   const { branding } = useSettingsStore();
@@ -18,8 +18,10 @@ export default function CheckoutPage() {
     items, 
     customerStatus,
     appliedVipOffer,
+    appliedCoupon,
     setCustomerStatus,
     setAppliedVipOffer,
+    setAppliedCoupon,
     setDiscountConfig,
     getCartTotal, 
     getDiscountInfo, 
@@ -30,6 +32,11 @@ export default function CheckoutPage() {
   const [mounted, setMounted] = useState(false);
   const [isLoadingOffers, setIsLoadingOffers] = useState(false);
   const [availableOffers, setAvailableOffers] = useState<any[]>([]);
+  const [couponInput, setCouponInput] = useState("");
+  const [isCheckingCoupon, setIsCheckingCoupon] = useState(false);
+  const [couponError, setCouponError] = useState("");
+  const [couponJustApplied, setCouponJustApplied] = useState(false);
+  const lastCartSignature = useRef("");
 
   useEffect(() => {
     setMounted(true);
@@ -94,6 +101,73 @@ export default function CheckoutPage() {
     }
   }
 
+  async function applyCoupon(code: string) {
+    const trimmed = code.trim();
+    if (!trimmed) return;
+    setIsCheckingCoupon(true);
+    setCouponError("");
+    try {
+      const res = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: trimmed,
+          cart: items.map(i => ({ productId: i.productId, price: i.price, quantity: i.quantity })),
+        }),
+      });
+      const data = await res.json();
+      if (!data.valid) {
+        setCouponError(data.error || "الكوبون غير صالح");
+        setAppliedCoupon(null);
+        return;
+      }
+      setAppliedCoupon({
+        id: data.coupon.id,
+        code: data.coupon.code,
+        discount_type: data.coupon.discount_type,
+        discount_value: data.coupon.discount_value,
+        max_discount_amount: data.coupon.max_discount_amount,
+      });
+      setCouponInput("");
+      setCouponJustApplied(true);
+      setTimeout(() => setCouponJustApplied(false), 2500);
+    } catch (err) {
+      console.error("Error validating coupon:", err);
+      setCouponError("حدث خطأ أثناء التحقق من الكوبون");
+    } finally {
+      setIsCheckingCoupon(false);
+    }
+  }
+
+  // Revalidate the applied coupon whenever the cart changes
+  useEffect(() => {
+    if (!mounted || !appliedCoupon) return;
+    const signature = items.map(i => `${i.productId}:${i.price}:${i.quantity}`).join("|");
+    if (signature === lastCartSignature.current) return;
+    lastCartSignature.current = signature;
+    if (items.length === 0) {
+      setAppliedCoupon(null);
+      return;
+    }
+    (async () => {
+      try {
+        const res = await fetch("/api/coupons/validate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            code: appliedCoupon.code,
+            cart: items.map(i => ({ productId: i.productId, price: i.price, quantity: i.quantity })),
+          }),
+        });
+        const data = await res.json();
+        if (!data.valid) {
+          setAppliedCoupon(null);
+          setCouponError(data.error || "لم يعد الكوبون صالحًا على سلتك الحالية");
+        }
+      } catch { /* keep coupon on transient network errors */ }
+    })();
+  }, [items, mounted, appliedCoupon, setAppliedCoupon]);
+
   if (!mounted) return null;
 
   if (items.length === 0) {
@@ -115,7 +189,7 @@ export default function CheckoutPage() {
     );
   }
 
-  const { isEligible, discountType, subtotal, discountAmount, finalTotal, label } = getDiscountInfo();
+  const { isEligible, discountType, subtotal, discountAmount, couponDiscount, finalTotal, label } = getDiscountInfo();
 
   return (
     <main className="min-h-screen bg-transparent flex flex-col pt-8">
@@ -195,6 +269,59 @@ export default function CheckoutPage() {
                   ))}
                 </div>
 
+                {/* Coupon Input */}
+                <div className="mb-6 relative z-10">
+                  {appliedCoupon ? (
+                    <div className="flex justify-between items-center bg-primary/5 border border-primary/20 p-4 rounded-2xl">
+                      <div className="flex items-center gap-2">
+                        <Ticket size={20} className="text-primary" />
+                        <div className="flex flex-col">
+                          <span className="font-black text-primary font-mono tracking-wider">{appliedCoupon.code}</span>
+                          <span className="text-[10px] text-gray-500 font-bold">
+                            {couponJustApplied ? "تم تطبيق الكوبون بنجاح ✓" : "كوبون الخصم مُطبّق"}
+                          </span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => { setAppliedCoupon(null); setCouponError(""); }}
+                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                        title="إزالة الكوبون"
+                      >
+                        <X size={18} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <Ticket size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                          <input
+                            type="text"
+                            value={couponInput}
+                            onChange={e => { setCouponInput(e.target.value.toUpperCase()); setCouponError(""); }}
+                            onKeyDown={e => { if (e.key === "Enter") applyCoupon(couponInput); }}
+                            className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 pr-12 pl-4 focus:ring-2 focus:ring-primary/20 outline-none font-mono font-black tracking-wider uppercase"
+                            placeholder="أدخل كود الخصم"
+                          />
+                        </div>
+                        <button
+                          onClick={() => applyCoupon(couponInput)}
+                          disabled={isCheckingCoupon || !couponInput.trim()}
+                          className="bg-gray-900 text-white px-6 py-3 rounded-xl font-black hover:bg-gray-800 transition-all disabled:opacity-40 flex items-center gap-2 shrink-0"
+                        >
+                          {isCheckingCoupon ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
+                          تطبيق
+                        </button>
+                      </div>
+                      {couponError && (
+                        <div className="flex items-center gap-2 text-red-500 text-xs font-bold mt-2 bg-red-50 p-3 rounded-xl">
+                          <AlertCircle size={14} /> {couponError}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
                 {/* Discount Applied */}
                 {isEligible && (
                   <div className="flex justify-between items-center text-green-600 font-bold mb-4 bg-green-50 p-4 rounded-2xl border border-green-100 animate-in zoom-in-95">
@@ -227,7 +354,29 @@ export default function CheckoutPage() {
                   </div>
                 )}
 
+                {/* Coupon Applied */}
+                {appliedCoupon && couponDiscount > 0 && (
+                  <div className="flex justify-between items-center text-primary font-bold mb-4 bg-primary/5 p-4 rounded-2xl border border-primary/20">
+                     <div className="flex items-center gap-2">
+                        <Ticket size={20} />
+                        <div className="flex flex-col">
+                           <span className="text-sm">كوبون {appliedCoupon.code}</span>
+                           <span className="text-[10px] opacity-70">
+                             {appliedCoupon.discount_type === "percentage" ? `${appliedCoupon.discount_value}%` : "خصم مباشر"}
+                           </span>
+                        </div>
+                     </div>
+                     <span>-{couponDiscount.toLocaleString()} د.ج</span>
+                  </div>
+                )}
+
                 <div className="pt-4 border-t border-gray-100">
+                  {(isEligible || (appliedCoupon && couponDiscount > 0)) && (
+                    <div className="flex justify-between items-center text-gray-500 font-bold mb-2 text-sm">
+                       <span>المجموع الفرعي</span>
+                       <span>{subtotal.toLocaleString()} د.ج</span>
+                    </div>
+                  )}
                   <div className="flex justify-between items-center mb-6">
                      <span className="text-gray-900 font-black text-xl">المجموع النهائي</span>
                      <span className="text-3xl font-black text-primary">{finalTotal.toLocaleString()} د.ج</span>
@@ -254,7 +403,9 @@ export default function CheckoutPage() {
                productPrice={finalTotal}
                appliedOfferId={appliedVipOffer?.id}
                cartItems={items}
-               discountAmount={discountAmount}
+               discountAmount={discountAmount + couponDiscount}
+               couponCode={appliedCoupon?.code}
+               appliedCouponId={appliedCoupon?.id}
              />
           </div>
 

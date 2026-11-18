@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
+import { verifySessionToken } from "@/lib/adminAuth";
 
 // Server-side route uses SERVICE_ROLE key → bypasses RLS completely
 const getAdminSupabase = () => {
@@ -14,10 +15,9 @@ const getAdminSupabase = () => {
 };
 
 async function isAdminAuthenticated(request: NextRequest): Promise<boolean> {
-  // Check httpOnly admin_session cookie (same method as admin-auth route)
-  const cookieStore = await cookies();
-  const sessionToken = cookieStore.get("admin_session");
-  if (sessionToken?.value) return true;
+  // Check httpOnly admin_session cookie with HMAC signature verification
+  const sessionToken = (await cookies()).get("admin_session")?.value;
+  if (verifySessionToken(sessionToken)) return true;
 
   // Fallback: check x-admin-password header
   const headerPassword = request.headers.get("x-admin-password");

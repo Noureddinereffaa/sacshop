@@ -1,7 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { rateLimitMiddleware } from "@/lib/rateLimit";
 import { cache } from "@/lib/redis";
+import { requireAdmin } from "@/lib/adminAuth";
 
 function getAdminSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim().replace(/['"]/g, "");
@@ -13,7 +14,10 @@ function getAdminSupabase() {
 // Cache TTL for inventory data (1 minute)
 const INVENTORY_CACHE_TTL = 60;
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  const unauthorized = requireAdmin(request);
+  if (unauthorized) return unauthorized;
+
   try {
     // Apply rate limiting
     const rateLimitResult = await rateLimitMiddleware(request, "general");
@@ -85,7 +89,10 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const unauthorized = requireAdmin(request);
+  if (unauthorized) return unauthorized;
+
   try {
     // Apply rate limiting
     const rateLimitResult = await rateLimitMiddleware(request, "general");

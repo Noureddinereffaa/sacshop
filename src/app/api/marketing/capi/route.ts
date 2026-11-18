@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
+import { requireAdmin } from '@/lib/adminAuth';
 
 // Hash data for Facebook CAPI (SHA-256)
 const hashData = (data: string) => {
@@ -8,7 +9,10 @@ const hashData = (data: string) => {
   return crypto.createHash('sha256').update(data.trim().toLowerCase()).digest('hex');
 };
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  const unauthorized = requireAdmin(req);
+  if (unauthorized) return unauthorized;
+
   try {
     const { eventName, order } = await req.json();
 

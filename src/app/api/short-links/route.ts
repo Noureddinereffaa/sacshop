@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { requireAdmin } from "@/lib/adminAuth";
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://serviceserigraphie.com").replace(/\/+$/, "");
 
@@ -20,7 +21,10 @@ function generateSlug(type: string): string {
   return slug;
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const unauthorized = requireAdmin(req);
+  if (unauthorized) return unauthorized;
+
   const sb = getAdminSupabase();
   if (!sb) return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
 
@@ -34,6 +38,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const unauthorized = requireAdmin(req);
+  if (unauthorized) return unauthorized;
+
   const sb = getAdminSupabase();
   if (!sb) return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
 
@@ -90,6 +97,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const unauthorized = requireAdmin(req);
+  if (unauthorized) return unauthorized;
+
   const sb = getAdminSupabase();
   if (!sb) return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
 

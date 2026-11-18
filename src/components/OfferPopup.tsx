@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { X, ArrowRight, Sparkles } from "lucide-react";
 import { useSettingsStore } from "@/store/settingsStore";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
+import { getPopupImageUrl } from "@/lib/popupImage";
 
 // Pages where popup is allowed
 const ALLOWED_PATHS = ["/", "/products", "/offers"];
@@ -36,23 +35,18 @@ export default function OfferPopup() {
     setIsEligiblePath(shouldShowPopup(pathname));
   }, [pathname]);
 
-  // Warm the browser cache as soon as settings arrive, so the image
-  // is already downloaded when the popup opens
-  useEffect(() => {
-    if (isLoaded && popup?.enabled && popup.image) {
-      const warm = new window.Image();
-      warm.src = popup.image;
-    }
-  }, [isLoaded, popup]);
+  // Same optimized URL as the server preload and SSR popup — one download total
+  const popupImageUrl = getPopupImageUrl(popup?.image);
 
   useEffect(() => {
     if (!isLoaded || !popup?.enabled || !isEligiblePath) return;
 
-    // Check if shown in this browser (localStorage = once per visitor, not per session)
-    const shown = localStorage.getItem("servseri_popup_shown_v2");
-    if (shown) return;
+    // Check if shown in this browser (localStorage = once per visitor, not per session).
+    // The in-timeout recheck avoids racing the SSR popup script (or vice versa).
+    if (localStorage.getItem("servseri_popup_shown_v2")) return;
 
     const timer = setTimeout(() => {
+      if (localStorage.getItem("servseri_popup_shown_v2")) return;
       setIsOpen(true);
       localStorage.setItem("servseri_popup_shown_v2", Date.now().toString());
     }, popup.delay || 1500);
@@ -65,22 +59,17 @@ export default function OfferPopup() {
   if (!popup?.enabled) return null;
 
   return (
-    <AnimatePresence>
+    <>
       {isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          <div
             onClick={closePopup}
+            style={{ animation: "ppFade 200ms ease-out" }}
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
           />
 
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          <div
+            style={{ animation: "ppIn 250ms ease-out" }}
             className="relative w-full max-w-sm sm:max-w-md bg-white rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col text-right"
             dir="rtl"
           >
@@ -91,15 +80,14 @@ export default function OfferPopup() {
               <X size={20} />
             </button>
 
-            {popup.image ? (
+            {popupImageUrl ? (
               <div className="relative w-full aspect-[4/3] max-h-[60vh] bg-gray-50 overflow-hidden">
-                <Image
-                  src={popup.image}
+                <img
+                  src={popupImageUrl}
                   alt={popup.title || "عرض خاص"}
-                  fill
-                  sizes="(max-width: 448px) 100vw, 448px"
-                  className="object-contain"
-                  priority
+                  fetchPriority="high"
+                  decoding="async"
+                  className="absolute inset-0 w-full h-full object-contain"
                 />
               </div>
             ) : (
@@ -131,9 +119,9 @@ export default function OfferPopup() {
                 ربما لاحقاً
               </button>
             </div>
-          </motion.div>
+          </div>
         </div>
       )}
-    </AnimatePresence>
+    </>
   );
 }

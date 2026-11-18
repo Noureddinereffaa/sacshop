@@ -6,6 +6,7 @@ import SettingsProvider from "@/components/SettingsProvider";
 import dynamic from "next/dynamic";
 import GlobalNavigation from "@/components/GlobalNavigation";
 import Footer from "@/components/Footer";
+import { getPopupImageUrl, escapeHtml } from "@/lib/popupImage";
 
 // Lazy-load non-critical components (code-split into separate chunks)
 const OfferPopup = dynamic(() => import("@/components/OfferPopup"));
@@ -145,6 +146,49 @@ export default async function RootLayout({
     '--color-primary-rgb': primaryColorRgb,
   } as React.CSSProperties;
 
+  // Maximum-speed popup: server-rendered markup + inline script.
+  // Appears exactly at the configured delay, independent of hydration.
+  const popupSettings = settingsMap?.popup;
+  const popupPreloadUrl = getPopupImageUrl(popupSettings?.image);
+  const popupSsrHtml = popupSettings?.enabled && popupPreloadUrl ?
+    (() => {
+      const title = escapeHtml(popupSettings.title || "عرض خاص");
+      const description = popupSettings.description ? escapeHtml(popupSettings.description) : "";
+      const buttonText = escapeHtml(popupSettings.buttonText || "اطلب الآن");
+      const buttonLink = escapeHtml(popupSettings.buttonLink || "/products");
+      return `<style>
+#promo-popup-ssr{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;padding:1rem;background:rgba(0,0,0,.6);backdrop-filter:blur(4px)}
+#promo-popup-ssr.on{display:flex}
+#promo-popup-ssr .pp-card{animation:ppIn .25s ease-out}
+@keyframes ppIn{from{opacity:0;transform:scale(.92) translateY(14px)}to{opacity:1;transform:scale(1) translateY(0)}}
+</style>
+<div id="promo-popup-ssr">
+  <div class="pp-card relative w-full max-w-sm sm:max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden text-right" dir="rtl">
+    <button onclick="window.__ppClose()" aria-label="إغلاق" style="position:absolute;top:14px;left:14px;z-index:20;width:36px;height:36px;border-radius:9999px;background:rgba(255,255,255,.85);color:#9ca3af;font-size:20px;line-height:1;box-shadow:0 1px 4px rgba(0,0,0,.15);cursor:pointer;border:0">×</button>
+    <img src="${popupPreloadUrl}" alt="${title}" fetchpriority="high" decoding="async" style="width:100%;aspect-ratio:4/3;max-height:60vh;object-fit:contain;background:#f9fafb">
+    <div style="padding:1rem 1.25rem 1.25rem;display:flex;flex-direction:column;gap:.6rem">
+      <h2 style="font-weight:900;font-size:1.15rem;color:#111827;margin:0">${title}</h2>
+      ${description ? `<p style="color:#6b7280;font-size:.85rem;font-weight:700;margin:0;line-height:1.6">${description}</p>` : ""}
+      <a href="${buttonLink}" onclick="window.__ppClose()" style="display:block;width:100%;background:var(--color-primary);color:#fff;text-align:center;padding:.9rem;border-radius:1rem;font-weight:900;text-decoration:none;box-shadow:0 10px 20px -8px var(--color-primary)">${buttonText}</a>
+      <button onclick="window.__ppClose()" style="background:none;border:0;color:#9ca3af;font-size:.75rem;font-weight:700;cursor:pointer;padding:.35rem">ربما لاحقًا</button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var KEY="servseri_popup_shown_v2";
+  var p=location.pathname;
+  var ok=p==="/"||p==="/products"||p==="/offers"||p.indexOf("/products/")===0;
+  if(!ok)return;
+  window.__ppClose=function(){localStorage.setItem(KEY,Date.now().toString());var el=document.getElementById("promo-popup-ssr");if(el)el.classList.remove("on");};
+  function open(){if(localStorage.getItem(KEY))return;var el=document.getElementById("promo-popup-ssr");if(!el)return;el.classList.add("on");localStorage.setItem(KEY,Date.now().toString());}
+  if(localStorage.getItem(KEY))return;
+  setTimeout(open,${(popupSettings.delay ?? 1500)});
+})();
+</script>`;
+    })()
+    : null;
+
   return (
     <html lang="ar" dir="rtl" style={cssVariables}>
       <head>
@@ -157,11 +201,12 @@ export default async function RootLayout({
             `,
           }}
         />
-        {settingsMap?.popup?.enabled && settingsMap.popup.image && (
-          <link rel="preload" as="image" href={settingsMap.popup.image} fetchPriority="high" />
+        {popupPreloadUrl && popupSsrHtml && (
+          <link rel="preload" as="image" href={popupPreloadUrl} fetchPriority="high" />
         )}
       </head>
       <body className={`${tajawal.variable} font-sans`}>
+        {popupSsrHtml && <div dangerouslySetInnerHTML={{ __html: popupSsrHtml }} />}
         <SettingsProvider initialSettings={settingsMap}>
           <ScrollToTop />
           <MarketingPixels />

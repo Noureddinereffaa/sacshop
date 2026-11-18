@@ -6,6 +6,7 @@ import { X, ArrowRight, Sparkles } from "lucide-react";
 import { useSettingsStore } from "@/store/settingsStore";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 
 // Pages where popup is allowed
 const ALLOWED_PATHS = ["/", "/products", "/offers"];
@@ -29,10 +30,23 @@ export default function OfferPopup() {
   const { popup, isLoaded } = useSettingsStore();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const [isEligiblePath, setIsEligiblePath] = useState(false);
 
   useEffect(() => {
-    if (!isLoaded || !popup?.enabled) return;
-    if (!shouldShowPopup(pathname)) return;
+    setIsEligiblePath(shouldShowPopup(pathname));
+  }, [pathname]);
+
+  // Warm the browser cache as soon as settings arrive, so the image
+  // is already downloaded when the popup opens
+  useEffect(() => {
+    if (isLoaded && popup?.enabled && popup.image) {
+      const warm = new window.Image();
+      warm.src = popup.image;
+    }
+  }, [isLoaded, popup]);
+
+  useEffect(() => {
+    if (!isLoaded || !popup?.enabled || !isEligiblePath) return;
 
     // Check if shown in this browser (localStorage = once per visitor, not per session)
     const shown = localStorage.getItem("servseri_popup_shown_v2");
@@ -41,10 +55,10 @@ export default function OfferPopup() {
     const timer = setTimeout(() => {
       setIsOpen(true);
       localStorage.setItem("servseri_popup_shown_v2", Date.now().toString());
-    }, popup.delay || 2000);
+    }, popup.delay || 1500);
 
     return () => clearTimeout(timer);
-  }, [isLoaded, popup, pathname]);
+  }, [isLoaded, popup, isEligiblePath]);
 
   const closePopup = () => setIsOpen(false);
 
@@ -78,11 +92,14 @@ export default function OfferPopup() {
             </button>
 
             {popup.image ? (
-              <div className="relative w-full bg-gray-50 flex justify-center items-center overflow-hidden">
-                <img
+              <div className="relative w-full aspect-[4/3] max-h-[60vh] bg-gray-50 overflow-hidden">
+                <Image
                   src={popup.image}
                   alt={popup.title || "عرض خاص"}
-                  className="w-full h-auto max-h-[60vh] object-contain"
+                  fill
+                  sizes="(max-width: 448px) 100vw, 448px"
+                  className="object-contain"
+                  priority
                 />
               </div>
             ) : (

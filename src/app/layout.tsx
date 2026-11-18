@@ -157,6 +157,9 @@ export default async function RootLayout({
             `,
           }}
         />
+        {settingsMap?.popup?.enabled && settingsMap.popup.image && (
+          <link rel="preload" as="image" href={settingsMap.popup.image} fetchPriority="high" />
+        )}
       </head>
       <body className={`${tajawal.variable} font-sans`}>
         <SettingsProvider initialSettings={settingsMap}>

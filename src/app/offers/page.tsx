@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import Reveal from "@/components/Reveal";
 import { Tag, Crown, Gift, ArrowLeft, ShoppingBag, Percent, Star, Zap, Clock, CheckCircle2, DollarSign, Loader2, Flame, Sparkles } from "lucide-react";
 import Link from "next/link";
 import OptimizedImage from "@/components/OptimizedImage";
@@ -69,29 +69,25 @@ export default function OffersPage() {
         <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -mr-48 -mt-48" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-secondary/5 rounded-full blur-3xl -ml-32 -mb-32" />
         <div className="container mx-auto px-4 text-center relative z-10">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
+          <div
+            style={{ animation: "fadeIn 400ms ease-out" }}
             className="inline-flex items-center gap-2 bg-primary/10 text-primary px-5 py-2 rounded-full font-black text-xs uppercase tracking-widest mb-6"
           >
             <Zap size={14} className="animate-pulse" />
             حصراً لزبائن {branding.storeName}
-          </motion.div>
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+          </div>
+          <h1
+            style={{ animation: "fadeUp 500ms ease-out" }}
             className="text-4xl lg:text-6xl font-black text-gray-950 mb-6"
           >
              عروض <span className="text-primary italic">VIP</span> وتخفيضات حصرية 🎁
-          </motion.h1>
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
+          </h1>
+          <p
+            style={{ animation: "fadeUp 500ms ease-out 100ms backwards" }}
             className="text-gray-500 text-lg max-w-2xl mx-auto font-medium"
           >
             نحن نقدر ولاءكم! اكتشف قائمة العروض المخصصة. وفر أكثر عند كل طلبية واحصل على مزايا استثنائية.
-          </motion.p>
+          </p>
         </div>
       </section>
 
@@ -164,9 +160,8 @@ export default function OffersPage() {
                   </div>
 
                   <div className="lg:col-span-2">
-                    <motion.div 
-                      whileHover={{ y: -10 }}
-                      className="bg-gradient-to-br from-primary to-primary/80 rounded-[3rem] p-10 md:p-16 shadow-2xl shadow-primary/30 relative overflow-hidden group border-4 border-white/20"
+                    <div
+                      className="bg-gradient-to-br from-primary to-primary/80 rounded-[3rem] p-10 md:p-16 shadow-2xl shadow-primary/30 relative overflow-hidden group border-4 border-white/20 transition-transform duration-300 hover:-translate-y-2.5"
                     >
                         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none group-hover:scale-125 transition-transform duration-1000" />
                         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
@@ -188,7 +183,7 @@ export default function OffersPage() {
                               </div>
                           </div>
                         </div>
-                    </motion.div>
+                    </div>
                   </div>
                 </div>
               </section>
@@ -200,15 +195,12 @@ export default function OffersPage() {
             {hasDiscountedProducts && (
               <section className="space-y-12 pt-12 border-t border-gray-100">
                 <div className="text-center space-y-3">
-                   <motion.div 
-                     initial={{ opacity: 0, y: 10 }}
-                     whileInView={{ opacity: 1, y: 0 }}
-                     viewport={{ once: true }}
+                   <Reveal
                      className="inline-flex items-center gap-2 bg-red-50 text-red-600 px-5 py-2 rounded-full font-black text-xs uppercase tracking-widest"
                    >
                      <Flame size={14} />
                      صفقات لا تُفوَّت
-                   </motion.div>
+                   </Reveal>
                    <h2 className="text-3xl font-black text-gray-950">مختارات مخفضة لك 🔥</h2>
                    <p className="text-gray-500 font-bold">منتجات عليها تخفيضات حقيقية — اغتنم الفرصة قبل نفاذها!</p>
                 </div>
@@ -219,12 +211,9 @@ export default function OffersPage() {
                     const savingPercent = product.compare_price ? Math.round((saving / product.compare_price) * 100) : 0;
                     
                     return (
-                      <motion.div
+                      <Reveal
                         key={product.id}
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: idx * 0.1 }}
+                        delay={idx * 0.1}
                       >
                         <Link href={`/products/${product.id}`} className="block group">
                           <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-lg hover:shadow-2xl transition-all overflow-hidden relative h-full flex flex-col">
@@ -265,7 +254,7 @@ export default function OffersPage() {
                             </div>
                           </div>
                         </Link>
-                      </motion.div>
+                      </Reveal>
                     );
                   })}
                 </div>

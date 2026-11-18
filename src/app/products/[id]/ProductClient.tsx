@@ -13,7 +13,6 @@ import {
   CheckCircle2, Package, Zap, Crown, Tag, Gift, Sparkles, ShoppingBag, ArrowLeft, Search
 } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
-import { motion, AnimatePresence } from "framer-motion";
 import { Product } from "@/types";
 
 // Fallback for demo when Supabase not connected
@@ -394,15 +393,11 @@ export default function ProductClient({ initialProduct }: { initialProduct: Prod
       </div>
 
       {/* Floating Toast Notification */}
-      <AnimatePresence mode="wait">
-        {showToast && (
-          <motion.div 
+      {showToast && (
+          <div
             key={toastKey}
-            initial={{ opacity: 0, y: -50, scale: 0.8 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.9 }}
-            transition={{ type: "spring", stiffness: 400, damping: 25 }}
-            className="fixed top-20 sm:top-24 left-1/2 -translate-x-1/2 z-[100] w-[92%] sm:w-max pointer-events-none"
+            style={{ animation: "toastIn 350ms cubic-bezier(0.16, 1, 0.3, 1)" }}
+            className="fixed top-20 sm:top-24 left-1/2 z-[100] w-[92%] sm:w-max pointer-events-none"
           >
             <div className="bg-white p-4 rounded-2xl shadow-2xl shadow-green-500/20 border-2 border-green-500 flex items-center justify-between gap-4 w-full">
                <div className="flex items-center gap-3">
@@ -418,20 +413,17 @@ export default function ProductClient({ initialProduct }: { initialProduct: Prod
                   <CheckCircle2 size={18} />
                </div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+      )}
 
       <div className="container mx-auto px-4 py-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
 
           {/* ==================== LEFT: Images ==================== */}
           <div className="space-y-4 lg:sticky lg:top-24">
-            <motion.div
+            <div
               key={selectedImage}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.2 }}
+              style={{ animation: "fadeIn 200ms ease-out" }}
               className="aspect-square bg-white rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-xl relative"
             >
               {allImages[selectedImage] ? (
@@ -453,7 +445,7 @@ export default function ProductClient({ initialProduct }: { initialProduct: Prod
                   -{discountPercent}%
                 </div>
               )}
-            </motion.div>
+            </div>
 
             {/* Thumbnails */}
             {allImages.length > 1 && (
@@ -742,9 +734,8 @@ export default function ProductClient({ initialProduct }: { initialProduct: Prod
 
               {/* Returning Customer & Rank Info (Bottom Position + Responsive) */}
               {customerStatus === 'vip' && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
+                <div
+                  style={{ animation: "fadeUp 400ms ease-out" }}
                   className="bg-white border-2 border-primary/20 rounded-[2.5rem] p-5 sm:p-7 shadow-xl shadow-primary/5 space-y-5 relative overflow-hidden group"
                 >
                   {/* Decorative background logo icon */}
@@ -789,7 +780,7 @@ export default function ProductClient({ initialProduct }: { initialProduct: Prod
                      <Sparkles size={16} className="shrink-0 mt-0.5 text-primary" />
                      <span>بما أنك زبون مميز، استمتع بأسعارك الخاصة المطبقة تلقائياً على سلتك فوراً.</span>
                   </div>
-                </motion.div>
+                </div>
               )}
             </div>
 
@@ -839,10 +830,8 @@ export default function ProductClient({ initialProduct }: { initialProduct: Prod
     </div>
 
       {/* Sticky Mobile Order Button */}
-      <motion.div
-        initial={{ y: 100 }}
-        animate={{ y: showStickyButton ? 0 : 100 }}
-        className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-white/95 backdrop-blur-lg border-t border-gray-200 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] lg:hidden flex items-center justify-between gap-4"
+      <div
+        className={`fixed bottom-0 left-0 right-0 z-40 p-4 bg-white/95 backdrop-blur-lg border-t border-gray-200 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] lg:hidden flex items-center justify-between gap-4 transition-transform duration-300 ${showStickyButton ? "translate-y-0" : "translate-y-full"}`}
       >
         <div className="flex flex-col">
           <span className="text-xs font-bold text-gray-500 uppercase">السعر الإجمالي</span>
@@ -864,7 +853,7 @@ export default function ProductClient({ initialProduct }: { initialProduct: Prod
           <Package size={20} />
           اطلب الآن
         </button>
-      </motion.div>
+      </div>
 
     </main>
   );

@@ -1,7 +1,6 @@
 "use client";
 
 import { useSettingsStore } from "@/store/settingsStore";
-import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { ArrowLeft, Sparkles, PlusCircle } from "lucide-react";
 
@@ -22,14 +21,13 @@ export default function PromoStrip() {
   const leftButtons = buttons.filter((b: any) => b.position === "left");
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="w-full border-b border-white/10 shadow-xl overflow-hidden"
-      style={{ 
+    <div
+      style={{
+        animation: "dropIn 300ms ease-out",
         backgroundColor: promobar.bgColor || "#00AEEF",
         backgroundImage: 'linear-gradient(to right, rgba(0,0,0,0.1), transparent, rgba(0,0,0,0.1))'
       }}
+      className="w-full border-b border-white/10 shadow-xl overflow-hidden"
     >
       <div className="container mx-auto px-4 py-1.5 flex flex-row items-center justify-between gap-2 sm:gap-4 overflow-x-auto no-scrollbar">
         
@@ -48,21 +46,12 @@ export default function PromoStrip() {
               {btn.label.includes("اضغط هنا") ? (
                 <>
                   {btn.label.split("اضغط هنا")[0]}
-                  <motion.span 
-                    animate={{ 
-                      scale: [1, 1.1, 1],
-                      color: ['#ffffff', '#FFE24D', '#ffffff'],
-                      textShadow: [
-                        '0 0 0px rgba(255,226,77,0)',
-                        '0 0 10px rgba(255,226,77,0.8)',
-                        '0 0 0px rgba(255,226,77,0)'
-                      ]
-                    }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  <span
+                    style={{ animation: "pulseGlow 2s ease-in-out infinite", color: "#FFE24D" }}
                     className="underline decoration-2 underline-offset-4 font-black mx-1 inline-block"
                   >
                     اضغط هنا
-                  </motion.span>
+                  </span>
                   {btn.label.split("اضغط هنا")[1]}
                 </>
               ) : btn.label}
@@ -99,6 +88,6 @@ export default function PromoStrip() {
       {/* Decorative patterns */}
       <div className="absolute top-0 left-0 w-24 h-full bg-gradient-to-r from-white/10 to-transparent pointer-events-none" />
       <div className="absolute top-0 right-0 w-24 h-full bg-gradient-to-l from-white/10 to-transparent pointer-events-none" />
-    </motion.div>
+    </div>
   );
 }

@@ -2,7 +2,6 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import {
   Crown, Package, Calendar, Gift, Percent, Tag,
   AlarmClock, ShoppingBag, ArrowLeft, Star, CheckCircle2,
@@ -312,9 +311,8 @@ function AccountContent() {
       </div>
 
       {activeTab === "settings" ? (
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
+        <div
+          style={{ animation: "fadeUp 400ms ease-out" }}
           className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-2xl border border-gray-100 max-w-2xl mx-auto"
         >
           <div className="flex items-center gap-4 mb-8">
@@ -388,15 +386,14 @@ function AccountContent() {
           >
             تسجيل الخروج من هذا الجهاز
           </button>
-        </motion.div>
+        </div>
       ) : (
         <>
 
       {/* ── WhatsApp Confirm CTA (shown immediately after new order) ────────── */}
       {waLink && !waClicked && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
+        <div
+          style={{ animation: "popIn 300ms ease-out" }}
           className="bg-[#25D366] rounded-[2.5rem] p-7 md:p-10 shadow-2xl shadow-[#25D366]/30 relative overflow-hidden"
         >
           <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
@@ -442,13 +439,12 @@ function AccountContent() {
               <ArrowLeft size={18} />
             </a>
           </div>
-        </motion.div>
+        </div>
       )}
 
       {waLink && waClicked && (
-        <motion.div
-           initial={{ opacity: 0, y: -10 }}
-           animate={{ opacity: 1, y: 0 }}
+        <div
+           style={{ animation: "dropIn 300ms ease-out" }}
            className="bg-green-50 border-2 border-green-200 rounded-3xl p-6 shadow-sm flex items-center gap-5"
         >
           <div className="w-14 h-14 bg-green-100 rounded-2xl flex items-center justify-center shrink-0 shadow-inner">
@@ -458,7 +454,7 @@ function AccountContent() {
              <p className="text-green-800 font-black text-lg">شكراً لك! طلبك الآن في طور التأكيد.</p>
              <p className="text-green-700 text-sm font-medium mt-0.5">لقد قمت بإرسال تفاصيل الطلب بنجاح. سيتم مراجعته قريباً وتحديث حالته هنا.</p>
           </div>
-        </motion.div>
+        </div>
       )}
 
       {/* ── Identity Card ──────────────────────────────────────────────────── */}
@@ -536,9 +532,8 @@ function AccountContent() {
                   <span>المستوى {customerData.star_level + 1}</span>
                 </div>
                 <div className="h-3 bg-gray-100 rounded-full overflow-hidden border border-gray-100 shadow-inner">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: "50%" }} // Simple logic: one more order needed
+                  <div
+                    style={{ width: "50%", animation: "growW 800ms ease-out" }}
                     className="h-full bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full shadow-lg shadow-yellow-500/20"
                   />
                 </div>
@@ -649,10 +644,9 @@ function AccountContent() {
             const currentStepIndex = order.status === "cancelled" ? -1 : TIMELINE_STEPS.indexOf(order.status);
             
             return (
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                key={order.id} 
+              <div
+                key={order.id}
+                style={{ animation: "fadeUp 350ms ease-out backwards" }}
                 className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden hover:shadow-xl transition-all duration-300 group"
               >
                 {/* Header */}
@@ -805,7 +799,7 @@ function AccountContent() {
                     </div>
                   )}
                 </div>
-              </motion.div>
+              </div>
             );
           })}
         </div>

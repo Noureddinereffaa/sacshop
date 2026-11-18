@@ -2,7 +2,6 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import { CheckCircle2, Eye, EyeOff, Lock, Loader2, ShieldCheck, Star } from "lucide-react";
 
 // ── Inner component that uses useSearchParams ─────────────────────────────────
@@ -71,9 +70,8 @@ function SetPasswordContent() {
         <div className="w-full max-w-lg">
 
           {/* Order Confirmed Banner */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
+          <div
+            style={{ animation: "dropIn 350ms ease-out" }}
             className="bg-green-50 border-2 border-green-200 rounded-3xl p-6 mb-8 flex items-center gap-5"
           >
             <div className="w-14 h-14 bg-green-100 rounded-2xl flex items-center justify-center shrink-0 shadow-inner">
@@ -87,13 +85,11 @@ function SetPasswordContent() {
                 رقم المرجع: <span className="font-black">#{refId.toUpperCase()}</span>
               </p>
             </div>
-          </motion.div>
+          </div>
 
           {/* Password Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
+          <div
+            style={{ animation: "fadeUp 500ms ease-out 150ms backwards" }}
             className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-2xl border border-gray-100 relative overflow-hidden"
           >
             {/* Background decorations */}
@@ -218,7 +214,7 @@ function SetPasswordContent() {
                 </div>
               </form>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </main>

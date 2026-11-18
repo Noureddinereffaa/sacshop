@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import OptimizedImage from "@/components/OptimizedImage";
 import Link from "next/link";
@@ -59,21 +58,15 @@ export default function Hero() {
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* ── Slides ── */}
-      <AnimatePresence initial={false} mode="wait">
-        <motion.div
+        <div
           key={current}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.7, ease: "easeInOut" }}
+          style={{ animation: "fadeIn 700ms ease-in-out" }}
           className="absolute inset-0"
         >
           {/* Image with subtle Ken Burns zoom */}
-          <motion.div
+          <div
             className="absolute inset-0"
-            initial={{ scale: 1.06 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 7, ease: "easeOut" }}
+            style={{ animation: "kenBurns 7s ease-out both" }}
           >
             <OptimizedImage
               src={slides[current].image}
@@ -83,7 +76,7 @@ export default function Hero() {
               className="object-cover object-center"
               priority
             />
-          </motion.div>
+          </div>
 
           {/* ── Bottom gradient — keeps image bright, just darkens the very bottom for text legibility ── */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
@@ -93,36 +86,30 @@ export default function Hero() {
             <div className="max-w-2xl ml-auto text-right">
 
               {/* Tag badge */}
-              <motion.p
+              <p
                 key={`tag-${current}`}
-                initial={{ opacity: 0, x: 16 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.05, duration: 0.45 }}
+                style={{ animation: "fadeIn 450ms ease-out 50ms backwards" }}
                 className="inline-block bg-primary/80 backdrop-blur-sm text-white text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-widest mb-5"
               >
                 منتجاتنا المميزة
-              </motion.p>
+              </p>
 
               {/* Main heading — layered text-shadow for crisp readability on any photo */}
-              <motion.h1
+              <h1
                 key={`h1-${current}`}
-                initial={{ opacity: 0, y: 24 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.18, duration: 0.55, ease: "easeOut" }}
-                className="text-3xl md:text-5xl lg:text-6xl font-black text-white leading-tight mb-4"
                 style={{
+                  animation: "fadeUp 550ms ease-out 180ms backwards",
                   textShadow: "0 2px 4px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.4), 0 0 40px rgba(0,0,0,0.25)"
                 }}
+                className="text-3xl md:text-5xl lg:text-6xl font-black text-white leading-tight mb-4"
               >
                 {slides[current].title}
-              </motion.h1>
+              </h1>
 
               {/* Accent line + subtitle */}
-              <motion.div
+              <div
                 key={`sub-${current}`}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.32, duration: 0.5 }}
+                style={{ animation: "fadeUp 500ms ease-out 320ms backwards" }}
                 className="flex items-start justify-end gap-3 mb-8"
               >
                 <p
@@ -133,41 +120,34 @@ export default function Hero() {
                 </p>
                 {/* Decorative vertical accent bar */}
                 <div className="w-1 shrink-0 rounded-full bg-primary mt-1" style={{ height: "100%", minHeight: "2.5rem" }} />
-              </motion.div>
+              </div>
 
               {/* CTA button — single */}
-              <motion.div
+              <div
                 key={`btn-${current}`}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.48, duration: 0.4 }}
+                style={{ animation: "fadeUp 400ms ease-out 480ms backwards" }}
                 className="flex items-center justify-end"
               >
                 <Link href={slides[current].link || "/products"}>
-                  <motion.button
-                    whileHover={{ scale: 1.05, x: -4 }}
-                    whileTap={{ scale: 0.96 }}
-                    className="flex items-center gap-2.5 bg-primary text-white px-8 py-4 rounded-2xl font-black text-lg shadow-2xl shadow-black/30 hover:bg-primary/90 transition-all"
+                  <button
+                    className="flex items-center gap-2.5 bg-primary text-white px-8 py-4 rounded-2xl font-black text-lg shadow-2xl shadow-black/30 hover:bg-primary/90 hover:scale-105 hover:-translate-x-1 active:scale-95 transition-all duration-200"
                   >
                     {slides[current].buttonText}
                     <ArrowLeft className="w-5 h-5" />
-                  </motion.button>
+                  </button>
                 </Link>
-              </motion.div>
+              </div>
 
             </div>
           </div>
-        </motion.div>
-      </AnimatePresence>
+        </div>
 
       {/* ── Progress bar ── */}
       <div className="absolute bottom-0 inset-x-0 h-1 bg-white/10 z-30">
-        <motion.div
+        <div
           key={`prog-${current}`}
           className="h-full bg-primary"
-          initial={{ width: "0%" }}
-          animate={{ width: isHovered ? undefined : "100%" }}
-          transition={{ duration: 6, ease: "linear" }}
+          style={{ animation: "growW 6s linear forwards", animationPlayState: isHovered ? "paused" : "running" }}
         />
       </div>
 

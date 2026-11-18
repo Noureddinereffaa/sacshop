@@ -15,14 +15,10 @@ const nextConfig: NextConfig = {
     // Cache optimized images for 1 year (they have unique URLs)
     minimumCacheTTL: 31536000,
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "**",
-      },
-      {
-        protocol: "http",
-        hostname: "**",
-      },
+      { protocol: "https", hostname: "*.supabase.co" },
+      { protocol: "https", hostname: "images.unsplash.com" },
+      { protocol: "https", hostname: "placehold.co" },
+      { protocol: "https", hostname: "images.pexels.com" },
     ],
   },
 

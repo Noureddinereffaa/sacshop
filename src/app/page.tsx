@@ -22,16 +22,6 @@ export default async function Home() {
 
   const products = rawProducts || [];
 
-  // Fetch discount settings
-  let discountEnabled = true; // Default to true as per cartStore
-  let discountPercentage = 10;
-  if (supabase) {
-     const { data: offerSetting } = await supabase.from("settings").select("value").eq("key", "discounts").maybeSingle();
-     if (offerSetting && offerSetting.value) {
-       discountEnabled = offerSetting.value.newCustomerDiscountEnabled !== false;
-       discountPercentage = offerSetting.value.newCustomerDiscountPercent || 10;
-     }
-  }
   return (
     <main className="min-h-screen">
       <Hero />

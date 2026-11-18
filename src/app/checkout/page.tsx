@@ -2,9 +2,9 @@
 
 import { useCartStore } from "@/store/cartStore";
 import { useSettingsStore } from "@/store/settingsStore";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import OrderForm from "@/components/OrderForm";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import OrderForm from "@/components/checkout/OrderForm";
 import { ShoppingBag, ArrowRight, Trash2 } from "lucide-react";
 import Link from "next/link";
 import OptimizedImage from "@/components/OptimizedImage";

@@ -1,46 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sacshop — متجر الدفع عند الاستلام
 
-## Getting Started
+متجر إلكتروني (COD) للطباعة والأكياس المخصصة، مبني على Next.js 16 (App Router) و Supabase و Tailwind CSS v4 و TypeScript.
 
-First, run the development server:
+## البنية
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+src/
+  app/                صفحات App Router + API Routes
+    api/              نقاط النهاية (طلب خارجي: /api/customer, /api/short-links/[slug] — إدارية: /api/products, /api/coupons ...)
+    admin/            لوحة التحكم (/admin/*)
+  components/
+    layout/           مكونات الهيكل العام (Header, Footer, GlobalNavigation, OfferPopup ...)
+    home/             مكونات الصفحة الرئيسية
+    product/          بطاقة المنتج والإضافة السريعة
+    checkout/         سلة المشتريات ونموذج الطلب
+    (الجذر)           OptimizedImage, Reveal, SettingsProvider, ImageUploader
+  hooks/              React hooks (useReveal)
+  lib/                عملاء Supabase، المصادقة الإدارية، rate limiting، أدوات مشتركة
+  store/              Zustand stores مع persist (سلة، إعدادات)
+supabase/migrations/  مخططات قاعدة البيانات (تُضاف يدوياً: git add -f *.sql)
+scripts/              سكربتات الاختبار والصيانة
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## المتغيرات البيئية
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| المتغير | الوصف |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | رابط مشروع Supabase |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | مفتاح anon (الواجهة العامة) |
+| `SUPABASE_SERVICE_ROLE_KEY` | مفتاح الخدمة (API الإدارية فقط — لا يُكشف للعميل) |
+| `NEXT_PUBLIC_SITE_URL` | نطاق الموقع (افتراضي: serviceserigraphie.com) — استخدم `SITE_URL` من `@/lib/siteUrl` |
+| `ADMIN_SESSION_SECRET` | سر توقيع جلسة الإدارة (HMAC) |
+| `UPSTASH_REDIS_REST_URL` / `_TOKEN` | تحديد معدل الطلبات |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## التشغيل
 
-## Learn More
+```bash
+npm install
+npm run dev        # التطوير
+npm run build      # بناء الإنتاج
+npx tsc --noEmit   # فحص الأنواع
+npm run test:coupons   # اختبارات الكوبونات (بعد ضبط env حية)
+```
 
-To learn more about Next.js, take a look at the following resources:
+## قواعد المشروع
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deployment
-
-To deploy this project on your VPS:
-
-1. **Build the project**:
-   ```bash
-   npm run build
-   ```
-
-2. **Start the production server**:
-   ```bash
-   npm run start
-   ```
-
-You can use a process manager like **PM2** or a containerization tool like **Docker** to keep the server running.
+- لا تنشئ عملاء Supabase على مستوى الوحدة (module-level `createClient`) — استخدم `getSupabaseAdmin()` / `getSupabaseAdminSafe()` من `@/lib/supabaseAdmin`.
+- الوصول الإداري لقاعدة البيانات يتم عبر API Routes مع `requireAdmin()` (كوكي `admin_session` موقّع بـ HMAC) — وليس عبر عميل anon من المتصفح.
+- نطاق الموقع دائماً من `@/lib/siteUrl` — لا تكرّر النطاق المضمّن.
+- مضيفات الصور الخارجية يجب إضافتها يدوياً إلى قائمة السماح في `next.config.ts`.
+- نصوص الواجهة بالعربية، والعملة `د.ج`.

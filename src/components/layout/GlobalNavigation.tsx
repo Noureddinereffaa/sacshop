@@ -1,8 +1,8 @@
 "use client";
 
 import { useSettingsStore } from "@/store/settingsStore";
-import Header from "./Header";
-import PromoStrip from "./PromoStrip";
+import Header from "@/components/layout/Header";
+import PromoStrip from "@/components/layout/PromoStrip";
 
 import { usePathname } from "next/navigation";
 

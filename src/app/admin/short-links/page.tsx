@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
+import { resolveSiteUrl } from "@/lib/siteUrl";
 import {
   Link2, Copy, Trash2, Search, Plus, ExternalLink,
   Loader2, CheckCircle2, TrendingUp, MousePointerClick,
@@ -37,11 +38,7 @@ interface ShortLink {
   type: string;
 }
 
-const BASE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ||
-  (typeof window !== "undefined" && !window.location.origin.includes("localhost")
-    ? window.location.origin
-    : "https://serviceserigraphie.com");
+const BASE_URL = resolveSiteUrl();
 
 // ─── Ultra-fast thumbnail component for popup images ───────────────────────
 // Uses native <img> with decoding=async + fetchpriority=high for max speed.

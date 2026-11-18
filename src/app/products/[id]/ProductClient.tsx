@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import OrderForm from "@/components/OrderForm";
+import OrderForm from "@/components/checkout/OrderForm";
 
 import { useCartStore } from "@/store/cartStore";
 import OptimizedImage from "@/components/OptimizedImage";
@@ -12,7 +12,7 @@ import {
   Star, ShieldCheck, Truck, RefreshCcw, ChevronRight,
   CheckCircle2, Package, Zap, Crown, Tag, Gift, Sparkles, ShoppingBag, ArrowLeft, Search
 } from "lucide-react";
-import ProductCard from "@/components/ProductCard";
+import ProductCard from "@/components/product/ProductCard";
 import { Product } from "@/types";
 
 // Fallback for demo when Supabase not connected

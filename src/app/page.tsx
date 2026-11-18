@@ -1,9 +1,9 @@
-import Hero from "@/components/Hero";
-import Partners from "@/components/Partners";
+import Hero from "@/components/home/Hero";
+import Partners from "@/components/home/Partners";
 
 import { ArrowRight, ShoppingBag, Truck, ShieldCheck, Zap } from "lucide-react";
 import { getSupabase } from "@/lib/supabase";
-import ProductCard from "@/components/ProductCard";
+import ProductCard from "@/components/product/ProductCard";
 import Link from "next/link";
 
 // Use ISR: Cache the page and regenerate every 60 seconds to slash TTFB server delay.

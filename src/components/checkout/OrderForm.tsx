@@ -12,6 +12,7 @@ import Link from "next/link";
 import { CartItem, Product } from "@/types";
 
 import { useCartStore } from "@/store/cartStore";
+import { resolveSiteUrl } from "@/lib/siteUrl";
 
 interface OrderFormProps {
   productId: string;
@@ -362,7 +363,7 @@ export default function OrderForm({
     }
 
     // ── Build WhatsApp message ────────────────────────────────────────────────
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== 'undefined' && !window.location.origin.includes("localhost") ? window.location.origin : 'https://serviceserigraphie.com');
+    const baseUrl = resolveSiteUrl();
     const receiptUrl = `${baseUrl}/receipt/${orderId}`;
 
     const waMessage = [

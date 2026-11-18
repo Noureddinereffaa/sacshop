@@ -1,7 +1,6 @@
 "use client";
 
 import { useCartStore } from "@/store/cartStore";
-import { motion, AnimatePresence } from "framer-motion";
 import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, Gift } from "lucide-react";
 import OptimizedImage from "@/components/OptimizedImage";
 import Link from "next/link";
@@ -37,24 +36,19 @@ export default function CartDrawer() {
   const { isEligible, subtotal, discountAmount, finalTotal } = getDiscountInfo();
 
   return (
-    <AnimatePresence>
+    <>
       {isOpen && (
         <>
           {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          <div
+            style={{ animation: "fadeIn 200ms ease-out" }}
             onClick={() => setIsOpen(false)}
             className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm"
           />
 
           {/* Drawer */}
-          <motion.div
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+          <div
+            style={{ animation: "slideInRight 380ms cubic-bezier(0.16, 1, 0.3, 1)" }}
             className="fixed top-0 right-0 h-full w-full sm:w-[400px] bg-white z-50 flex flex-col shadow-2xl"
           >
             {/* Header */}
@@ -112,7 +106,7 @@ export default function CartDrawer() {
               ) : (
                 <div className="space-y-4">
                   {items.map((item: CartItem) => (
-                    <motion.div key={item.id} className="flex gap-4 p-4 bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+                    <div key={item.id} className="flex gap-4 p-4 bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
                       {/* Image */}
                       <div className="w-20 h-20 bg-gray-50 rounded-xl overflow-hidden relative flex-shrink-0">
                         {item.image_url ? (
@@ -194,7 +188,7 @@ export default function CartDrawer() {
                           </div>
                         </div>
                       </div>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               )}
@@ -234,9 +228,9 @@ export default function CartDrawer() {
                 </Link>
               </div>
             )}
-          </motion.div>
+          </div>
         </>
       )}
-    </AnimatePresence>
+    </>
   );
 }

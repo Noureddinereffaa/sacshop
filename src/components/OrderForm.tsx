@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { motion, AnimatePresence } from "framer-motion";
 import { 
   Phone, User, Loader2, Edit3, MessageCircle, 
   ShoppingCart, Lock, Eye, EyeOff, CheckCircle2, 
@@ -409,10 +408,9 @@ export default function OrderForm({
   // ─── SUCCESS SCREEN ─────────────────────────────────────────────────────────
   if (step === "success") {
     return (
-      <motion.div
+      <div
         ref={successRef}
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
+        style={{ animation: "popIn 300ms ease-out" }}
         className="bg-white p-8 rounded-3xl border-2 border-[#25D366]/40 shadow-xl text-center space-y-5"
       >
         <div className="w-20 h-20 bg-[#25D366]/15 rounded-full flex items-center justify-center text-[#25D366] mx-auto">
@@ -476,7 +474,7 @@ export default function OrderForm({
         <p className="text-xs text-gray-400">
           رقم الطلب: #{pendingOrderId.split("-")[0].toUpperCase()}
         </p>
-      </motion.div>
+      </div>
     );
   }
 
@@ -545,12 +543,9 @@ export default function OrderForm({
           </div>
 
           {/* ── VIP Greeting (Relocated under notes) ── */}
-          <AnimatePresence>
-            {customerStatus === 'vip' && customer && (
-              <motion.div
-                initial={{ opacity: 0, y: -10, height: 0 }}
-                animate={{ opacity: 1, y: 0, height: 'auto' }}
-                exit={{ opacity: 0, y: -10, height: 0 }}
+          {customerStatus === 'vip' && customer && (
+              <div
+                style={{ animation: "dropIn 250ms ease-out" }}
                 className="overflow-hidden"
               >
                 <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 flex items-center gap-4 relative overflow-hidden group">
@@ -570,9 +565,8 @@ export default function OrderForm({
                       </p>
                    </div>
                 </div>
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
 
           {/* Pricing Summary */}
           <div className="bg-[#25D366]/5 p-4 rounded-2xl border border-[#25D366]/15">
@@ -590,9 +584,8 @@ export default function OrderForm({
 
           {/* Welcome Upsell Alert */}
           {customerStatus !== 'vip' && discountConfig?.enabled && productId !== 'cart-order' && (
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
+            <div
+              style={{ animation: "fadeUp 300ms ease-out" }}
               className={`border rounded-2xl p-4 flex items-center gap-3 shadow-sm mb-2 transition-colors ${
                 items.length >= discountConfig.minItems 
                   ? "bg-green-50 border-green-200" 
@@ -637,7 +630,7 @@ export default function OrderForm({
                   </div>
                 </>
               )}
-            </motion.div>
+            </div>
           )}
 
           <div className="space-y-3">
@@ -744,11 +737,9 @@ export default function OrderForm({
             </button>
             
             {/* View Cart Button (Appears when items added, hidden if shown in the success alert above) */}
-            <AnimatePresence>
-              {items.length > 0 && !(customerStatus !== 'vip' && discountConfig?.enabled && items.length >= discountConfig.minItems) && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
+            {items.length > 0 && !(customerStatus !== 'vip' && discountConfig?.enabled && items.length >= discountConfig.minItems) && (
+                <div
+                  style={{ animation: "dropIn 250ms ease-out" }}
                   className="overflow-hidden"
                 >
                   <Link href="/checkout" className="block mt-2">
@@ -760,9 +751,8 @@ export default function OrderForm({
                       إنهاء الطلبات المضافة في السلة ({items.length})
                     </button>
                   </Link>
-                </motion.div>
+                </div>
               )}
-            </AnimatePresence>
           </div>
 
           {/* Trust Badges */}
@@ -780,13 +770,10 @@ export default function OrderForm({
             ))}
           </div>
 
-          <AnimatePresence>
-            {formError && (
-              <motion.div
+          {formError && (
+              <div
                 ref={errorRef}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
+                style={{ animation: "popIn 250ms ease-out" }}
                 className="mt-4 p-4 bg-red-50 border border-red-100 rounded-2xl flex items-start gap-3 shadow-sm"
               >
                 <div className="w-8 h-8 bg-red-500 text-white rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-red-500/20 animate-pulse">
@@ -796,9 +783,8 @@ export default function OrderForm({
                    <p className="text-red-600 font-black text-sm mb-0.5">خطأ في الطلب!</p>
                    <p className="text-red-500/80 text-xs font-bold leading-relaxed">{formError}</p>
                 </div>
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
         </form>
       </div>
     </div>

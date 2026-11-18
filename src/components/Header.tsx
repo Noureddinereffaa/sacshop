@@ -4,7 +4,6 @@ import Link from "next/link";
 import { Search, Menu, X, UserCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
 import { useCartStore } from "@/store/cartStore";
 import { useSettingsStore } from "@/store/settingsStore";
 import { ShoppingCart } from "lucide-react";
@@ -132,12 +131,9 @@ export default function Header() {
         </div>
 
       {/* Mobile Menu */}
-      <AnimatePresence>
-        {isMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+      {isMenuOpen && (
+          <div
+            style={{ animation: "dropIn 200ms ease-out" }}
             className="lg:hidden absolute top-full left-0 w-full bg-white border-b border-gray-100 shadow-2xl py-8 px-6 flex flex-col gap-6 text-right z-[80]"
           >
             {navigation && navigation.map((item, idx) => (
@@ -155,9 +151,8 @@ export default function Header() {
               <Link href="/shipping" onClick={() => setIsMenuOpen(false)} className="text-sm font-bold text-gray-500 hover:text-primary transition-colors">سياسة الشحن والتوصيل</Link>
               <Link href="/refund" onClick={() => setIsMenuOpen(false)} className="text-sm font-bold text-gray-500 hover:text-primary transition-colors">سياسة الاسترجاع والاستبدال</Link>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+      )}
     </header>
   );
 }

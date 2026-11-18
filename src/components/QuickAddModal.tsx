@@ -2,7 +2,6 @@
 
 import { useQuickAddStore } from "@/store/quickAddStore";
 import { useCartStore } from "@/store/cartStore";
-import { motion, AnimatePresence } from "framer-motion";
 import { X, ShoppingCart, Star, CheckCircle2, Package } from "lucide-react";
 import OptimizedImage from "@/components/OptimizedImage";
 import { useRouter, usePathname } from "next/navigation";
@@ -131,26 +130,22 @@ export default function QuickAddModal() {
   if (!product) return null;
 
   return (
-    <AnimatePresence>
+    <>
       {isOpen && (
         <>
           {/* Backdrop */}
-          <motion.div
+          <div
             key="backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            style={{ animation: "fadeIn 200ms ease-out" }}
             onClick={close}
             className="fixed inset-0 bg-black/60 z-[100] backdrop-blur-md"
           />
 
           {/* Modal Container (Centered) */}
           <div key="modal-container" className="fixed inset-0 z-[101] flex items-center justify-center p-4 pointer-events-none">
-            <motion.div
+            <div
               key="modal-content"
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              style={{ animation: "popIn 250ms cubic-bezier(0.16, 1, 0.3, 1)" }}
               className="pointer-events-auto w-full max-w-2xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[90vh]"
             >
               {/* Left Image Section */}
@@ -268,10 +263,10 @@ export default function QuickAddModal() {
                   </button>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </div>
         </>
       )}
-    </AnimatePresence>
+    </>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
+import Reveal from "@/components/Reveal";
+
 import { Star, Users2 } from "lucide-react";
 import { useSettingsStore } from "@/store/settingsStore";
 
@@ -82,11 +83,7 @@ export default function Partners() {
       ` }} />
 
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.5 }}
+      <Reveal
         className="container mx-auto px-4 mb-12 text-center relative z-10"
       >
         <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest mb-4">
@@ -102,22 +99,19 @@ export default function Partners() {
         <p className="text-gray-500 font-medium max-w-lg mx-auto text-sm">
           نفخر بشراكتنا مع أفضل العلامات التجارية في الجزائر لتقديم أعلى معايير الجودة
         </p>
-      </motion.div>
+      </Reveal>
 
       {useStaticGrid ? (
         /* ── Static grid for ≤5 partners ── */
         <div className="container mx-auto px-4">
           <div className="flex flex-wrap gap-6 justify-center">
             {partners.map((partner, i) => (
-              <motion.div
+              <Reveal
                 key={i}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
+                delay={i * 0.1}
               >
                 <PartnerCard partner={partner} />
-              </motion.div>
+              </Reveal>
             ))}
           </div>
         </div>

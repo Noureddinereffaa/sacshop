@@ -2,7 +2,7 @@
 
 import OptimizedImage from "@/components/OptimizedImage";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import Reveal from "@/components/Reveal";
 import { ShoppingCart, Eye, PackagePlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useQuickAddStore } from "@/store/quickAddStore";
@@ -23,12 +23,8 @@ export default function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      className="bg-white rounded-[2.5rem] p-5 border border-gray-100 shadow-sm hover:shadow-2xl transition-all group relative"
-    >
+    <Reveal className="bg-white rounded-[2.5rem] p-5 border border-gray-100 shadow-sm hover:shadow-2xl transition-all group relative">
+    <div>
       {/* Dynamic Badge */}
       {(() => {
         const isNew = product.created_at && (Date.now() - new Date(product.created_at).getTime()) < 7 * 24 * 60 * 60 * 1000;
@@ -89,6 +85,7 @@ export default function ProductCard({ product }: ProductCardProps) {
            </div>
         </div>
       </div>
-    </motion.div>
+    </div>
+    </Reveal>
   );
 }

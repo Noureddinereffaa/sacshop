@@ -1,5 +1,6 @@
 import { Metadata, ResolvingMetadata } from 'next';
 import { getSupabase } from "@/lib/supabase";
+import { SITE_URL } from "@/lib/siteUrl";
 import ProductClient from "./ProductClient";
 import { Product } from "@/types";
 
@@ -75,7 +76,7 @@ export async function generateMetadata(
   return {
     title: `${product.name} | Service Serigraphie`,
     description: product.short_description || product.description?.slice(0, 150),
-    metadataBase: new URL("https://serviceserigraphie.com"),
+    metadataBase: new URL(SITE_URL),
     openGraph: {
       title: product.name,
       description: product.short_description || product.description?.slice(0, 150),

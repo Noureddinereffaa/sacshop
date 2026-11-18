@@ -1,18 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { getSupabaseAdminSafe } from "@/lib/supabaseAdmin";
 import { cookies } from "next/headers";
 import { verifySessionToken } from "@/lib/adminAuth";
-
-// Server-side route uses SERVICE_ROLE key → bypasses RLS completely
-const getAdminSupabase = () => {
-  // Sanitize the URL and Key to prevent "Invalid Compact JWS" if there are spaces or quotes
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim().replace(/['"]/g, '');
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim().replace(/['"]/g, '');
-  if (!url || !key) return null;
-  return createClient(url, key, {
-    auth: { persistSession: false },
-  });
-};
 
 async function isAdminAuthenticated(request: NextRequest): Promise<boolean> {
   // Check httpOnly admin_session cookie with HMAC signature verification
@@ -34,7 +23,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const supabase = getAdminSupabase();
+    const supabase = getSupabaseAdminSafe();
     if (!supabase) {
       return NextResponse.json(
         { error: "SUPABASE_SERVICE_ROLE_KEY is not configured on the server" },

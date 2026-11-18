@@ -1,15 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { getSupabaseAdminSafe } from "@/lib/supabaseAdmin";
+import { SITE_URL } from "@/lib/siteUrl";
 import { requireAdmin } from "@/lib/adminAuth";
-
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://serviceserigraphie.com").replace(/\/+$/, "");
-
-function getAdminSupabase() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim().replace(/['"]/g, "");
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim().replace(/['"]/g, "");
-  if (!url || !key) return null;
-  return createClient(url, key);
-}
 
 function generateSlug(type: string): string {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -25,7 +17,7 @@ export async function GET(req: NextRequest) {
   const unauthorized = requireAdmin(req);
   if (unauthorized) return unauthorized;
 
-  const sb = getAdminSupabase();
+  const sb = getSupabaseAdminSafe();
   if (!sb) return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
 
   const { data, error } = await sb
@@ -41,7 +33,7 @@ export async function POST(req: NextRequest) {
   const unauthorized = requireAdmin(req);
   if (unauthorized) return unauthorized;
 
-  const sb = getAdminSupabase();
+  const sb = getSupabaseAdminSafe();
   if (!sb) return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
 
   const body = await req.json();
@@ -100,7 +92,7 @@ export async function DELETE(req: NextRequest) {
   const unauthorized = requireAdmin(req);
   if (unauthorized) return unauthorized;
 
-  const sb = getAdminSupabase();
+  const sb = getSupabaseAdminSafe();
   if (!sb) return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
 
   const { searchParams } = new URL(req.url);

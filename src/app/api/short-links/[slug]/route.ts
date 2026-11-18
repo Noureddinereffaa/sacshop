@@ -1,21 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://serviceserigraphie.com").replace(/\/+$/, "");
-
-function getAdminSupabase() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim().replace(/['"]/g, "");
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim().replace(/['"]/g, "");
-  if (!url || !key) return null;
-  return createClient(url, key);
-}
+import { getSupabaseAdminSafe } from "@/lib/supabaseAdmin";
+import { SITE_URL } from "@/lib/siteUrl";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await params;
-  const sb = getAdminSupabase();
+  const sb = getSupabaseAdminSafe();
 
   if (!sb) {
     return NextResponse.redirect(`${SITE_URL}/`, 302);

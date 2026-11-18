@@ -1,15 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { getSupabaseAdminSafe } from "@/lib/supabaseAdmin";
 import { rateLimitMiddleware } from "@/lib/rateLimit";
 import { cache } from "@/lib/redis";
 import { requireAdmin } from "@/lib/adminAuth";
-
-function getAdminSupabase() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim().replace(/['"]/g, "");
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim().replace(/['"]/g, "");
-  if (!url || !key) return null;
-  return createClient(url, key);
-}
 
 // Cache TTL for stock movements (5 minutes)
 const MOVEMENTS_CACHE_TTL = 300;
@@ -35,7 +28,7 @@ export async function GET(request: NextRequest) {
     const productId = searchParams.get("product_id");
     const limit = parseInt(searchParams.get("limit") || "50");
 
-    const sb = getAdminSupabase();
+    const sb = getSupabaseAdminSafe();
     if (!sb) {
       return NextResponse.json(
         { error: "Supabase not configured" },

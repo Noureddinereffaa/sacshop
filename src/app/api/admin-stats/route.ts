@@ -1,19 +1,12 @@
 import { NextResponse, NextRequest } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { getSupabaseAdminSafe } from "@/lib/supabaseAdmin";
 import { requireAdmin } from "@/lib/adminAuth";
-
-function getAdminSupabase() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim().replace(/['"]/g, "");
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim().replace(/['"]/g, "");
-  if (!url || !key) return null;
-  return createClient(url, key);
-}
 
 export async function GET(request: NextRequest) {
   const unauthorized = requireAdmin(request);
   if (unauthorized) return unauthorized;
 
-  const sb = getAdminSupabase();
+  const sb = getSupabaseAdminSafe();
   if (!sb) {
     return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
   }

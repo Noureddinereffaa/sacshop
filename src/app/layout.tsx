@@ -1,16 +1,16 @@
 import type { Metadata, Viewport } from "next";
 import { Tajawal } from "next/font/google";
 import "./globals.css";
-import MarketingPixels from "@/components/MarketingPixels";
+import MarketingPixels from "@/components/layout/MarketingPixels";
 import SettingsProvider from "@/components/SettingsProvider";
 import dynamic from "next/dynamic";
-import GlobalNavigation from "@/components/GlobalNavigation";
-import Footer from "@/components/Footer";
+import GlobalNavigation from "@/components/layout/GlobalNavigation";
+import Footer from "@/components/layout/Footer";
 import { getPopupImageUrl, escapeHtml } from "@/lib/popupImage";
 
 // Lazy-load non-critical components (code-split into separate chunks)
-const OfferPopup = dynamic(() => import("@/components/OfferPopup"));
-const ScrollToTop = dynamic(() => import("@/components/ScrollToTop"));
+const OfferPopup = dynamic(() => import("@/components/layout/OfferPopup"));
+const ScrollToTop = dynamic(() => import("@/components/layout/ScrollToTop"));
 
 
 const tajawal = Tajawal({
@@ -21,7 +21,7 @@ const tajawal = Tajawal({
   display: "swap", // Show text immediately with fallback font
 });
 
-const QuickAddModal = dynamic(() => import("@/components/QuickAddModal"));
+const QuickAddModal = dynamic(() => import("@/components/product/QuickAddModal"));
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -32,8 +32,10 @@ export const viewport: Viewport = {
 export const revalidate = 60; // Revalidate settings every 60 seconds
 
 
+import { SITE_URL, resolveSiteUrl } from "@/lib/siteUrl";
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://serviceserigraphie.com"),
+  metadataBase: new URL(SITE_URL),
   title: "Service Serigraphie | طباعة أكياس، ملصقات، وتغليف في الجزائر",
   description: "Service Serigraphie - شريكك الأول في الجزائر للطباعة الاحترافية. نحن متخصصون في طباعة الأكياس الورقية والقماشية، الملصقات (Stickers)، وحلول التغليف المخصصة. جودة عالية وتوصيل لـ 58 ولاية.",
   keywords: ["طباعة", "أكياس ورقية", "ملصقات", "تغليف", "سيريغرافي", "الجزائر", "أكياس قماشية", "Service Serigraphie", "printing algeria"],
@@ -45,7 +47,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Service Serigraphie | خدمات الطباعة والتغليف الاحترافية",
     description: "اطلب الآن أكياسك المخصصة، ملصقاتك، وحلول التغليف لعلامتك التجارية. جودة مضمونة وتوصيل سريع لكل الولايات.",
-    url: "https://serviceserigraphie.com",
+    url: SITE_URL,
     siteName: "Service Serigraphie",
     images: [
       {

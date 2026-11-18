@@ -1,9 +1,13 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
+import { requireAdmin } from '@/lib/adminAuth';
 
 
 // GET: fetch all vip_offers
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const unauthorized = requireAdmin(request);
+  if (unauthorized) return unauthorized;
+
   const { data, error } = await getSupabaseAdmin()
     .from('vip_offers')
     .select('*')
@@ -14,7 +18,10 @@ export async function GET() {
 }
 
 // POST: create new vip_offer
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const unauthorized = requireAdmin(request);
+  if (unauthorized) return unauthorized;
+
   try {
     const body = await request.json();
     const {
@@ -59,7 +66,10 @@ export async function POST(request: Request) {
 }
 
 // PATCH: update existing vip_offer
-export async function PATCH(request: Request) {
+export async function PATCH(request: NextRequest) {
+  const unauthorized = requireAdmin(request);
+  if (unauthorized) return unauthorized;
+
   try {
     const body = await request.json();
     const { id, uses_count, ...rest } = body;
@@ -83,7 +93,10 @@ export async function PATCH(request: Request) {
 }
 
 // DELETE: delete a vip_offer by id (passed as query param)
-export async function DELETE(request: Request) {
+export async function DELETE(request: NextRequest) {
+  const unauthorized = requireAdmin(request);
+  if (unauthorized) return unauthorized;
+
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

@@ -104,9 +104,12 @@ export default function OffersPage() {
           <section className="max-w-4xl mx-auto">
             <Link href={popup.buttonLink || "/products"} className="flex flex-col group relative rounded-[2rem] sm:rounded-[3rem] overflow-hidden shadow-2xl border-4 border-white animate-in fade-in zoom-in duration-700 bg-white">
                <div className="w-full relative flex justify-center bg-gray-50 overflow-hidden">
-                 <img 
-                   src={popup.image} 
+                 <OptimizedImage
+                   src={popup.image}
                    alt={popup.title || "عرض حصري"}
+                   width={1200}
+                   height={849}
+                   sizes="(max-width: 896px) 100vw, 896px"
                    className="w-full h-auto max-h-[75vh] object-contain group-hover:scale-[1.02] transition-transform duration-700"
                  />
                </div>

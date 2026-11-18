@@ -18,7 +18,7 @@ export default function Hero() {
       title: "أكياس ورقية فخمة لعلامتك التجارية",
       subtitle: "جودة عالية وتصاميم مخصصة تعكس رقي منتجاتك",
       buttonText: "تصفح المنتجات",
-      image: "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&q=80&w=2000",
+      image: "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&q=75&w=1200",
       link: "/products"
     },
     {
@@ -26,7 +26,7 @@ export default function Hero() {
       title: "حلول تعبئة ذكية وصديقة للبيئة",
       subtitle: "نقدم لك أفضل خامات الأكياس القماشية في الجزائر",
       buttonText: "اطلب الآن",
-      image: "https://images.unsplash.com/photo-1598257006458-087169a1f08d?auto=format&fit=crop&q=80&w=2000",
+      image: "https://images.unsplash.com/photo-1598257006458-087169a1f08d?auto=format&fit=crop&q=75&w=1200",
       link: "/products"
     }
   ];

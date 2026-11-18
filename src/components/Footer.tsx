@@ -13,7 +13,7 @@ export default function Footer() {
 
   if (pathname?.startsWith("/admin")) return null;
 
-  const footerLogoSrc = branding.footerLogo || branding.logo || "/favicon.ico";
+  const footerLogoSrc = branding.footerLogo || branding.logo || "/favicon.png";
   const waNumber = branding.whatsappNumber?.replace(/[^0-9]/g, "") || "213";
 
   return (
